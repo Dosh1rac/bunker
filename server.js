@@ -1079,6 +1079,124 @@ const RANDOM_EVENTS = [
   }
 ];
 
+const DILEMMAS = [
+  {
+    id: 'stranger_at_airlock',
+    title: 'Стук в гермошлюз',
+    description: 'Снаружи обнаружен раненый техник с инструментами и фильтрами. Впустить его за порогом или оставить шлюз запечатанным?',
+    yesLabel: 'Впустить и поделиться пайком',
+    noLabel: 'Не открывать герметичный шлюз',
+    resolveYes: (game) => {
+      game.bunker.foodMonths = Math.max(2, game.bunker.foodMonths - 1);
+      if (game.bunker.malfunctions.length > 0) {
+        const fixed = game.bunker.malfunctions.shift();
+        return `Техник починил «${fixed}» и ушёл дальше, забрав 1 мес. продовольствия.`;
+      }
+      game.bunker.powerPercent = Math.min(120, game.bunker.powerPercent + 15);
+      return `Техник усилил генератор до ${game.bunker.powerPercent}% за 1 мес. пайков.`;
+    },
+    resolveNo: (game) => {
+      game.disaster.extraDanger += ' · Напряжение из-за отказа помощи';
+      return 'Шлюз остался закрытым. Запасы сохранены, но моральный дух снизился.';
+    }
+  },
+  {
+    id: 'ballast_power_dump',
+    title: 'Сброс аварийного балласта сети',
+    description: 'Инженерная автоматика предлагает на час обесточить освещение, чтобы перекалибровать фильтры и устранить поломку.',
+    yesLabel: 'Обесточить и провести ремонт',
+    noLabel: 'Отказаться и беречь свет',
+    resolveYes: (game) => {
+      game.bunker.powerPercent = Math.max(15, game.bunker.powerPercent - 10);
+      if (game.bunker.malfunctions.length > 0) {
+        const fixed = game.bunker.malfunctions.shift();
+        return `Потрачено 10% энергии, но устранена поломка: «${fixed}».`;
+      }
+      return `Системы откалиброваны (энергия ${game.bunker.powerPercent}%).`;
+    },
+    resolveNo: (game) => {
+      game.bunker.powerPercent = Math.max(15, game.bunker.powerPercent - 15);
+      return `Сеть работает с перегрузкой — потеряно 15% энергии (осталось ${game.bunker.powerPercent}%).`;
+    }
+  },
+  {
+    id: 'chem_crate',
+    title: 'Герметичный контейнер в техкоридоре',
+    description: 'В дренажной нише найден старый контейнер с маркировкой «Резерв/Хим». Вскрыть его или изолировать за дверью?',
+    yesLabel: 'Вскрыть контейнер',
+    noLabel: 'Замуровать без риска',
+    resolveYes: (game) => {
+      if (Math.random() < 0.65) {
+        game.bunker.foodMonths += 3;
+        return `Внутри сухпайки и консервы! Запас еды увеличен до ${game.bunker.foodMonths} мес.`;
+      }
+      game.bunker.waterPercent = Math.max(20, game.bunker.waterPercent - 15);
+      return `Утечка реагента снизила запас чистой воды до ${game.bunker.waterPercent}%.`;
+    },
+    resolveNo: () => 'Контейнер запечатан. Рисков нет, ресурсов не прибавилось.'
+  },
+  {
+    id: 'co2_recalibration',
+    title: 'Форсированная продувка вентиляции',
+    description: 'Воздуховоды требуют экстренной очистки — обсуждение в следующем раунде станет короче, но воздух очистится.',
+    yesLabel: 'Запустить продувку (90с раунд)',
+    noLabel: 'Отложить очистку',
+    resolveYes: (game) => {
+      game.nextDiscussionDuration = 90;
+      game.bunker.waterPercent = Math.min(120, game.bunker.waterPercent + 10);
+      return `Конденсат вернул +10% воды (${game.bunker.waterPercent}%). Следующее обсуждение — 90 сек.`;
+    },
+    resolveNo: (game) => {
+      game.bunker.powerPercent = Math.max(15, game.bunker.powerPercent - 10);
+      return `Вытяжки работают на повышенной мощности (энергия ${game.bunker.powerPercent}%).`;
+    }
+  },
+  {
+    id: 'neighbor_radio_trade',
+    title: 'Радиообмен с соседним убежищем',
+    description: 'Соседний объект предлагает передать им резервные батареи в обмен на запас медикаментов и консервов.',
+    yesLabel: 'Провести обмен через шлюз',
+    noLabel: 'Сохранить радиомолчание',
+    resolveYes: (game) => {
+      game.bunker.powerPercent = Math.max(20, game.bunker.powerPercent - 15);
+      game.bunker.foodMonths += 2;
+      game.bunker.medical += ' + набор антисептиков из обмена';
+      return `Отдано 15% энергии, получено +2 мес. еды (${game.bunker.foodMonths} мес.) и медикаменты.`;
+    },
+    resolveNo: () => 'Координаты остались скрытыми. Сделка не состоялась.'
+  },
+  {
+    id: 'deep_water_drill',
+    title: 'Бурение запасной водоносной жилы',
+    description: 'Можно рискнуть и пробить бетонную плиту пола в поисках чистых грунтовых вод.',
+    yesLabel: 'Бурить скважину',
+    noLabel: 'Не нарушать герметичность',
+    resolveYes: (game) => {
+      if (Math.random() < 0.7) {
+        game.bunker.waterPercent = Math.min(120, game.bunker.waterPercent + 25);
+        return `Открыт чистый источник! Вода восстановлена до ${game.bunker.waterPercent}%.`;
+      }
+      game.bunker.malfunctions.push('Трещина в гидроизоляции нижнего отсека');
+      return 'Слой оказался сухим, добавлена неисправность гидроизоляции.';
+    },
+    resolveNo: () => 'Плита осталась нетронутой. Герметичность бункера сохранена.'
+  }
+];
+
+const SECRET_GOALS = [
+  { id: 'save_medic', title: 'Беречь врача', description: 'Попасть в финал вместе с хотя бы одним живым медиком/биологом (Хирург, Ветеринар, Фармацевт, Акушер-педиатр, Микробиолог, Биолог-генетик).' },
+  { id: 'clean_reputation', title: 'Чистая репутация', description: 'Пройти в бункер, ни разу не попав в тур переголосования (ничьей).' },
+  { id: 'saboteur', title: 'Диверсант', description: 'Выжить в бункере при итоговом индексе выживаемости ниже 65%, ИЛИ дожить до финала с нераскрытой картой «Доп. факт» до конца партии.' },
+  { id: 'frugal_voter', title: 'Хладнокровный судья', description: 'Попасть в бункер и сохранить хотя бы 1 неиспользованный пропуск голоса (если скипы разрешены).' },
+  { id: 'tactician', title: 'Тактик кризиса', description: 'Применить свою спецкарту во время партии и оказаться среди выживших в финале.' },
+  { id: 'engineer_alliance', title: 'Союз технарей', description: 'Оказаться в финале вместе с хотя бы одним инженером/механиком/сварщиком/электриком.' }
+];
+
+const BOT_NAMES = [
+  'Бот_Макс', 'Бот_Кира', 'Бот_Артём', 'Бот_Ника', 'Бот_Егор',
+  'Бот_Зоя', 'Бот_Влад', 'Бот_Рита', 'Бот_Олег', 'Бот_Таня'
+];
+
 const TRAIT_KEYS = ['profession', 'biology', 'health', 'hobby', 'phobia', 'luggage', 'character', 'fact'];
 const TRAIT_LABELS = {
   profession: 'Профессия',
@@ -1094,6 +1212,9 @@ const TRAIT_LABELS = {
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excludes O, 0, I, 1
 const DISCUSSION_SECONDS = 120;
 const VOTING_SECONDS = 45;
+const DILEMMA_SECONDS = 25;
+const MAX_WHISPERS_PER_ROUND = 2;
+const ALLOWED_REACTIONS = ['👍', '🤔', '🚨'];
 const HOST_MIGRATION_DELAY_MS = 20000;
 const OFFLINE_KICK_DELAY_MS = 60000;
 const ROOM_CLEANUP_DELAY_MS = 120000;
@@ -1219,6 +1340,169 @@ function formatTimeHHMM(date = new Date()) {
   return `${hh}:${mm}`;
 }
 
+function validateRoomSettings(raw, defaults = {}) {
+  const allowedDiscussion = [60, 120, 180];
+  const allowedVoting = [30, 45, 60];
+  const allowedSkips = [0, 1, 2, 3];
+
+  const defaultDisc = defaults.discussionSeconds ?? DISCUSSION_SECONDS;
+  const defaultVote = defaults.votingSeconds ?? VOTING_SECONDS;
+  const defaultSkips = defaults.maxSkips ?? 3;
+
+  const disc = Number(raw?.discussionSeconds);
+  const vote = Number(raw?.votingSeconds);
+  const skips = Number(raw?.maxSkips);
+
+  return {
+    discussionSeconds: allowedDiscussion.includes(disc) ? disc : defaultDisc,
+    votingSeconds: allowedVoting.includes(vote) ? vote : defaultVote,
+    maxSkips: allowedSkips.includes(skips) ? skips : defaultSkips,
+    forceProfessionRound1: raw?.forceProfessionRound1 !== undefined
+      ? Boolean(raw.forceProfessionRound1)
+      : Boolean(defaults.forceProfessionRound1),
+    enableRandomEvents: raw?.enableRandomEvents !== undefined
+      ? Boolean(raw.enableRandomEvents)
+      : (defaults.enableRandomEvents !== undefined ? Boolean(defaults.enableRandomEvents) : true),
+    enableDilemmas: raw?.enableDilemmas !== undefined
+      ? Boolean(raw.enableDilemmas)
+      : (defaults.enableDilemmas !== undefined ? Boolean(defaults.enableDilemmas) : true),
+    enableSecretRoles: raw?.enableSecretRoles !== undefined
+      ? Boolean(raw.enableSecretRoles)
+      : (defaults.enableSecretRoles !== undefined ? Boolean(defaults.enableSecretRoles) : true)
+  };
+}
+
+function evaluateBunkerSurvival(room) {
+  const game = room.game;
+  const survivors = room.players.filter((p) => p.alive);
+  const checks = [];
+
+  const profTitles = survivors.map((p) => (p.traits?.profession?.data?.title || '').toLowerCase());
+  const luggageTitles = survivors.map((p) => (p.traits?.luggage?.data?.title || '').toLowerCase());
+  const hobbyTitles = survivors.map((p) => (p.traits?.hobby?.data?.title || '').toLowerCase());
+
+  const hasMedic = profTitles.some((t) => /хирург|ветеринар|фармацевт|акушер|микробиолог/.test(t));
+  const hasMedLuggage = luggageTitles.some((t) => /аптеч|хирург|стерилизатор|термоконтейнер/.test(t));
+  const severeCount = survivors.filter((p) => p.traits?.health?.data?.severity === 'severe').length;
+  const medOk = (hasMedic || hasMedLuggage) && severeCount <= 1;
+  checks.push({
+    label: 'Медицина и здоровье',
+    passed: medOk,
+    detail: hasMedic || hasMedLuggage
+      ? (severeCount > 1 ? `Есть медик/аптечка, но ${severeCount} тяжёлых болезней.` : 'Медицинская поддержка достаточна.')
+      : 'Нет профильного медика или полевой аптечки.'
+  });
+
+  const hasEngineer = profTitles.some((t) => /инженер|сварщик|электрик|механик|сантехник|сапёр|астронавт|программист|оптик/.test(t));
+  const faultsLeft = game?.bunker?.malfunctions?.length || 0;
+  const engOk = hasEngineer || faultsLeft === 0;
+  checks.push({
+    label: 'Инженерия и ремонт',
+    passed: engOk,
+    detail: faultsLeft === 0
+      ? 'Все критические неисправности бункера устранены.'
+      : (hasEngineer ? `Инженеры справятся с ${faultsLeft} неисправностями.` : `Осталось ${faultsLeft} поломок и нет технического специалиста.`)
+  });
+
+  const hasFoodSpecialist = profTitles.some((t) => /фермер|агроном|повар|биолог/.test(t))
+    || hobbyTitles.some((t) => /растен|кулинар|консервац|гриб|пчел/.test(t));
+  const foodMonths = game?.bunker?.foodMonths || 0;
+  const waterPercent = game?.bunker?.waterPercent || 0;
+  const supplyOk = (foodMonths >= 10 || hasFoodSpecialist) && waterPercent >= 65;
+  checks.push({
+    label: 'Продовольствие и вода',
+    passed: supplyOk,
+    detail: `Еда: ${foodMonths} мес., вода: ${waterPercent}%${hasFoodSpecialist ? ', есть специалист по питанию/растениям' : ''}.`
+  });
+
+  const powerPercent = game?.bunker?.powerPercent || 0;
+  const powerOk = powerPercent >= 55;
+  checks.push({
+    label: 'Энергоснабжение',
+    passed: powerOk,
+    detail: `Остаточный ресурс электросети: ${powerPercent}%.`
+  });
+
+  const fertileCount = survivors.filter((p) => p.traits?.biology?.data?.fertility === 'Фертилен').length;
+  const demoOk = fertileCount >= 1 && survivors.length >= 1;
+  checks.push({
+    label: 'Демография и восстановление',
+    passed: demoOk,
+    detail: fertileCount > 0 ? `Фертильных участников: ${fertileCount}.` : 'Нет фертильных выживших для продолжения рода.'
+  });
+
+  const passedCount = checks.filter((c) => c.passed).length;
+  const score = Math.round((passedCount / checks.length) * 100);
+
+  let verdictTitle = 'БУНКЕР ПРОЦВЕТАЕТ';
+  let verdictTone = 'success';
+  let summaryText = 'Группа подобрана идеально: убежище пережило изоляцию, системы выдержали, и человечество получило надёжный шанс на возрождение.';
+  if (score < 50) {
+    verdictTitle = 'КРИТИЧЕСКИЙ ПРОВАЛ';
+    verdictTone = 'danger';
+    summaryText = 'Выжившим не хватило ключевых специалистов или ресурсов — после закрытия гермодверей бункер столкнулся с тяжёлым кризисом.';
+  } else if (score < 80) {
+    verdictTitle = 'ТЯЖЁЛОЕ ВЫЖИВАНИЕ';
+    verdictTone = 'warning';
+    summaryText = 'Бункер выстоял ценой жёсткой экономии и нехватки отдельных специалистов, но группа сумела дождаться выхода.';
+  }
+
+  return { score, verdictTitle, verdictTone, summaryText, checks };
+}
+
+function evaluateSecretGoal(player, room, survivalReport) {
+  const goal = player.secretGoal;
+  if (!goal) return null;
+  const survivors = room.players.filter((p) => p.alive);
+  const isAlive = Boolean(player.alive);
+  let achieved = false;
+  let note = '';
+
+  switch (goal.id) {
+    case 'save_medic': {
+      const medicAlive = survivors.some((p) => /хирург|ветеринар|фармацевт|акушер|микробиолог|биолог/.test((p.traits?.profession?.data?.title || '').toLowerCase()));
+      achieved = isAlive && medicAlive;
+      note = achieved ? 'Выжили вместе с медиком/биологом.' : 'Не удалось попасть в финал вместе с врачом.';
+      break;
+    }
+    case 'clean_reputation':
+      achieved = isAlive && !player.everRunoff;
+      note = achieved ? 'Ни разу не попали на переголосование и дошли до финала.' : 'Не соблюдено условие (попали в ничью или изгнаны).';
+      break;
+    case 'saboteur':
+      achieved = isAlive && ((survivalReport?.score ?? 100) < 65 || !player._factRevealedBeforeEnd);
+      note = achieved ? 'План диверсанта удался!' : 'Бункер слишком стабилен или секрет раскрыли слишком рано.';
+      break;
+    case 'frugal_voter': {
+      const maxSkips = room.settings?.maxSkips ?? 3;
+      achieved = isAlive && (maxSkips === 0 || (maxSkips - (player.skipsUsed || 0)) >= 1);
+      note = achieved ? 'Прошли в финал с неиспользованным скипом.' : 'Потратили все скипы или были изгнаны.';
+      break;
+    }
+    case 'tactician':
+      achieved = isAlive && Boolean(player.specialCard?.used);
+      note = achieved ? 'Успешно применили спецкарту и выжили.' : 'Не использовали спецкарту или не прошли в финал.';
+      break;
+    case 'engineer_alliance': {
+      const engAlive = survivors.some((p) => /инженер|сварщик|электрик|механик|сантехник|сапёр|астронавт|программист|оптик/.test((p.traits?.profession?.data?.title || '').toLowerCase()));
+      achieved = isAlive && engAlive;
+      note = achieved ? 'Выжили в союзе с техническим специалистом.' : 'В финале не оказалось ни одного инженера/техника.';
+      break;
+    }
+    default:
+      achieved = isAlive;
+      note = '';
+  }
+
+  return {
+    goalId: goal.id,
+    title: goal.title,
+    description: goal.description,
+    achieved,
+    note
+  };
+}
+
 // ============================================================================
 // CORE GAME SERVER FACTORY (TESTABLE IN ISOLATION OR ON PORT 3000)
 // ============================================================================
@@ -1226,10 +1510,12 @@ function formatTimeHHMM(date = new Date()) {
 function createBunkerServer(options = {}) {
   const discussionSeconds = options.discussionSeconds || DISCUSSION_SECONDS;
   const votingSeconds = options.votingSeconds || VOTING_SECONDS;
+  const dilemmaSeconds = options.dilemmaSeconds || DILEMMA_SECONDS;
   const hostMigrationMs = options.hostMigrationMs ?? HOST_MIGRATION_DELAY_MS;
   const offlineKickMs = options.offlineKickMs ?? OFFLINE_KICK_DELAY_MS;
   const roomCleanupMs = options.roomCleanupMs ?? ROOM_CLEANUP_DELAY_MS;
   const disableRandomEvents = Boolean(options.disableRandomEvents);
+  const disableDilemmas = Boolean(options.disableDilemmas);
 
   const app = express();
   const server = http.createServer(app);
@@ -1284,11 +1570,12 @@ function createBunkerServer(options = {}) {
       name: player.name,
       avatarId: player.avatarId,
       isHost: player.isHost,
+      isBot: Boolean(player.isBot),
       connected: player.connected,
       ready: player.ready,
       alive: player.alive,
       exiled: player.exiled,
-      offlineKickReady: !player.connected && player.disconnectedAt ? (Date.now() - player.disconnectedAt >= offlineKickMs) : false,
+      offlineKickReady: !player.isBot && !player.connected && player.disconnectedAt ? (Date.now() - player.disconnectedAt >= offlineKickMs) : false,
       disconnectedAt: player.disconnectedAt || null,
       revealedThisRound: player.revealedThisRound,
       specialCardUsed: player.specialCard ? player.specialCard.used : false,
@@ -1315,9 +1602,33 @@ function createBunkerServer(options = {}) {
       };
     }
 
+    let dilemmaInfo = null;
+    if (game && room.phase === 'dilemma' && game.activeDilemma) {
+      const alivePlayers = room.players.filter((p) => p.alive);
+      let yesCount = 0;
+      let noCount = 0;
+      for (const val of game.dilemmaVotes.values()) {
+        if (val === 'yes') yesCount += 1;
+        else if (val === 'no') noCount += 1;
+      }
+      dilemmaInfo = {
+        id: game.activeDilemma.id,
+        title: game.activeDilemma.title,
+        description: game.activeDilemma.description,
+        yesLabel: game.activeDilemma.yesLabel,
+        noLabel: game.activeDilemma.noLabel,
+        yesCount,
+        noCount,
+        votedPlayerIds: alivePlayers.filter((p) => game.dilemmaVotes.has(p.id)).map((p) => p.id),
+        totalVoters: alivePlayers.length
+      };
+    }
+
     return {
       code: room.code,
       phase: room.phase,
+      paused: Boolean(room.paused),
+      settings: room.settings,
       hostId: room.hostId,
       round: game ? game.round : 0,
       bunkerCapacity: game ? game.bunkerCapacity : computeBunkerCapacity(room.players.length),
@@ -1333,11 +1644,11 @@ function createBunkerServer(options = {}) {
       diary: game ? game.diary.slice(-60) : [],
       votingHistory: game ? game.votingHistory : [],
       votingInfo,
+      dilemmaInfo,
       endSummary: game && isEnded ? game.endSummary : null
     };
   }
 
-  const MAX_VOTE_SKIPS = 3;
   const VOTE_SKIP_MARKER = '__SKIP__';
 
   function getPrivatePlayerState(room, player) {
@@ -1345,16 +1656,21 @@ function createBunkerServer(options = {}) {
     const hasVoted = Boolean(game && game.votes && game.votes.has(player.id));
     const voteVal = hasVoted ? game.votes.get(player.id) : null;
     const skipsUsed = player.skipsUsed || 0;
+    const maxSkips = room.settings?.maxSkips ?? 3;
     return {
       playerId: player.id,
       roomCode: room.code,
       traits: player.traits || null,
       specialCard: player.specialCard || null,
+      secretGoal: room.settings?.enableSecretRoles ? (player.secretGoal || null) : null,
       hasVoted,
       skippedThisVote: voteVal === VOTE_SKIP_MARKER,
       votedForId: voteVal && voteVal !== VOTE_SKIP_MARKER ? voteVal : null,
+      dilemmaVote: game?.dilemmaVotes?.get(player.id) || null,
       skipsUsed,
-      skipsRemaining: Math.max(0, MAX_VOTE_SKIPS - skipsUsed),
+      maxSkips,
+      skipsRemaining: Math.max(0, maxSkips - skipsUsed),
+      whispersRemaining: Math.max(0, MAX_WHISPERS_PER_ROUND - (player.whispersUsedThisRound || 0)),
       extraVotes: player.extraVotes || 0,
       immuneThisRound: Boolean(player.immuneThisRound),
       quarantinedThisRound: Boolean(game && player.quarantinedRound === game.round),
@@ -1406,7 +1722,14 @@ function createBunkerServer(options = {}) {
   // TIMERS & LIFECYCLE MANAGEMENT
   // --------------------------------------------------------------------------
 
+  function clearBotTimers(room) {
+    if (!room.botTimers) return;
+    for (const t of room.botTimers) clearTimeout(t);
+    room.botTimers.clear();
+  }
+
   function clearPhaseTimer(room) {
+    clearBotTimers(room);
     if (room.phaseInterval) {
       clearInterval(room.phaseInterval);
       room.phaseInterval = null;
@@ -1432,7 +1755,10 @@ function createBunkerServer(options = {}) {
   }
 
   function startPhaseTimer(room, seconds, onExpire) {
-    clearPhaseTimer(room);
+    if (room.phaseInterval) {
+      clearInterval(room.phaseInterval);
+      room.phaseInterval = null;
+    }
     room.timerTotal = seconds;
     room.timerSeconds = seconds;
     room.phaseInterval = setInterval(() => {
@@ -1440,6 +1766,7 @@ function createBunkerServer(options = {}) {
         clearPhaseTimer(room);
         return;
       }
+      if (room.paused) return;
       room.timerSeconds -= 1;
       if (room.timerSeconds <= 0) {
         room.timerSeconds = 0;
@@ -1449,15 +1776,16 @@ function createBunkerServer(options = {}) {
         io.to(room.code).emit('timer:tick', {
           timerSeconds: room.timerSeconds,
           timerTotal: room.timerTotal,
-          phase: room.phase
+          phase: room.phase,
+          paused: Boolean(room.paused)
         });
       }
     }, 1000);
   }
 
   function scheduleRoomCleanupIfEmpty(room) {
-    const anyConnected = room.players.some((p) => p.connected);
-    if (anyConnected) {
+    const anyHumanConnected = room.players.some((p) => !p.isBot && p.connected);
+    if (anyHumanConnected) {
       if (room.cleanupTimer) {
         clearTimeout(room.cleanupTimer);
         room.cleanupTimer = null;
@@ -1468,7 +1796,7 @@ function createBunkerServer(options = {}) {
     room.cleanupTimer = setTimeout(() => {
       const current = rooms.get(room.code);
       if (!current) return;
-      const stillEmpty = !current.players.some((p) => p.connected);
+      const stillEmpty = !current.players.some((p) => !p.isBot && p.connected);
       if (stillEmpty) {
         clearAllRoomTimers(current);
         rooms.delete(current.code);
@@ -1484,8 +1812,8 @@ function createBunkerServer(options = {}) {
       if (disconnectedHost.connected || !disconnectedHost.isHost) return;
 
       const candidate =
-        room.players.find((p) => p.connected && p.alive && p.id !== disconnectedHost.id) ||
-        room.players.find((p) => p.connected && p.id !== disconnectedHost.id);
+        room.players.find((p) => !p.isBot && p.connected && p.alive && p.id !== disconnectedHost.id) ||
+        room.players.find((p) => !p.isBot && p.connected && p.id !== disconnectedHost.id);
 
       if (candidate) {
         disconnectedHost.isHost = false;
@@ -1517,12 +1845,16 @@ function createBunkerServer(options = {}) {
     const characterPool = shuffle(CHARACTERS);
     const factPool = shuffle(FACTS);
     const specialPool = shuffle(SPECIAL_CARDS);
+    const goalPool = shuffle(SECRET_GOALS);
 
+    room.paused = false;
     room.players.forEach((player, idx) => {
       player.alive = true;
       player.exiled = false;
       player.revealedThisRound = false;
       player.skipsUsed = 0;
+      player.whispersUsedThisRound = 0;
+      player.everRunoff = false;
       player.extraVotes = 0;
       player.immuneThisRound = false;
       player.quarantinedRound = 0;
@@ -1541,8 +1873,10 @@ function createBunkerServer(options = {}) {
         ...cloneObj(specialPool[idx % specialPool.length]),
         used: false
       };
+      player.secretGoal = cloneObj(goalPool[idx % goalPool.length]);
     });
 
+    const baseDisc = room.settings?.discussionSeconds || discussionSeconds;
     room.game = {
       round: 1,
       bunkerCapacity,
@@ -1553,27 +1887,118 @@ function createBunkerServer(options = {}) {
       votes: new Map(),
       runoffCandidates: [],
       revoteArmed: false,
-      nextDiscussionDuration: discussionSeconds,
+      activeDilemma: null,
+      dilemmaVotes: new Map(),
+      usedDilemmaIds: new Set(),
+      nextDiscussionDuration: baseDisc,
       usedLuggageTitles: new Set(room.players.map((p) => p.traits.luggage.data.title)),
       endSummary: null
     };
   }
 
+  function scheduleBotsForDiscussion(room) {
+    const bots = room.players.filter((p) => p.isBot && p.alive && !p.revealedThisRound);
+    bots.forEach((bot, i) => {
+      const t = setTimeout(() => {
+        if (!rooms.has(room.code) || room.phase !== 'discussion' || room.paused || !bot.alive || bot.revealedThisRound) return;
+        const hiddenKeys = getHiddenTraitKeys(bot);
+        if (hiddenKeys.length === 0) return;
+
+        let pickKey = pickRandom(hiddenKeys);
+        if (room.game.round === 1 && room.settings?.forceProfessionRound1 && !bot.traits.profession.revealed) {
+          pickKey = 'profession';
+        }
+        const card = bot.traits[pickKey];
+        card.revealed = true;
+        bot.revealedThisRound = true;
+        addSystemMessage(room, `${bot.name} раскрыл карту (${TRAIT_LABELS[pickKey]}): «${card.data.title}».`, 'reveal');
+        addDiaryEntry(room, 'Раскрытие карты', `${bot.name} открыл: ${TRAIT_LABELS[pickKey]} — ${card.data.title}.`, 'reveal');
+        if (Math.random() < 0.75) {
+          const msg = {
+            id: generateId(),
+            senderId: bot.id,
+            senderName: bot.name,
+            senderAvatarId: bot.avatarId,
+            senderIsHost: false,
+            senderExiled: false,
+            text: `Моя карта (${TRAIT_LABELS[pickKey].toLowerCase()}) — «${card.data.title}». Это пригодится группе!`,
+            time: formatTimeHHMM(),
+            timestamp: Date.now(),
+            type: 'user',
+            reactions: {}
+          };
+          room.chat.push(msg);
+          if (room.chat.length > 1000) room.chat.shift();
+          io.to(room.code).emit('chat:message', msg);
+        }
+        broadcastRoom(room);
+      }, 900 + i * 350);
+      room.botTimers.add(t);
+    });
+  }
+
+  function scheduleBotsForVoting(room) {
+    const isRunoff = room.phase === 'runoff';
+    const aliveBots = room.players.filter((p) => p.isBot && p.alive && !room.game.votes.has(p.id));
+    aliveBots.forEach((bot, i) => {
+      const t = setTimeout(() => {
+        if (!rooms.has(room.code) || (room.phase !== 'voting' && room.phase !== 'runoff') || room.paused || !bot.alive || room.game.votes.has(bot.id)) return;
+        const pool = (isRunoff ? room.game.runoffCandidates : room.players.filter((p) => p.alive).map((p) => p.id))
+          .filter((id) => id !== bot.id);
+        if (pool.length === 0) return;
+
+        const targetId = pickRandom(pool);
+        room.game.votes.set(bot.id, targetId);
+        addSystemMessage(room, `${bot.name} отправил свой голос.`, 'voting');
+        broadcastRoom(room);
+
+        const aliveCount = room.players.filter((p) => p.alive).length;
+        if (room.game.votes.size >= aliveCount) {
+          resolveVoting(room);
+        }
+      }, 950 + i * 300);
+      room.botTimers.add(t);
+    });
+  }
+
+  function scheduleBotsForDilemma(room) {
+    const aliveBots = room.players.filter((p) => p.isBot && p.alive && !room.game.dilemmaVotes.has(p.id));
+    aliveBots.forEach((bot, i) => {
+      const t = setTimeout(() => {
+        if (!rooms.has(room.code) || room.phase !== 'dilemma' || room.paused || !bot.alive || room.game.dilemmaVotes.has(bot.id)) return;
+        const choice = Math.random() < 0.6 ? 'yes' : 'no';
+        room.game.dilemmaVotes.set(bot.id, choice);
+        broadcastRoom(room);
+
+        const aliveCount = room.players.filter((p) => p.alive).length;
+        if (room.game.dilemmaVotes.size >= aliveCount) {
+          resolveDilemma(room);
+        }
+      }, 700 + i * 250);
+      room.botTimers.add(t);
+    });
+  }
+
   function startDiscussionPhase(room) {
     const game = room.game;
+    clearBotTimers(room);
     room.phase = 'discussion';
+    room.paused = false;
     game.votes.clear();
     game.runoffCandidates = [];
     for (const p of room.players) {
       p.revealedThisRound = false;
+      p.whispersUsedThisRound = 0;
     }
 
-    const duration = game.nextDiscussionDuration || discussionSeconds;
-    game.nextDiscussionDuration = discussionSeconds;
+    const baseDisc = room.settings?.discussionSeconds || discussionSeconds;
+    const duration = game.nextDiscussionDuration || baseDisc;
+    game.nextDiscussionDuration = baseDisc;
 
     addSystemMessage(room, `Раунд ${game.round}: началась фаза обсуждения (${duration} сек.). Раскройте одну свою характеристику.`, 'round');
     addDiaryEntry(room, `Раунд ${game.round}`, `Началось обсуждение. В живых: ${room.players.filter((p) => p.alive).length} чел.`, 'round');
     broadcastRoom(room);
+    scheduleBotsForDiscussion(room);
 
     startPhaseTimer(room, duration, () => {
       if (room.phase === 'discussion') {
@@ -1584,30 +2009,89 @@ function createBunkerServer(options = {}) {
 
   function startVotingPhase(room, runoffCandidateIds = null) {
     const game = room.game;
+    clearBotTimers(room);
     game.votes.clear();
     const isRunoff = Array.isArray(runoffCandidateIds) && runoffCandidateIds.length >= 2;
     room.phase = isRunoff ? 'runoff' : 'voting';
+    room.paused = false;
     game.runoffCandidates = isRunoff ? [...runoffCandidateIds] : [];
+    if (isRunoff) {
+      for (const id of game.runoffCandidates) {
+        const pl = room.players.find((p) => p.id === id);
+        if (pl) pl.everRunoff = true;
+      }
+    }
 
+    const voteDuration = room.settings?.votingSeconds || votingSeconds;
     if (isRunoff) {
       const names = game.runoffCandidates
         .map((id) => room.players.find((p) => p.id === id)?.name)
         .filter(Boolean)
         .join(', ');
-      addSystemMessage(room, `Ничья! Запущено повторное голосование между кандидатами: ${names} (${votingSeconds} сек.).`, 'voting');
+      addSystemMessage(room, `Ничья! Запущено повторное голосование между кандидатами: ${names} (${voteDuration} сек.).`, 'voting');
       addDiaryEntry(room, 'Повторное голосование', `Кандидаты: ${names}.`, 'vote');
     } else {
-      addSystemMessage(room, `Раунд ${game.round}: началось голосование за изгнание (${votingSeconds} сек.).`, 'voting');
+      addSystemMessage(room, `Раунд ${game.round}: началось голосование за изгнание (${voteDuration} сек.).`, 'voting');
       addDiaryEntry(room, 'Голосование', `Открыт приём голосов в раунде ${game.round}.`, 'vote');
     }
 
     broadcastRoom(room);
+    scheduleBotsForVoting(room);
 
-    startPhaseTimer(room, votingSeconds, () => {
+    startPhaseTimer(room, voteDuration, () => {
       if (room.phase === 'voting' || room.phase === 'runoff') {
         resolveVoting(room);
       }
     });
+  }
+
+  function startDilemmaPhase(room) {
+    const game = room.game;
+    clearBotTimers(room);
+    const pool = DILEMMAS.filter((d) => !game.usedDilemmaIds.has(d.id));
+    const chosen = pickRandom(pool.length > 0 ? pool : DILEMMAS);
+    game.usedDilemmaIds.add(chosen.id);
+    game.activeDilemma = chosen;
+    game.dilemmaVotes = new Map();
+    room.phase = 'dilemma';
+    room.paused = false;
+
+    addSystemMessage(room, `Межраундовая дилемма: «${chosen.title}» — выберите решение группой (${dilemmaSeconds} сек.).`, 'event');
+    broadcastRoom(room);
+    scheduleBotsForDilemma(room);
+
+    startPhaseTimer(room, dilemmaSeconds, () => {
+      if (room.phase === 'dilemma') {
+        resolveDilemma(room);
+      }
+    });
+  }
+
+  function resolveDilemma(room) {
+    clearPhaseTimer(room);
+    const game = room.game;
+    const dilemma = game.activeDilemma;
+    if (!dilemma) {
+      startDiscussionPhase(room);
+      return;
+    }
+
+    let yesCount = 0;
+    let noCount = 0;
+    for (const v of game.dilemmaVotes.values()) {
+      if (v === 'yes') yesCount += 1;
+      else if (v === 'no') noCount += 1;
+    }
+
+    const accepted = yesCount > noCount;
+    const outcomeText = accepted ? dilemma.resolveYes(game, room) : dilemma.resolveNo(game, room);
+    const decisionLabel = accepted ? dilemma.yesLabel : dilemma.noLabel;
+    game.activeDilemma = null;
+    game.dilemmaVotes.clear();
+
+    addSystemMessage(room, `Решение по дилемме «${dilemma.title}» (${decisionLabel}, ЗА: ${yesCount} / ПРОТИВ: ${noCount}): ${outcomeText}`, 'event');
+    addDiaryEntry(room, `Дилемма: ${dilemma.title}`, `${decisionLabel}. ${outcomeText}`, 'event');
+    startDiscussionPhase(room);
   }
 
   function resolveVoting(room) {
@@ -1786,12 +2270,17 @@ function createBunkerServer(options = {}) {
 
     game.round += 1;
 
-    // Trigger a random event between rounds
-    if (!disableRandomEvents) {
+    // Trigger a random event between rounds if enabled
+    if (room.settings?.enableRandomEvents && !disableRandomEvents) {
       const event = pickRandom(RANDOM_EVENTS);
       const outcomeText = event.effect(game, room);
       addSystemMessage(room, `Событие перед раундом ${game.round}: «${event.title}» — ${event.description} ${outcomeText}`, 'event');
       addDiaryEntry(room, `Событие: ${event.title}`, `${event.description} ${outcomeText}`, 'event');
+    }
+
+    if (room.settings?.enableDilemmas && !disableDilemmas) {
+      startDilemmaPhase(room);
+      return;
     }
 
     startDiscussionPhase(room);
@@ -1801,14 +2290,26 @@ function createBunkerServer(options = {}) {
     clearPhaseTimer(room);
     const game = room.game;
     room.phase = 'ended';
+    room.paused = false;
     room.timerSeconds = 0;
     room.timerTotal = 0;
 
     for (const p of room.players) {
+      p._factRevealedBeforeEnd = Boolean(p.traits?.fact?.revealed);
       for (const k of TRAIT_KEYS) {
         p.traits[k].revealed = true;
       }
     }
+
+    const survivalReport = evaluateBunkerSurvival(room);
+    const goalResults = room.settings?.enableSecretRoles
+      ? room.players.map((p) => ({
+          playerId: p.id,
+          name: p.name,
+          avatarId: p.avatarId,
+          ...evaluateSecretGoal(p, room, survivalReport)
+        }))
+      : [];
 
     const survivors = room.players.filter((p) => p.alive).map((p) => ({ id: p.id, name: p.name, avatarId: p.avatarId }));
     const exiled = room.players.filter((p) => !p.alive).map((p) => ({ id: p.id, name: p.name, avatarId: p.avatarId }));
@@ -1817,11 +2318,13 @@ function createBunkerServer(options = {}) {
       survivors,
       exiled,
       rounds: game.round,
-      totalVotes: game.votingHistory.length
+      totalVotes: game.votingHistory.length,
+      survivalReport,
+      goalResults
     };
 
-    addSystemMessage(room, `Игра завершилась! ВЫЖИВАНИЕ УСПЕШНО! Выжившие: ${survivors.map((s) => s.name).join(', ')}.`, 'gameover');
-    addDiaryEntry(room, 'Финал партии', `Бункер закрыл гермодвери. Выжило ${survivors.length} из ${room.players.length} участников.`, 'end');
+    addSystemMessage(room, `Игра завершилась! ${survivalReport.verdictTitle} (${survivalReport.score}%). Выжившие: ${survivors.map((s) => s.name).join(', ')}.`, 'gameover');
+    addDiaryEntry(room, 'Финал партии', `Бункер закрыл гермодвери. ${survivalReport.verdictTitle} (${survivalReport.score}%). Выжило ${survivors.length} из ${room.players.length} участников.`, 'end');
     broadcastRoom(room);
   }
 
@@ -2154,6 +2657,7 @@ function createBunkerServer(options = {}) {
         name: nameCheck.name,
         avatarId,
         isHost: true,
+        isBot: false,
         connected: true,
         ready: true,
         alive: true,
@@ -2161,17 +2665,30 @@ function createBunkerServer(options = {}) {
         disconnectedAt: null,
         revealedThisRound: false,
         skipsUsed: 0,
+        whispersUsedThisRound: 0,
+        everRunoff: false,
         extraVotes: 0,
         immuneThisRound: false,
         quarantinedRound: 0,
         redirectTargetId: null,
         traits: null,
-        specialCard: null
+        specialCard: null,
+        secretGoal: null
       };
 
       const room = {
         code,
         phase: 'lobby',
+        paused: false,
+        settings: validateRoomSettings({}, {
+          discussionSeconds,
+          votingSeconds,
+          maxSkips: 3,
+          forceProfessionRound1: false,
+          enableRandomEvents: !disableRandomEvents,
+          enableDilemmas: !disableDilemmas,
+          enableSecretRoles: true
+        }),
         hostId: playerId,
         players: [hostPlayer],
         chat: [],
@@ -2179,6 +2696,7 @@ function createBunkerServer(options = {}) {
         timerSeconds: 0,
         timerTotal: 0,
         phaseInterval: null,
+        botTimers: new Set(),
         hostMigrationTimer: null,
         cleanupTimer: null
       };
@@ -2239,6 +2757,7 @@ function createBunkerServer(options = {}) {
         name: nameCheck.name,
         avatarId,
         isHost: false,
+        isBot: false,
         connected: true,
         ready: false,
         alive: true,
@@ -2246,12 +2765,15 @@ function createBunkerServer(options = {}) {
         disconnectedAt: null,
         revealedThisRound: false,
         skipsUsed: 0,
+        whispersUsedThisRound: 0,
+        everRunoff: false,
         extraVotes: 0,
         immuneThisRound: false,
         quarantinedRound: 0,
         redirectTargetId: null,
         traits: null,
-        specialCard: null
+        specialCard: null,
+        secretGoal: null
       };
 
       room.players.push(newPlayer);
@@ -2436,6 +2958,102 @@ function createBunkerServer(options = {}) {
       ack({ ok: true });
     });
 
+    socket.on('lobby:setAvatar', (payload, cb) => {
+      const ack = typeof cb === 'function' ? cb : () => {};
+      if (!allowSocketAction(socket, 'avatar', 150)) return ack({ ok: false, error: 'Подождите секунду.' });
+      const ctx = getSessionContext(socket);
+      if (!ctx) return ack({ ok: false, error: 'Вы не в комнате.' });
+      const { room, player } = ctx;
+      if (room.phase !== 'lobby') return ack({ ok: false, error: 'Аватар можно сменить только в лобби.' });
+
+      const avatarId = Number(payload?.avatarId);
+      if (!Number.isInteger(avatarId) || avatarId < 0 || avatarId > 9) {
+        return ack({ ok: false, error: 'Некорректный выбор аватара.' });
+      }
+      player.avatarId = avatarId;
+      broadcastRoom(room);
+      ack({ ok: true, avatarId });
+    });
+
+    socket.on('lobby:updateSettings', (payload, cb) => {
+      const ack = typeof cb === 'function' ? cb : () => {};
+      if (!allowSocketAction(socket, 'settings', 150)) return ack({ ok: false, error: 'Подождите секунду.' });
+      const ctx = getSessionContext(socket);
+      if (!ctx) return ack({ ok: false, error: 'Вы не в комнате.' });
+      const { room, player } = ctx;
+      if (!player.isHost) return ack({ ok: false, error: 'Только хост может менять настройки.' });
+      if (room.phase !== 'lobby') return ack({ ok: false, error: 'Настройки доступны только в лобби.' });
+
+      room.settings = validateRoomSettings(payload, room.settings);
+      broadcastRoom(room);
+      ack({ ok: true, settings: room.settings });
+    });
+
+    socket.on('lobby:addBot', (_payload, cb) => {
+      const ack = typeof cb === 'function' ? cb : () => {};
+      if (!allowSocketAction(socket, 'bot', 200)) return ack({ ok: false, error: 'Подождите секунду.' });
+      const ctx = getSessionContext(socket);
+      if (!ctx) return ack({ ok: false, error: 'Вы не в комнате.' });
+      const { room, player } = ctx;
+      if (!player.isHost) return ack({ ok: false, error: 'Только хост может добавлять ботов.' });
+      if (room.phase !== 'lobby') return ack({ ok: false, error: 'Ботов можно добавлять только в лобби.' });
+      if (room.players.length >= 10) return ack({ ok: false, error: 'Комната заполнена (максимум 10 игроков).' });
+
+      const usedNames = new Set(room.players.map((p) => p.name.toLowerCase()));
+      const freeName = BOT_NAMES.find((n) => !usedNames.has(n.toLowerCase())) || `Бот_${room.players.length + 1}`;
+      const usedAvatars = new Set(room.players.map((p) => p.avatarId));
+      const freeAvatars = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].filter((a) => !usedAvatars.has(a));
+      const avatarId = freeAvatars.length > 0 ? pickRandom(freeAvatars) : room.players.length % 10;
+
+      const bot = {
+        id: generateId(),
+        token: generateToken(),
+        socketId: null,
+        name: freeName,
+        avatarId,
+        isHost: false,
+        isBot: true,
+        connected: true,
+        ready: true,
+        alive: true,
+        exiled: false,
+        disconnectedAt: null,
+        revealedThisRound: false,
+        skipsUsed: 0,
+        whispersUsedThisRound: 0,
+        everRunoff: false,
+        extraVotes: 0,
+        immuneThisRound: false,
+        quarantinedRound: 0,
+        redirectTargetId: null,
+        traits: null,
+        specialCard: null,
+        secretGoal: null
+      };
+      room.players.push(bot);
+      addSystemMessage(room, `К лобби подключён автопилот ${bot.name}.`, 'join');
+      broadcastRoom(room);
+      ack({ ok: true, botId: bot.id });
+    });
+
+    socket.on('lobby:removeBot', (payload, cb) => {
+      const ack = typeof cb === 'function' ? cb : () => {};
+      if (!allowSocketAction(socket, 'bot', 200)) return ack({ ok: false, error: 'Подождите секунду.' });
+      const ctx = getSessionContext(socket);
+      if (!ctx) return ack({ ok: false, error: 'Вы не в комнате.' });
+      const { room, player } = ctx;
+      if (!player.isHost) return ack({ ok: false, error: 'Только хост может убирать ботов.' });
+      if (room.phase !== 'lobby') return ack({ ok: false, error: 'Убирать ботов можно только в лобби.' });
+
+      const targetId = sanitizeText(payload?.targetId, 64);
+      const idx = room.players.findIndex((p) => p.id === targetId && p.isBot);
+      if (idx === -1) return ack({ ok: false, error: 'Бот не найден.' });
+      const [removed] = room.players.splice(idx, 1);
+      addSystemMessage(room, `${removed.name} удалён из лобби.`, 'leave');
+      broadcastRoom(room);
+      ack({ ok: true });
+    });
+
     socket.on('game:revealTrait', (payload, cb) => {
       const ack = typeof cb === 'function' ? cb : () => {};
       if (!allowSocketAction(socket, 'reveal', 200)) return ack({ ok: false, error: 'Подождите секунду.' });
@@ -2454,6 +3072,10 @@ function createBunkerServer(options = {}) {
       const traitKey = sanitizeText(payload?.traitKey, 32);
       if (!TRAIT_KEYS.includes(traitKey)) {
         return ack({ ok: false, error: 'Неизвестная категория характеристики.' });
+      }
+
+      if (room.game.round === 1 && room.settings?.forceProfessionRound1 && !player.traits.profession.revealed && traitKey !== 'profession') {
+        return ack({ ok: false, error: 'По настройкам комнаты в 1-м раунде нужно сначала открыть «Профессию».' });
       }
 
       const card = player.traits[traitKey];
@@ -2558,8 +3180,9 @@ function createBunkerServer(options = {}) {
       if (room.game.votes.has(player.id)) {
         return ack({ ok: false, error: 'Вы уже сделали выбор в этом голосовании.' });
       }
-      if ((player.skipsUsed || 0) >= MAX_VOTE_SKIPS) {
-        return ack({ ok: false, error: 'Вы уже использовали все 3 пропуска голосования за игру.' });
+      const maxSkips = room.settings?.maxSkips ?? 3;
+      if ((player.skipsUsed || 0) >= maxSkips) {
+        return ack({ ok: false, error: maxSkips === 0 ? 'В этой партии пропуск голоса отключён настройками.' : `Вы уже использовали все ${maxSkips} пропуска голосования за игру.` });
       }
 
       player.skipsUsed = (player.skipsUsed || 0) + 1;
@@ -2572,7 +3195,57 @@ function createBunkerServer(options = {}) {
         resolveVoting(room);
       }
 
-      ack({ ok: true, skipsRemaining: Math.max(0, MAX_VOTE_SKIPS - player.skipsUsed) });
+      ack({ ok: true, skipsRemaining: Math.max(0, maxSkips - player.skipsUsed) });
+    });
+
+    socket.on('game:togglePause', (_payload, cb) => {
+      const ack = typeof cb === 'function' ? cb : () => {};
+      if (!allowSocketAction(socket, 'pause', 200)) return ack({ ok: false, error: 'Подождите секунду.' });
+      const ctx = getSessionContext(socket);
+      if (!ctx) return ack({ ok: false, error: 'Вы не в комнате.' });
+      const { room, player } = ctx;
+      if (!player.isHost) return ack({ ok: false, error: 'Только хост может ставить игру на паузу.' });
+      if (!['discussion', 'voting', 'runoff', 'dilemma'].includes(room.phase)) {
+        return ack({ ok: false, error: 'Пауза доступна только во время активного раунда.' });
+      }
+      room.paused = !room.paused;
+      addSystemMessage(room, room.paused ? `Хост ${player.name} поставил игру на паузу.` : `Хост ${player.name} снял паузу.`);
+      broadcastRoom(room);
+      ack({ ok: true, paused: room.paused });
+    });
+
+    socket.on('game:voteDilemma', (payload, cb) => {
+      const ack = typeof cb === 'function' ? cb : () => {};
+      if (!allowSocketAction(socket, 'dilemma', 200)) return ack({ ok: false, error: 'Подождите секунду.' });
+      const ctx = getSessionContext(socket);
+      if (!ctx) return ack({ ok: false, error: 'Вы не в комнате.' });
+      const { room, player } = ctx;
+      if (room.phase !== 'dilemma') return ack({ ok: false, error: 'Сейчас нет активной дилеммы.' });
+      if (!player.alive) return ack({ ok: false, error: 'Наблюдатели не голосуют в дилеммах.' });
+      const choice = payload?.choice === 'yes' ? 'yes' : payload?.choice === 'no' ? 'no' : null;
+      if (!choice) return ack({ ok: false, error: 'Выберите ЗА или ПРОТИВ.' });
+      if (room.game.dilemmaVotes.has(player.id)) return ack({ ok: false, error: 'Ваш голос уже учтён.' });
+
+      room.game.dilemmaVotes.set(player.id, choice);
+      broadcastRoom(room);
+
+      const aliveCount = room.players.filter((p) => p.alive).length;
+      if (room.game.dilemmaVotes.size >= aliveCount) {
+        resolveDilemma(room);
+      }
+      ack({ ok: true, choice });
+    });
+
+    socket.on('game:endDilemma', (_payload, cb) => {
+      const ack = typeof cb === 'function' ? cb : () => {};
+      if (!allowSocketAction(socket, 'endDilemma', 100)) return ack({ ok: false, error: 'Подождите секунду.' });
+      const ctx = getSessionContext(socket);
+      if (!ctx) return ack({ ok: false, error: 'Вы не в комнате.' });
+      const { room, player } = ctx;
+      if (!player.isHost) return ack({ ok: false, error: 'Только хост может завершить дилемму досрочно.' });
+      if (room.phase !== 'dilemma') return ack({ ok: false, error: 'Сейчас нет активной дилеммы.' });
+      resolveDilemma(room);
+      ack({ ok: true });
     });
 
     socket.on('game:endVoting', (_payload, cb) => {
@@ -2636,7 +3309,11 @@ function createBunkerServer(options = {}) {
         p.immuneThisRound = false;
         p.quarantinedRound = 0;
         p.redirectTargetId = null;
+        p.whispersUsedThisRound = 0;
+        p.everRunoff = false;
+        p.secretGoal = null;
       }
+      room.paused = false;
 
       addSystemMessage(room, 'Комната возвращена в лобби. Ожидаем старта новой игры.');
       broadcastRoom(room);
@@ -2665,12 +3342,89 @@ function createBunkerServer(options = {}) {
         text: parsed.text,
         time: formatTimeHHMM(),
         timestamp: Date.now(),
-        type: 'user'
+        type: 'user',
+        reactions: {}
       };
       room.chat.push(msg);
       if (room.chat.length > 1000) room.chat.shift();
       io.to(room.code).emit('chat:message', msg);
       ack({ ok: true, message: msg });
+    });
+
+    socket.on('chat:react', (payload, cb) => {
+      const ack = typeof cb === 'function' ? cb : () => {};
+      if (!allowSocketAction(socket, 'react', 150)) return ack({ ok: false, error: 'Подождите секунду.' });
+      const ctx = getSessionContext(socket);
+      if (!ctx) return ack({ ok: false, error: 'Вы не в комнате.' });
+      const { room, player } = ctx;
+
+      const msgId = sanitizeText(payload?.messageId, 64);
+      const emoji = typeof payload?.emoji === 'string' ? payload.emoji.trim() : '';
+      if (!ALLOWED_REACTIONS.includes(emoji)) {
+        return ack({ ok: false, error: 'Недопустимая реакция.' });
+      }
+      const msg = room.chat.find((m) => m.id === msgId);
+      if (!msg) return ack({ ok: false, error: 'Сообщение не найдено.' });
+
+      if (!msg.reactions) msg.reactions = {};
+      if (!Array.isArray(msg.reactions[emoji])) msg.reactions[emoji] = [];
+
+      const idx = msg.reactions[emoji].indexOf(player.id);
+      if (idx === -1) msg.reactions[emoji].push(player.id);
+      else msg.reactions[emoji].splice(idx, 1);
+
+      io.to(room.code).emit('chat:reactionUpdate', {
+        messageId: msg.id,
+        reactions: msg.reactions
+      });
+      ack({ ok: true, reactions: msg.reactions });
+    });
+
+    socket.on('chat:whisper', (payload, cb) => {
+      const ack = typeof cb === 'function' ? cb : () => {};
+      if (!allowSocketAction(socket, 'whisper', 400)) return ack({ ok: false, error: 'Подождите секунду.' });
+      const ctx = getSessionContext(socket);
+      if (!ctx) return ack({ ok: false, error: 'Вы не в комнате.' });
+      const { room, player } = ctx;
+
+      if (room.phase === 'lobby' || room.phase === 'ended') {
+        return ack({ ok: false, error: 'Тайный шёпот доступен только во время активной партии.' });
+      }
+      if (!player.alive) {
+        return ack({ ok: false, error: 'Изгнанные наблюдатели не могут шептаться с живыми.' });
+      }
+      if ((player.whispersUsedThisRound || 0) >= MAX_WHISPERS_PER_ROUND) {
+        return ack({ ok: false, error: `В этом раунде уже использованы все ${MAX_WHISPERS_PER_ROUND} тайных сообщения.` });
+      }
+
+      const targetId = sanitizeText(payload?.targetId, 64);
+      const target = room.players.find((p) => p.id === targetId && p.alive && p.id !== player.id);
+      if (!target) {
+        return ack({ ok: false, error: 'Выберите живого собеседника для шёпота.' });
+      }
+
+      const parsed = sanitizeChatMessage(payload?.text, 300);
+      if (!parsed.valid) return ack({ ok: false, error: parsed.error });
+
+      player.whispersUsedThisRound = (player.whispersUsedThisRound || 0) + 1;
+      const whisperMsg = {
+        id: generateId(),
+        senderId: player.id,
+        senderName: player.name,
+        targetId: target.id,
+        targetName: target.name,
+        text: parsed.text,
+        time: formatTimeHHMM(),
+        timestamp: Date.now(),
+        type: 'whisper'
+      };
+
+      if (player.socketId) io.to(player.socketId).emit('chat:whisperMessage', whisperMsg);
+      if (target.socketId) io.to(target.socketId).emit('chat:whisperMessage', whisperMsg);
+      if (player.socketId) io.to(player.socketId).emit('player:private', getPrivatePlayerState(room, player));
+
+      addSystemMessage(room, `${player.name} и ${target.name} о чём-то тихо перешёптываются...`, 'system');
+      ack({ ok: true, whisper: whisperMsg, whispersRemaining: MAX_WHISPERS_PER_ROUND - player.whispersUsedThisRound });
     });
 
     socket.on('disconnect', () => {
@@ -2743,11 +3497,16 @@ module.exports = {
   FACTS,
   SPECIAL_CARDS,
   RANDOM_EVENTS,
+  DILEMMAS,
+  SECRET_GOALS,
   TRAIT_KEYS,
   TRAIT_LABELS,
   CODE_ALPHABET,
   computeBunkerCapacity,
   validatePlayerName,
+  validateRoomSettings,
+  evaluateBunkerSurvival,
+  evaluateSecretGoal,
   sanitizeChatMessage,
   checkChatFlood
 };

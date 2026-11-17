@@ -293,10 +293,10 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-2 sm:gap-3">
-        <div id="hud-phase-wrap" class="flex items-center gap-2 bg-bunker-metal border border-bunker-border px-2.5 py-1">
-          <span id="hud-phase-label" class="text-xs font-mono font-bold text-bunker-yellow uppercase whitespace-nowrap">ЛОББИ</span>
-          <span id="hud-timer" class="hidden font-pixel text-xs sm:text-sm text-bunker-amber tabular-nums">00:00</span>
+      <div class="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2.5">
+        <div id="hud-phase-wrap" class="flex items-center gap-1.5 sm:gap-2 bg-bunker-metal border border-bunker-border px-2 py-1">
+          <span id="hud-phase-label" class="text-[11px] sm:text-xs font-mono font-bold text-bunker-yellow uppercase whitespace-nowrap">ЛОББИ</span>
+          <span id="hud-timer" class="hidden font-pixel text-[11px] sm:text-sm text-bunker-amber tabular-nums">00:00</span>
         </div>
 
         <div id="hud-conn" class="flex items-center gap-1.5 text-xs font-mono px-2 py-1 bg-bunker-panel border border-bunker-border" title="Статус подключения к серверу">
@@ -304,15 +304,19 @@
           <span id="hud-conn-text" class="hidden sm:inline text-bunker-muted">ОНЛАЙН</span>
         </div>
 
-        <button id="btn-hud-rules" type="button" class="pixel-btn pixel-btn-steel px-2.5 py-1.5 text-xs font-mono min-h-[36px]" aria-label="Открыть правила игры">
+        <button id="btn-hud-rules" type="button" class="pixel-btn pixel-btn-steel px-2 py-1 sm:px-2.5 sm:py-1.5 text-[11px] sm:text-xs font-mono min-h-[34px] sm:min-h-[36px] whitespace-nowrap" aria-label="Открыть правила игры">
           ПРАВИЛА
         </button>
 
-        <button id="btn-sound-toggle" type="button" class="pixel-btn pixel-btn-steel px-2.5 py-1.5 text-xs font-mono flex items-center gap-1.5 min-h-[36px]" aria-label="Переключить звук">
+        <button id="btn-toggle-ambient" type="button" class="pixel-btn pixel-btn-steel px-2 py-1 sm:px-2.5 sm:py-1.5 text-[11px] sm:text-xs font-mono min-h-[34px] sm:min-h-[36px] whitespace-nowrap" aria-label="Переключить эмбиент бункера">
+          <span id="ambient-icon">ЭМБИЕНТ: ВЫКЛ</span>
+        </button>
+
+        <button id="btn-sound-toggle" type="button" class="pixel-btn pixel-btn-steel px-2 py-1 sm:px-2.5 sm:py-1.5 text-[11px] sm:text-xs font-mono flex items-center gap-1.5 min-h-[34px] sm:min-h-[36px] whitespace-nowrap" aria-label="Переключить звук">
           <span id="sound-icon">ЗВУК: ВКЛ</span>
         </button>
 
-        <button id="btn-leave-room" type="button" class="pixel-btn pixel-btn-steel px-2.5 py-1.5 text-xs font-mono min-h-[36px] text-red-300 hover:text-red-200" aria-label="Выйти из комнаты">
+        <button id="btn-leave-room" type="button" class="pixel-btn pixel-btn-steel px-2 py-1 sm:px-2.5 sm:py-1.5 text-[11px] sm:text-xs font-mono min-h-[34px] sm:min-h-[36px] text-red-300 hover:text-red-200 whitespace-nowrap" aria-label="Выйти из комнаты">
           ВЫЙТИ
         </button>
       </div>
@@ -430,13 +434,18 @@
               </div>
             </div>
 
-            <div class="mt-6 pt-4 border-t border-bunker-steel flex items-center justify-between gap-3">
+            <div class="mt-6 pt-4 border-t border-bunker-steel flex flex-wrap items-center justify-between gap-2">
               <button id="btn-open-rules" type="button" class="pixel-btn pixel-btn-steel px-3 py-2 text-xs font-mono min-h-[44px]">
                 Краткие правила
               </button>
-              <button id="btn-title-sound" type="button" class="pixel-btn pixel-btn-steel px-3 py-2 text-xs font-mono min-h-[44px]">
-                Звук: ВКЛ
-              </button>
+              <div class="flex items-center gap-2">
+                <button id="btn-title-ambient" type="button" class="pixel-btn pixel-btn-steel px-3 py-2 text-xs font-mono min-h-[44px]">
+                  Эмбиент: ВЫКЛ
+                </button>
+                <button id="btn-title-sound" type="button" class="pixel-btn pixel-btn-steel px-3 py-2 text-xs font-mono min-h-[44px]">
+                  Звук: ВКЛ
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -483,8 +492,78 @@
 
             <div id="lobby-error" role="alert" class="hidden mt-4 p-3 bg-red-950/80 border-2 border-red-500 text-red-200 text-sm"></div>
 
+            <!-- Avatar Picker -->
+            <div class="mt-4 p-3 bg-[#101418] border border-bunker-steel">
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="text-xs font-mono uppercase text-bunker-amber font-semibold">Ваш аватар</span>
+                <span class="text-[11px] font-mono text-bunker-muted">Нажмите, чтобы выбрать облик</span>
+              </div>
+              <div id="lobby-avatar-picker" class="grid grid-cols-5 sm:grid-cols-10 gap-2"></div>
+            </div>
+
+            <!-- Players Header & Host Bot Button -->
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xs font-mono uppercase text-bunker-muted">Список претендентов</span>
+              <button id="btn-add-bot" type="button" class="hidden pixel-btn pixel-btn-steel px-3 py-1.5 text-xs font-mono text-bunker-amber min-h-[38px]">
+                + Добавить бота
+              </button>
+            </div>
+
             <!-- Player list -->
-            <div id="lobby-players-list" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+            <div id="lobby-players-list" class="mt-2.5 grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+
+            <!-- Room Settings Panel -->
+            <div id="lobby-settings-panel" class="mt-4 p-3.5 bg-[#101418] border border-bunker-steel space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-bunker-steel/70 pb-2">
+                <span class="text-xs font-mono uppercase text-bunker-amber font-semibold">Параметры партии</span>
+                <span id="lobby-settings-badge" class="text-[11px] font-mono text-bunker-muted">Только хост может менять</span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                <div>
+                  <label for="set-disc-sec" class="block font-mono text-bunker-muted mb-1">Обсуждение</label>
+                  <select id="set-disc-sec" class="w-full bg-[#0b0d0f] border border-bunker-border px-2.5 py-2 text-bunker-text font-mono min-h-[40px]">
+                    <option value="60">60 сек.</option>
+                    <option value="120">120 сек.</option>
+                    <option value="180">180 сек.</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="set-vote-sec" class="block font-mono text-bunker-muted mb-1">Голосование</label>
+                  <select id="set-vote-sec" class="w-full bg-[#0b0d0f] border border-bunker-border px-2.5 py-2 text-bunker-text font-mono min-h-[40px]">
+                    <option value="30">30 сек.</option>
+                    <option value="45">45 сек.</option>
+                    <option value="60">60 сек.</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="set-max-skips" class="block font-mono text-bunker-muted mb-1">Скипов за игру</label>
+                  <select id="set-max-skips" class="w-full bg-[#0b0d0f] border border-bunker-border px-2.5 py-2 text-bunker-text font-mono min-h-[40px]">
+                    <option value="0">0 (отключены)</option>
+                    <option value="1">1 пропуск</option>
+                    <option value="2">2 пропуска</option>
+                    <option value="3">3 пропуска</option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                <label class="flex items-center gap-2 cursor-pointer select-none p-1.5 bg-[#0d1013] border border-bunker-steel/60">
+                  <input id="set-force-prof" type="checkbox" class="w-4 h-4 accent-amber-500" />
+                  <span class="text-gray-200">1-й раунд: обязательна Профессия</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none p-1.5 bg-[#0d1013] border border-bunker-steel/60">
+                  <input id="set-events" type="checkbox" class="w-4 h-4 accent-amber-500" />
+                  <span class="text-gray-200">Случайные события между раундами</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none p-1.5 bg-[#0d1013] border border-bunker-steel/60">
+                  <input id="set-dilemmas" type="checkbox" class="w-4 h-4 accent-amber-500" />
+                  <span class="text-gray-200">Межраундовые дилеммы (ЗА / ПРОТИВ)</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none p-1.5 bg-[#0d1013] border border-bunker-steel/60">
+                  <input id="set-secret-roles" type="checkbox" class="w-4 h-4 accent-amber-500" />
+                  <span class="text-gray-200">Тайные личные цели игроков</span>
+                </label>
+              </div>
+            </div>
 
             <!-- Action bar -->
             <div class="mt-6 pt-4 border-t border-bunker-steel flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
@@ -684,26 +763,59 @@
       <div id="phase-panel" class="pixel-panel p-3.5 sm:p-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <div class="flex items-center gap-2.5">
+            <div class="flex items-center gap-2.5 flex-wrap">
               <span id="phase-title" class="font-pixel text-xs sm:text-sm text-bunker-amber">ФАЗА ОБСУЖДЕНИЯ</span>
               <span id="phase-timer-inline" class="font-mono text-sm font-bold text-bunker-text tabular-nums">120с</span>
+              <span id="phase-paused-badge" class="hidden bg-amber-950 border border-bunker-amber text-bunker-amber px-2 py-0.5 text-[11px] font-mono font-bold">ПАУЗА</span>
             </div>
             <p id="phase-subtitle" class="mt-1 text-xs sm:text-sm text-bunker-muted"></p>
           </div>
 
           <!-- Host Phase Controls -->
           <div id="host-phase-controls" class="hidden flex flex-wrap gap-2">
-            <button id="btn-host-end-discussion" type="button" class="hidden pixel-btn pixel-btn-amber px-4 py-2.5 text-xs font-mono">
+            <button id="btn-host-pause" type="button" class="hidden pixel-btn pixel-btn-steel px-3.5 py-2 text-xs font-mono">
+              ПАУЗА
+            </button>
+            <button id="btn-host-end-discussion" type="button" class="hidden pixel-btn pixel-btn-amber px-4 py-2 text-xs font-mono">
               Перейти к голосованию
             </button>
-            <button id="btn-host-end-voting" type="button" class="hidden pixel-btn pixel-btn-danger px-4 py-2.5 text-xs font-mono">
+            <button id="btn-host-end-dilemma" type="button" class="hidden pixel-btn pixel-btn-amber px-4 py-2 text-xs font-mono">
+              Подвести итог дилеммы
+            </button>
+            <button id="btn-host-end-voting" type="button" class="hidden pixel-btn pixel-btn-danger px-4 py-2 text-xs font-mono">
               Завершить голосование
             </button>
           </div>
         </div>
 
+        <!-- Paused Banner -->
+        <div id="phase-paused-banner" class="hidden mt-3 p-2.5 border-2 border-bunker-amber bg-amber-950/35 text-xs sm:text-sm text-amber-100 font-mono">
+          ТАЙМЕР НА ПАУЗЕ — Хост временно остановил отсчёт времени.
+        </div>
+
         <!-- Clear Step-by-Step Action Guide -->
         <div id="phase-action-guide" class="mt-3 p-2.5 border border-bunker-amber/50 bg-amber-950/20 text-xs sm:text-sm text-amber-100 flex items-center gap-2"></div>
+
+        <!-- Active Dilemma Zone -->
+        <div id="dilemma-zone" class="hidden mt-4 pt-4 border-t border-bunker-steel space-y-3">
+          <div class="hazard-bar"></div>
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 id="dilemma-title" class="font-bold text-base text-bunker-amber"></h3>
+            <span id="dilemma-progress" class="text-xs font-mono text-bunker-muted tabular-nums">Решений: 0 / 0</span>
+          </div>
+          <p id="dilemma-desc" class="text-sm text-gray-200 leading-relaxed"></p>
+          <div id="dilemma-status-note" class="hidden p-2.5 bg-emerald-950/40 border border-emerald-700 text-emerald-200 text-xs sm:text-sm"></div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button id="btn-dilemma-yes" type="button" class="pixel-btn pixel-btn-green px-4 py-3 text-xs sm:text-sm font-mono text-left flex items-center justify-between gap-2">
+              <span id="dilemma-yes-label">ЗА</span>
+              <span id="dilemma-yes-count" class="bg-black/40 border border-emerald-400/50 px-2 py-0.5 tabular-nums shrink-0">0</span>
+            </button>
+            <button id="btn-dilemma-no" type="button" class="pixel-btn pixel-btn-danger px-4 py-3 text-xs sm:text-sm font-mono text-left flex items-center justify-between gap-2">
+              <span id="dilemma-no-label">ПРОТИВ</span>
+              <span id="dilemma-no-count" class="bg-black/40 border border-red-400/50 px-2 py-0.5 tabular-nums shrink-0">0</span>
+            </button>
+          </div>
+        </div>
 
         <!-- Active Voting Grid -->
         <div id="voting-zone" class="hidden mt-4 pt-4 border-t border-bunker-steel">
@@ -713,14 +825,21 @@
             <div id="voting-progress" class="text-xs font-mono text-bunker-amber tabular-nums">Проголосовало: 0 / 0</div>
           </div>
           <div id="voting-status-note" class="hidden mb-3 p-3 bg-emerald-950/40 border border-emerald-700 text-emerald-200 text-sm"></div>
+
+          <!-- Runoff Defense Spotlight -->
+          <div id="runoff-spotlight" class="hidden mb-4 p-3 bg-[#101418] border-2 border-red-700/80 space-y-2.5">
+            <div class="text-xs font-mono font-bold text-red-300 uppercase">Очная ставка — сравнение открытых карт кандидатов:</div>
+            <div id="runoff-spotlight-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+          </div>
+
           <div id="voting-candidates" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
 
-          <!-- Skip Vote Option (max 3 per game) -->
+          <!-- Skip Vote Option -->
           <div id="voting-skip-box" class="mt-3 p-3 bg-[#101418] border-2 border-bunker-steel flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="text-xs sm:text-sm">
               <div class="font-semibold text-bunker-text">Не хотите никого изгонять в этом голосовании?</div>
-              <div class="text-xs text-bunker-muted mt-0.5">
-                Можно воздержаться (скипнуть) до 3 раз за игру. <span id="voting-skip-remaining-label" class="font-mono text-bunker-amber font-bold">Осталось: 3 / 3</span>
+              <div id="voting-skip-desc" class="text-xs text-bunker-muted mt-0.5">
+                Можно воздержаться (скипнуть). <span id="voting-skip-remaining-label" class="font-mono text-bunker-amber font-bold">Осталось: 3 / 3</span>
               </div>
             </div>
             <button
@@ -750,6 +869,20 @@
               <div id="my-buffs-line" class="text-xs font-mono text-bunker-green"></div>
             </div>
 
+            <!-- Secret Personal Goal -->
+            <div id="my-secret-goal-box" class="hidden mt-3 p-3 bg-[#11161c] border-2 border-purple-700/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="text-[11px] font-mono font-bold text-purple-300 uppercase">Тайная цель:</span>
+                  <span id="my-secret-goal-title" class="text-xs sm:text-sm font-bold text-bunker-text"></span>
+                </div>
+                <p id="my-secret-goal-desc" class="mt-0.5 text-xs text-gray-300 leading-snug"></p>
+              </div>
+              <button id="btn-toggle-secret-goal" type="button" class="pixel-btn pixel-btn-steel px-3 py-1.5 text-[11px] font-mono shrink-0 min-h-[36px]">
+                Скрыть от экрана
+              </button>
+            </div>
+
             <!-- 8 Trait Cards -->
             <div id="my-traits-grid" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3"></div>
 
@@ -766,15 +899,26 @@
           <!-- Block: PLAYERS ROSTER -->
           <div class="pixel-panel p-4 sm:p-5">
             <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-bunker-steel">
-              <h2 class="font-pixel text-xs sm:text-sm text-bunker-amber">УЧАСТНИКИ В БУНКЕРЕ</h2>
-              <span class="text-xs font-mono text-bunker-muted">Нажмите на игрока для полного досье</span>
+              <div>
+                <h2 class="font-pixel text-xs sm:text-sm text-bunker-amber">УЧАСТНИКИ В БУНКЕРЕ</h2>
+                <span class="text-xs font-mono text-bunker-muted">Нажмите на игрока для полного досье</span>
+              </div>
+              <div class="flex items-center border border-bunker-border bg-[#0e1114]" role="group" aria-label="Режим отображения игроков">
+                <button id="btn-view-cards" type="button" class="px-3 py-1.5 text-xs font-mono font-bold bg-bunker-amber text-black min-h-[36px]">
+                  Карточки
+                </button>
+                <button id="btn-view-matrix" type="button" class="px-3 py-1.5 text-xs font-mono font-bold text-bunker-muted hover:text-bunker-text min-h-[36px]">
+                  Таблица
+                </button>
+              </div>
             </div>
             <div id="players-grid" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+            <div id="players-matrix" class="hidden mt-4 overflow-x-auto border border-bunker-steel bg-[#0d1013]"></div>
           </div>
         </div>
 
         <!-- Right 4 columns: Chat, Survival Diary, Voting History -->
-        <aside id="game-console-panel" class="hidden xl:flex xl:col-span-4 pixel-panel flex-col h-[calc(100dvh-10.5rem)] min-h-[420px] xl:h-[780px] xl:sticky xl:top-20">
+        <aside id="game-console-panel" class="hidden xl:flex xl:col-span-4 pixel-panel flex-col h-[calc(100dvh-15.5rem)] min-h-[340px] xl:h-[780px] xl:sticky xl:top-20">
           <!-- Segmented Tabs -->
           <div class="grid grid-cols-3 border-b-2 border-bunker-steel bg-[#101316]" role="tablist">
             <button id="tab-btn-chat" type="button" role="tab" aria-selected="true" class="py-3 px-2 font-mono text-xs font-bold border-b-2 border-bunker-amber text-bunker-amber bg-bunker-panel min-h-[44px] flex items-center justify-center gap-1.5">
@@ -797,6 +941,13 @@
             </div>
             <div id="game-chat-messages" role="log" aria-live="polite" class="flex-1 overflow-y-auto p-3 space-y-2.5 text-sm bg-[#0d1013]"></div>
             <form id="game-chat-form" class="p-3 border-t border-bunker-steel space-y-2 bg-[#101316]">
+              <div id="chat-whisper-bar" class="flex items-center justify-between gap-2 text-[11px] font-mono">
+                <label for="chat-whisper-target" class="sr-only">Канал отправки</label>
+                <select id="chat-whisper-target" class="flex-1 bg-[#0b0d0f] border border-bunker-border px-2 py-1.5 text-xs text-bunker-text focus:border-bunker-amber outline-none min-h-[34px]">
+                  <option value="">Всем (общий канал)</option>
+                </select>
+                <span id="chat-whisper-remaining" class="text-purple-300 shrink-0 tabular-nums">Шёпот: 2/2</span>
+              </div>
               <div id="game-chat-error" role="alert" class="hidden text-xs text-red-300 bg-red-950/60 border border-red-600 px-2.5 py-1.5"></div>
               <div class="flex items-end gap-2">
                 <label for="game-chat-input" class="sr-only">Сообщение в игровой чат</label>
@@ -810,7 +961,7 @@
                 <button type="submit" class="pixel-btn pixel-btn-amber px-4 text-xs font-mono min-h-[44px] shrink-0">ОТПР.</button>
               </div>
               <div class="flex items-center justify-between gap-2 text-[11px] font-mono text-bunker-muted">
-                <span class="hidden sm:inline">Enter — отправить · Shift+Enter — перенос</span>
+                <span class="hidden sm:inline">Enter — отпр. · Нажмите на имя для @упоминания</span>
                 <span class="sm:hidden">Shift+Enter — перенос</span>
                 <span id="game-chat-counter" class="tabular-nums shrink-0">0 / 500</span>
               </div>
@@ -870,7 +1021,7 @@
 
           <div class="absolute inset-0 flex flex-col justify-end p-5 sm:p-8">
             <div class="text-xs font-mono uppercase text-bunker-green tracking-widest">Протокол комплектации завершён</div>
-            <h1 class="mt-1 font-pixel text-xl sm:text-3xl lg:text-4xl text-bunker-amber leading-snug">ВЫЖИВАНИЕ УСПЕШНО</h1>
+            <h1 id="end-hero-title" class="mt-1 font-pixel text-xl sm:text-3xl lg:text-4xl text-bunker-amber leading-snug">ВЫЖИВАНИЕ УСПЕШНО</h1>
             <p id="end-subtitle" class="mt-2 text-sm text-gray-200 max-w-2xl"></p>
           </div>
         </div>
@@ -896,6 +1047,25 @@
             </div>
           </div>
 
+          <!-- Final Survival Simulation Report -->
+          <div id="end-survival-report" class="pixel-panel-dark p-4 sm:p-5 border-2 border-bunker-amber/70 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div class="text-[11px] font-mono uppercase text-bunker-muted">Симуляция исхода выживания</div>
+                <h2 id="end-survival-verdict" class="font-pixel text-sm sm:text-base text-bunker-amber mt-1"></h2>
+              </div>
+              <div class="text-left sm:text-right">
+                <div class="text-[11px] font-mono text-bunker-muted">Индекс выживания</div>
+                <div id="end-survival-score" class="font-pixel text-lg sm:text-2xl text-bunker-green tabular-nums">0%</div>
+              </div>
+            </div>
+            <div class="h-2.5 bg-[#090b0d] border border-bunker-steel">
+              <div id="end-survival-bar" class="h-full bg-bunker-green transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <p id="end-survival-summary" class="text-xs sm:text-sm text-gray-200 leading-relaxed"></p>
+            <div id="end-survival-checks" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 text-xs"></div>
+          </div>
+
           <!-- Survivors & Exiled Lists -->
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <div class="pixel-panel-dark p-4 border-emerald-800/70">
@@ -907,6 +1077,12 @@
               <h2 class="font-pixel text-xs text-red-400 mb-3">ИЗГНАННЫЕ НА ПОВЕРХНОСТЬ</h2>
               <div id="end-exiled-list" class="space-y-3"></div>
             </div>
+          </div>
+
+          <!-- Secret Personal Goals Evaluation -->
+          <div id="end-secret-goals-section" class="hidden pixel-panel-dark p-4 border-purple-800/70 space-y-3">
+            <h3 class="font-pixel text-xs text-purple-300">ТАЙНЫЕ ЦЕЛИ ИГРОКОВ</h3>
+            <div id="end-secret-goals-list" class="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs"></div>
           </div>
 
           <!-- Final Disaster & Bunker + Voting History -->
@@ -1027,20 +1203,20 @@
       </div>
       <div class="p-4 sm:p-5 space-y-3 text-sm text-gray-200 overflow-y-auto leading-relaxed">
         <div class="pixel-panel-dark p-3 border-l-4 border-l-bunker-amber">
-          <div class="font-mono text-xs font-bold text-bunker-amber">1. ГЛАВНАЯ ЦЕЛЬ (МЕСТА ОГРАНИЧЕНЫ)</div>
-          <p class="mt-1 text-xs sm:text-sm text-gray-300">Мир пережил катастрофу. В убежище поместится только <strong>половина участников</strong> (с округлением вниз, например 2 из 5 или 3 из 6). Докажите другим игрокам, что именно вы полезны для выживания.</p>
+          <div class="font-mono text-xs font-bold text-bunker-amber">1. ГЛАВНАЯ ЦЕЛЬ И НАСТРОЙКИ</div>
+          <p class="mt-1 text-xs sm:text-sm text-gray-300">Мир пережил катастрофу. В убежище поместится только <strong>половина участников</strong> (с округлением вниз). В лобби хост может выбрать таймеры, лимит пропусков, режим обязательной профессии, ботов и <strong>тайные личные цели</strong>.</p>
         </div>
         <div class="pixel-panel-dark p-3 border-l-4 border-l-sky-400">
-          <div class="font-mono text-xs font-bold text-sky-300">2. ОБСУЖДЕНИЕ (120 СЕК.) И РАСКРЫТИЕ КАРТ</div>
-          <p class="mt-1 text-xs sm:text-sm text-gray-300">В каждом раунде живой игрок должен открыть <strong>1 из 8 своих карт</strong> (Профессия, Биология, Здоровье, Хобби, Фобия, Багаж, Характер или Доп. факт). Убеждайте, блефуйте и спорьте в чате, а также используйте 1 личную <strong>Спецкарту</strong>.</p>
+          <div class="font-mono text-xs font-bold text-sky-300">2. ОБСУЖДЕНИЕ, ШЁПОТ И КАРТЫ</div>
+          <p class="mt-1 text-xs sm:text-sm text-gray-300">В каждом раунде откройте <strong>1 из 8 карт</strong> (Профессия, Биология, Здоровье, Хобби, Фобия, Багаж, Характер, Доп. факт). В чате доступны <strong>@упоминания</strong>, тактические реакции (👍, 🤔, 🚨) и до <strong>2 тайных шёпотов за раунд</strong>.</p>
         </div>
         <div class="pixel-panel-dark p-3 border-l-4 border-l-red-400">
           <div class="font-mono text-xs font-bold text-red-300">3. ГОЛОСОВАНИЕ И ПРОПУСК ГОЛОСА (СКИП)</div>
-          <p class="mt-1 text-xs sm:text-sm text-gray-300">Все голосуют, кто покинет бункер (против себя нельзя). Если не хотите никого выгонять — нажмите <strong>«ПРОПУСТИТЬ ГОЛОС»</strong> (доступно <strong>3 раза за игру</strong>). При ничьей проводится повторный тур; повторная ничья никого не изгоняет.</p>
+          <p class="mt-1 text-xs sm:text-sm text-gray-300">Голосуйте против того, кто лишний (против себя нельзя), либо нажмите <strong>«ПРОПУСТИТЬ ГОЛОС»</strong> в пределах лимита комнаты. При ничьей проводится очная ставка с переголосованием.</p>
         </div>
         <div class="pixel-panel-dark p-3 border-l-4 border-l-bunker-green">
-          <div class="font-mono text-xs font-bold text-bunker-green">4. СОБЫТИЯ И ПОБЕДА</div>
-          <p class="mt-1 text-xs sm:text-sm text-gray-300">Между раундами происходят случайные события. Изгнанные становятся наблюдателями и могут продолжать общаться в чате. Когда живых остаётся столько, сколько мест в бункере — партия завершается победой!</p>
+          <div class="font-mono text-xs font-bold text-bunker-green">4. ДИЛЕММЫ И СИМУЛЯЦИЯ ФИНАЛА</div>
+          <p class="mt-1 text-xs sm:text-sm text-gray-300">Между раундами группа решает кризисные дилеммы (ЗА / ПРОТИВ), влияющие на ресурсы бункера. В финале система оценит шансы выжившей команды и выполнение тайных целей!</p>
         </div>
       </div>
       <div class="px-5 py-3.5 border-t border-bunker-steel bg-[#101316] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1067,6 +1243,7 @@
       // ======================================================================
       const STORAGE_SESSION_KEY = 'bunker_active_session_v1';
       const STORAGE_MUTE_KEY = 'bunker_sound_muted_v1';
+      const STORAGE_AMBIENT_KEY = 'bunker_ambient_enabled_v1';
 
       const state = {
         connected: false,
@@ -1075,10 +1252,14 @@
         session: loadSavedSession(),
         activeTab: 'chat',
         mobileView: 'bunker',
+        playersViewMode: 'cards',
+        secretGoalHidden: false,
+        whispers: [],
         unreadChatCount: 0,
         renderedChatSig: {},
         scenarioOpen: true,
         muted: localStorage.getItem(STORAGE_MUTE_KEY) === '1',
+        ambientEnabled: localStorage.getItem(STORAGE_AMBIENT_KEY) === '1',
         audioUnlocked: false,
         lastRevealedKeys: new Set(),
         knownRound: 0,
@@ -1106,9 +1287,11 @@
         state.session = null;
         state.room = null;
         state.privateData = null;
+        state.whispers = [];
         state.unreadChatCount = 0;
         state.renderedChatSig = {};
         state.mobileView = 'bunker';
+        state.playersViewMode = 'cards';
         state.lastRevealedKeys.clear();
         if (typeof updateChatUnreadBadges === 'function') updateChatUnreadBadges();
         if (typeof syncMobileNavUI === 'function') syncMobileNavUI();
@@ -1118,9 +1301,73 @@
       }
 
       // ======================================================================
-      // WEB AUDIO API RETRO SYNTHESIZER
+      // WEB AUDIO API RETRO SYNTHESIZER + PROCEDURAL BUNKER AMBIENT
       // ======================================================================
       let audioCtx = null;
+      let ambientNodes = null;
+
+      function startAmbientDrone() {
+        if (state.muted || !state.ambientEnabled || !state.audioUnlocked || ambientNodes) return;
+        try {
+          const Ctx = window.AudioContext || window.webkitAudioContext;
+          if (!audioCtx && Ctx) audioCtx = new Ctx();
+          if (!audioCtx) return;
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+
+          // Brown-like filtered noise + sub-bass ventilation hum
+          const bufferSize = audioCtx.sampleRate * 2;
+          const noiseBuf = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+          const data = noiseBuf.getChannelData(0);
+          let lastOut = 0;
+          for (let i = 0; i < bufferSize; i++) {
+            const white = Math.random() * 2 - 1;
+            data[i] = (lastOut + 0.02 * white) / 1.02;
+            lastOut = data[i];
+          }
+          const noiseSrc = audioCtx.createBufferSource();
+          noiseSrc.buffer = noiseBuf;
+          noiseSrc.loop = true;
+
+          const lowpass = audioCtx.createBiquadFilter();
+          lowpass.type = 'lowpass';
+          lowpass.frequency.value = 175;
+
+          const droneOsc = audioCtx.createOscillator();
+          droneOsc.type = 'triangle';
+          droneOsc.frequency.value = 54;
+
+          const masterGain = audioCtx.createGain();
+          masterGain.gain.value = 0.032;
+
+          const droneGain = audioCtx.createGain();
+          droneGain.gain.value = 0.22;
+
+          noiseSrc.connect(lowpass);
+          lowpass.connect(masterGain);
+          droneOsc.connect(droneGain);
+          droneGain.connect(masterGain);
+          masterGain.connect(audioCtx.destination);
+
+          noiseSrc.start();
+          droneOsc.start();
+          ambientNodes = { noiseSrc, droneOsc, masterGain };
+        } catch (_e) {}
+      }
+
+      function stopAmbientDrone() {
+        if (!ambientNodes) return;
+        try {
+          ambientNodes.noiseSrc.stop();
+          ambientNodes.droneOsc.stop();
+          ambientNodes.masterGain.disconnect();
+        } catch (_e) {}
+        ambientNodes = null;
+      }
+
+      function syncAmbientAudio() {
+        if (state.ambientEnabled && !state.muted && state.audioUnlocked) startAmbientDrone();
+        else stopAmbientDrone();
+      }
 
       function unlockAudio() {
         if (state.audioUnlocked) return;
@@ -1129,6 +1376,7 @@
           const Ctx = window.AudioContext || window.webkitAudioContext;
           if (Ctx && !audioCtx) audioCtx = new Ctx();
           if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+          syncAmbientAudio();
         } catch (_e) {}
       }
 
@@ -1191,6 +1439,11 @@
         const text = state.muted ? 'ЗВУК: ВЫКЛ' : 'ЗВУК: ВКЛ';
         document.getElementById('sound-icon').textContent = text;
         document.getElementById('btn-title-sound').textContent = state.muted ? 'Звук: ВЫКЛ' : 'Звук: ВКЛ';
+        const ambText = state.ambientEnabled ? 'ЭМБИЕНТ: ВКЛ' : 'ЭМБИЕНТ: ВЫКЛ';
+        const ambHud = document.getElementById('ambient-icon');
+        if (ambHud) ambHud.textContent = ambText;
+        const ambTitle = document.getElementById('btn-title-ambient');
+        if (ambTitle) ambTitle.textContent = state.ambientEnabled ? 'Эмбиент: ВКЛ' : 'Эмбиент: ВЫКЛ';
       }
 
       function toggleMute() {
@@ -1198,7 +1451,21 @@
         state.muted = !state.muted;
         localStorage.setItem(STORAGE_MUTE_KEY, state.muted ? '1' : '0');
         updateMuteUI();
+        syncAmbientAudio();
         if (!state.muted) SoundFX.click();
+      }
+
+      function toggleAmbient() {
+        unlockAudio();
+        state.ambientEnabled = !state.ambientEnabled;
+        if (state.ambientEnabled && state.muted) {
+          state.muted = false;
+          localStorage.setItem(STORAGE_MUTE_KEY, '0');
+        }
+        localStorage.setItem(STORAGE_AMBIENT_KEY, state.ambientEnabled ? '1' : '0');
+        updateMuteUI();
+        syncAmbientAudio();
+        SoundFX.click();
       }
 
       // ======================================================================
@@ -1662,7 +1929,7 @@
         state.knownRound = room.round;
 
         if (prevPhase !== room.phase) {
-          if (room.phase === 'voting' || room.phase === 'runoff') SoundFX.voteStart();
+          if (room.phase === 'voting' || room.phase === 'runoff' || room.phase === 'dilemma') SoundFX.voteStart();
           else if (room.phase === 'ended') SoundFX.victory();
           else if ((prevPhase === 'voting' || prevPhase === 'runoff') && room.phase === 'discussion') {
             SoundFX.voteEnd();
@@ -1670,6 +1937,9 @@
         }
         if (prevRound > 0 && room.round > prevRound && room.phase === 'discussion') {
           SoundFX.warning();
+        }
+        if (room.phase === 'lobby') {
+          state.whispers = [];
         }
 
         renderCurrentScreen();
@@ -1679,7 +1949,9 @@
         state.privateData = priv;
         if (state.room && state.room.phase !== 'lobby') {
           renderPlayingPersonal();
+          renderDilemmaZone();
           renderVotingZone();
+          updateWhisperComposerUI();
         }
       });
 
@@ -1696,6 +1968,22 @@
           if (state.room.chat.length > 500) state.room.chat.shift();
         }
         appendChatMessage(msg);
+      });
+
+      socket.on('chat:reactionUpdate', ({ messageId, reactions }) => {
+        if (!state.room) return;
+        const msg = state.room.chat.find((m) => m.id === messageId);
+        if (msg) msg.reactions = reactions || {};
+        updateMessageReactionsInDom(messageId, reactions || {});
+      });
+
+      socket.on('chat:whisperMessage', (whisperMsg) => {
+        if (!whisperMsg || !whisperMsg.id) return;
+        if (!state.whispers.some((w) => w.id === whisperMsg.id)) {
+          state.whispers.push(whisperMsg);
+          if (state.whispers.length > 120) state.whispers.shift();
+        }
+        appendWhisperMessage(whisperMsg);
       });
 
       socket.on('room:kicked', (data) => {
@@ -1759,16 +2047,20 @@
       function updateTimerDisplays(sec, phase) {
         const hudTimer = document.getElementById('hud-timer');
         const inlineTimer = document.getElementById('phase-timer-inline');
-        const isTimed = phase === 'discussion' || phase === 'voting' || phase === 'runoff';
+        const isTimed = phase === 'discussion' || phase === 'voting' || phase === 'runoff' || phase === 'dilemma';
         if (!isTimed) {
           hudTimer.classList.add('hidden');
           return;
         }
+        const paused = Boolean(state.room?.paused);
         hudTimer.classList.remove('hidden');
         const formatted = formatTimerMMSS(sec);
-        hudTimer.textContent = formatted;
-        inlineTimer.textContent = `${sec} сек.`;
-        if (sec <= 15) {
+        hudTimer.textContent = paused ? `${formatted} ⏸` : formatted;
+        inlineTimer.textContent = paused ? `${sec} сек. (ПАУЗА)` : `${sec} сек.`;
+        if (paused) {
+          hudTimer.className = 'font-pixel text-xs sm:text-sm text-bunker-yellow tabular-nums';
+          inlineTimer.className = 'font-mono text-sm font-bold text-bunker-yellow tabular-nums';
+        } else if (sec <= 15) {
           hudTimer.className = 'font-pixel text-xs sm:text-sm text-red-400 animate-alert tabular-nums';
           inlineTimer.className = 'font-mono text-sm font-bold text-red-400 animate-alert tabular-nums';
         } else {
@@ -1793,10 +2085,11 @@
           discussion: 'ОБСУЖДЕНИЕ',
           voting: 'ГОЛОСОВАНИЕ',
           runoff: 'ПЕРЕГОЛОСОВАНИЕ',
+          dilemma: 'ДИЛЕММА',
           ended: 'ФИНАЛ'
         };
         const phaseEl = document.getElementById('hud-phase-label');
-        phaseEl.textContent = phaseLabels[r.phase] || r.phase;
+        phaseEl.textContent = r.paused ? `${phaseLabels[r.phase] || r.phase} · ПАУЗА` : (phaseLabels[r.phase] || r.phase);
         phaseEl.className = (r.phase === 'voting' || r.phase === 'runoff')
           ? 'text-xs font-mono font-bold text-red-400 uppercase whitespace-nowrap'
           : r.phase === 'ended'
@@ -1818,14 +2111,54 @@
         document.getElementById('lobby-player-count').textContent = `${r.players.length} / 10`;
         document.getElementById('lobby-capacity-preview').textContent = Math.floor(r.players.length / 2);
 
+        // Avatar Picker (10 options)
+        const pickerEl = document.getElementById('lobby-avatar-picker');
+        if (pickerEl && me) {
+          pickerEl.innerHTML = AVATAR_THEMES.map((_, idx) => {
+            const selected = Number(me.avatarId) === idx;
+            return `
+              <button
+                type="button"
+                data-pick-avatar="${idx}"
+                aria-label="Выбрать аватар ${idx + 1}"
+                class="p-1 border-2 flex items-center justify-center transition-colors ${selected ? 'border-bunker-amber bg-amber-950/40' : 'border-bunker-steel bg-[#0d1013] hover:border-bunker-border'}"
+              >
+                ${renderPixelAvatar(idx, false, 'w-9 h-9')}
+              </button>
+            `;
+          }).join('');
+          pickerEl.querySelectorAll('[data-pick-avatar]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              const avatarId = Number(btn.getAttribute('data-pick-avatar'));
+              SoundFX.click();
+              socket.emit('lobby:setAvatar', { avatarId }, (res) => {
+                if (!res?.ok) setInlineError('lobby-error', res?.error || 'Не удалось сменить аватар.');
+              });
+            });
+          });
+        }
+
+        // Add Bot button
+        const addBotBtn = document.getElementById('btn-add-bot');
+        if (addBotBtn) {
+          addBotBtn.classList.toggle('hidden', !isHost);
+          addBotBtn.disabled = r.players.length >= 10;
+        }
+
+        // Players List
         const listEl = document.getElementById('lobby-players-list');
         listEl.innerHTML = r.players.map((p) => {
           const isMe = me && p.id === me.id;
-          const kickBtn = (isHost && !isMe)
-            ? `<button type="button" data-kick-id="${p.id}" class="pixel-btn pixel-btn-steel px-2.5 py-1 text-xs font-mono text-red-300 min-h-[36px]" aria-label="Исключить ${escapeHtml(p.name)}">ИСКЛ.</button>`
-            : '';
-          const connText = p.connected ? 'В сети' : 'Не в сети';
-          const connColor = p.connected ? 'text-bunker-green' : 'text-red-400';
+          let actionBtn = '';
+          if (isHost && !isMe) {
+            if (p.isBot) {
+              actionBtn = `<button type="button" data-remove-bot="${p.id}" class="pixel-btn pixel-btn-steel px-2.5 py-1 text-xs font-mono text-red-300 min-h-[36px]" aria-label="Удалить бота ${escapeHtml(p.name)}">УБРАТЬ</button>`;
+            } else {
+              actionBtn = `<button type="button" data-kick-id="${p.id}" class="pixel-btn pixel-btn-steel px-2.5 py-1 text-xs font-mono text-red-300 min-h-[36px]" aria-label="Исключить ${escapeHtml(p.name)}">ИСКЛ.</button>`;
+            }
+          }
+          const connText = p.isBot ? 'Автопилот' : (p.connected ? 'В сети' : 'Не в сети');
+          const connColor = p.isBot ? 'text-sky-300' : (p.connected ? 'text-bunker-green' : 'text-red-400');
           const readyText = p.isHost ? 'Координатор' : (p.ready ? 'Готов' : 'Ожидает');
           const readyColor = p.isHost ? 'text-bunker-amber' : (p.ready ? 'text-bunker-green' : 'text-bunker-muted');
 
@@ -1834,9 +2167,10 @@
               <div class="flex items-center gap-3 min-w-0">
                 ${renderPixelAvatar(p.avatarId, false, 'w-11 h-11')}
                 <div class="min-w-0">
-                  <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-1.5 flex-wrap">
                     <span class="font-semibold text-sm text-bunker-text truncate">${escapeHtml(p.name)}</span>
                     ${p.isHost ? '<span class="text-[10px] font-pixel text-bunker-amber shrink-0">[ХОСТ]</span>' : ''}
+                    ${p.isBot ? '<span class="text-[10px] font-mono font-bold text-sky-300 border border-sky-700/80 px-1 shrink-0">[БОТ]</span>' : ''}
                     ${isMe ? '<span class="text-[11px] font-mono text-gray-400 shrink-0">(Вы)</span>' : ''}
                   </div>
                   <div class="mt-0.5 text-xs font-mono flex items-center gap-2">
@@ -1846,7 +2180,7 @@
                   </div>
                 </div>
               </div>
-              ${kickBtn}
+              ${actionBtn}
             </div>
           `;
         }).join('');
@@ -1861,6 +2195,44 @@
             });
           });
         });
+
+        listEl.querySelectorAll('[data-remove-bot]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            SoundFX.click();
+            const targetId = btn.getAttribute('data-remove-bot');
+            socket.emit('lobby:removeBot', { targetId }, (res) => {
+              if (!res?.ok) setInlineError('lobby-error', res?.error || 'Не удалось убрать бота.');
+              else setInlineError('lobby-error', '');
+            });
+          });
+        });
+
+        // Room Settings Panel Sync
+        const s = r.settings || {};
+        const setDisc = document.getElementById('set-disc-sec');
+        const setVote = document.getElementById('set-vote-sec');
+        const setSkips = document.getElementById('set-max-skips');
+        const setProf = document.getElementById('set-force-prof');
+        const setEvents = document.getElementById('set-events');
+        const setDilemmas = document.getElementById('set-dilemmas');
+        const setSecrets = document.getElementById('set-secret-roles');
+        const setBadge = document.getElementById('lobby-settings-badge');
+        if (setDisc && setVote && setSkips) {
+          setDisc.value = String(s.discussionSeconds || 120);
+          setVote.value = String(s.votingSeconds || 45);
+          setSkips.value = String(s.maxSkips ?? 3);
+          setProf.checked = Boolean(s.forceProfessionRound1);
+          setEvents.checked = s.enableRandomEvents !== false;
+          setDilemmas.checked = s.enableDilemmas !== false;
+          setSecrets.checked = s.enableSecretRoles !== false;
+          [setDisc, setVote, setSkips, setProf, setEvents, setDilemmas, setSecrets].forEach((el) => {
+            el.disabled = !isHost;
+          });
+          if (setBadge) {
+            setBadge.textContent = isHost ? 'Настройки активны (Хост)' : 'Только просмотр (меняет хост)';
+            setBadge.className = isHost ? 'text-[11px] font-mono text-bunker-green' : 'text-[11px] font-mono text-bunker-muted';
+          }
+        }
 
         const readyBtn = document.getElementById('btn-toggle-ready');
         const startBtn = document.getElementById('btn-start-game');
@@ -1946,13 +2318,21 @@
         const phaseTitle = document.getElementById('phase-title');
         const phaseSub = document.getElementById('phase-subtitle');
         const hostControls = document.getElementById('host-phase-controls');
+        const btnPause = document.getElementById('btn-host-pause');
         const btnEndDisc = document.getElementById('btn-host-end-discussion');
+        const btnEndDilemma = document.getElementById('btn-host-end-dilemma');
         const btnEndVote = document.getElementById('btn-host-end-voting');
 
         if (r.phase === 'discussion') {
           phaseTitle.textContent = `РАУНД ${r.round} · ОБСУЖДЕНИЕ`;
           phaseTitle.className = 'font-pixel text-xs sm:text-sm text-bunker-amber';
-          phaseSub.textContent = 'Откройте по одной характеристике и обсудите, кто полезнее всего для выживания.';
+          phaseSub.textContent = (r.round === 1 && r.settings?.forceProfessionRound1)
+            ? 'Особое правило: в 1-м раунде все игроки сначала открывают свою «Профессию».'
+            : 'Откройте по одной характеристике и обсудите, кто полезнее всего для выживания.';
+        } else if (r.phase === 'dilemma') {
+          phaseTitle.textContent = `РАУНД ${r.round} · КРИЗИСНАЯ ДИЛЕММА`;
+          phaseTitle.className = 'font-pixel text-xs sm:text-sm text-bunker-yellow';
+          phaseSub.textContent = 'Совместное решение группы перед следующим раундом. Итог влияет на ресурсы бункера.';
         } else if (r.phase === 'voting') {
           phaseTitle.textContent = `РАУНД ${r.round} · ГОЛОСОВАНИЕ`;
           phaseTitle.className = 'font-pixel text-xs sm:text-sm text-red-400';
@@ -1963,14 +2343,28 @@
           phaseSub.textContent = 'Ничья! Повторный выбор только между лидерами прошлого голосования.';
         }
 
+        const isPaused = Boolean(r.paused);
+        document.getElementById('phase-paused-badge').classList.toggle('hidden', !isPaused);
+        document.getElementById('phase-paused-banner').classList.toggle('hidden', !isPaused);
+
         hostControls.classList.toggle('hidden', !isHost);
+        if (btnPause) {
+          btnPause.classList.toggle('hidden', !isHost);
+          btnPause.textContent = isPaused ? 'ПРОДОЛЖИТЬ' : 'ПАУЗА';
+          btnPause.className = isPaused
+            ? 'pixel-btn pixel-btn-green px-3.5 py-2 text-xs font-mono'
+            : 'pixel-btn pixel-btn-steel px-3.5 py-2 text-xs font-mono';
+        }
         btnEndDisc.classList.toggle('hidden', !(isHost && r.phase === 'discussion'));
+        if (btnEndDilemma) btnEndDilemma.classList.toggle('hidden', !(isHost && r.phase === 'dilemma'));
         btnEndVote.classList.toggle('hidden', !(isHost && (r.phase === 'voting' || r.phase === 'runoff')));
 
         updatePhaseActionGuide();
+        renderDilemmaZone();
         renderVotingZone();
         renderPlayingPersonal();
         renderPlayersGrid();
+        updateWhisperComposerUI();
         renderChatList('game-chat-messages', r.chat);
         renderDiary();
         renderVotingHistory('panel-tab-history', r.votingHistory);
@@ -1994,6 +2388,9 @@
           if (me.revealedThisRound) {
             guideEl.className = 'mt-3 p-2.5 border border-emerald-700/70 bg-emerald-950/25 text-xs sm:text-sm text-emerald-200';
             guideEl.textContent = '✔ Вы уже открыли карту в этом раунде. Обсуждайте игроков в чате или примените спецкарту.';
+          } else if (r.round === 1 && r.settings?.forceProfessionRound1 && priv && !priv.traits?.profession?.revealed) {
+            guideEl.className = 'mt-3 p-2.5 border border-bunker-amber/60 bg-amber-950/25 text-xs sm:text-sm text-amber-100';
+            guideEl.textContent = 'ШАГ 1 (обязательно по правилам комнаты): откройте карту «Профессия» ниже.';
           } else {
             guideEl.className = 'mt-3 p-2.5 border border-bunker-amber/60 bg-amber-950/25 text-xs sm:text-sm text-amber-100';
             guideEl.textContent = 'ШАГ 1: Нажмите «Открыть для всех» на одной из ваших 8 характеристик ниже.';
@@ -2001,18 +2398,78 @@
           return;
         }
 
+        if (r.phase === 'dilemma') {
+          if (priv && priv.dilemmaVote) {
+            guideEl.className = 'mt-3 p-2.5 border border-emerald-700/70 bg-emerald-950/25 text-xs sm:text-sm text-emerald-200';
+            guideEl.textContent = '✔ Ваше решение по дилемме принято. Ожидаем остальных выживших.';
+          } else {
+            guideEl.className = 'mt-3 p-2.5 border border-bunker-amber/60 bg-amber-950/25 text-xs sm:text-sm text-amber-100';
+            guideEl.textContent = 'ДИЛЕММА: Выберите «ЗА» или «ПРОТИВ» ниже — большинство определит исход.';
+          }
+          return;
+        }
+
         if (r.phase === 'voting' || r.phase === 'runoff') {
-          const skipsRemaining = priv && typeof priv.skipsRemaining === 'number' ? priv.skipsRemaining : 3;
+          const maxSkips = priv?.maxSkips ?? r.settings?.maxSkips ?? 3;
+          const skipsRemaining = priv && typeof priv.skipsRemaining === 'number' ? priv.skipsRemaining : maxSkips;
           if (priv && priv.hasVoted) {
             guideEl.className = 'mt-3 p-2.5 border border-emerald-700/70 bg-emerald-950/25 text-xs sm:text-sm text-emerald-200';
             guideEl.textContent = priv.skippedThisVote
-              ? `✔ Вы воздержались в этом голосовании (осталось пропусков: ${skipsRemaining} / 3). Ожидаем остальных.`
+              ? `✔ Вы воздержались в этом голосовании (осталось пропусков: ${skipsRemaining} / ${maxSkips}). Ожидаем остальных.`
               : '✔ Ваш голос учтён. Ожидаем завершения голосования.';
+          } else if (maxSkips > 0) {
+            guideEl.className = 'mt-3 p-2.5 border border-red-600/70 bg-red-950/30 text-xs sm:text-sm text-red-100';
+            guideEl.textContent = `ШАГ 2: Выберите кандидата для изгнания или нажмите «ПРОПУСТИТЬ ГОЛОС» (осталось ${skipsRemaining} из ${maxSkips}).`;
           } else {
             guideEl.className = 'mt-3 p-2.5 border border-red-600/70 bg-red-950/30 text-xs sm:text-sm text-red-100';
-            guideEl.textContent = `ШАГ 2: Выберите кандидата для изгнания или нажмите «ПРОПУСТИТЬ ГОЛОС» (осталось ${skipsRemaining} из 3).`;
+            guideEl.textContent = 'ШАГ 2: Выберите кандидата для изгнания (пропуск голоса отключён настройками).';
           }
         }
+      }
+
+      function renderDilemmaZone() {
+        const r = state.room;
+        const priv = state.privateData;
+        const me = r?.players.find((p) => p.id === state.session?.playerId);
+        const zone = document.getElementById('dilemma-zone');
+        if (!zone) return;
+
+        if (!r || r.phase !== 'dilemma' || !r.dilemmaInfo) {
+          zone.classList.add('hidden');
+          return;
+        }
+
+        zone.classList.remove('hidden');
+        const info = r.dilemmaInfo;
+        const isAlive = Boolean(me && me.alive);
+        const myChoice = priv?.dilemmaVote || null;
+
+        document.getElementById('dilemma-title').textContent = info.title;
+        document.getElementById('dilemma-desc').textContent = info.description;
+        document.getElementById('dilemma-progress').textContent = `Решений: ${(info.votedPlayerIds || []).length} / ${info.totalVoters}`;
+        document.getElementById('dilemma-yes-label').textContent = `ЗА: ${info.yesLabel}`;
+        document.getElementById('dilemma-yes-count').textContent = String(info.yesCount || 0);
+        document.getElementById('dilemma-no-label').textContent = `ПРОТИВ: ${info.noLabel}`;
+        document.getElementById('dilemma-no-count').textContent = String(info.noCount || 0);
+
+        const noteEl = document.getElementById('dilemma-status-note');
+        if (!isAlive) {
+          noteEl.classList.remove('hidden');
+          noteEl.textContent = 'Наблюдатели не участвуют в голосовании по дилеммам.';
+        } else if (myChoice) {
+          noteEl.classList.remove('hidden');
+          noteEl.textContent = myChoice === 'yes' ? `Вы проголосовали ЗА (${info.yesLabel}).` : `Вы проголосовали ПРОТИВ (${info.noLabel}).`;
+        } else {
+          noteEl.classList.add('hidden');
+        }
+
+        const btnYes = document.getElementById('btn-dilemma-yes');
+        const btnNo = document.getElementById('btn-dilemma-no');
+        const canVote = isAlive && !myChoice;
+        btnYes.disabled = !canVote;
+        btnNo.disabled = !canVote;
+        btnYes.className = `pixel-btn ${myChoice === 'yes' ? 'pixel-btn-green ring-2 ring-emerald-300' : 'pixel-btn-green'} px-4 py-3 text-xs sm:text-sm font-mono text-left flex items-center justify-between gap-2`;
+        btnNo.className = `pixel-btn ${myChoice === 'no' ? 'pixel-btn-danger ring-2 ring-red-300' : 'pixel-btn-danger'} px-4 py-3 text-xs sm:text-sm font-mono text-left flex items-center justify-between gap-2`;
       }
 
       function renderVotingZone() {
@@ -2028,6 +2485,7 @@
 
         zone.classList.remove('hidden');
         const vInfo = r.votingInfo;
+        const maxSkips = priv?.maxSkips ?? r.settings?.maxSkips ?? 3;
         document.getElementById('voting-progress').textContent = `Проголосовало: ${vInfo.votesCast} / ${vInfo.totalVoters}`;
         document.getElementById('voting-instruction').textContent = vInfo.isRunoff
           ? 'Повторное голосование между кандидатами с ничьей:'
@@ -2036,7 +2494,7 @@
         const statusNote = document.getElementById('voting-status-note');
         const hasVoted = Boolean(priv && priv.hasVoted);
         const skippedThisVote = Boolean(priv && priv.skippedThisVote);
-        const skipsRemaining = priv && typeof priv.skipsRemaining === 'number' ? priv.skipsRemaining : 3;
+        const skipsRemaining = priv && typeof priv.skipsRemaining === 'number' ? priv.skipsRemaining : maxSkips;
         const isAlive = Boolean(me && me.alive);
 
         if (!isAlive) {
@@ -2047,7 +2505,7 @@
           statusNote.classList.remove('hidden');
           statusNote.className = 'mb-3 p-3 bg-emerald-950/40 border border-emerald-700 text-emerald-200 text-sm';
           if (skippedThisVote) {
-            statusNote.textContent = `Вы воздержались в этом голосовании (пропуск). Осталось пропусков: ${skipsRemaining} из 3.`;
+            statusNote.textContent = `Вы воздержались в этом голосовании (пропуск). Осталось пропусков: ${skipsRemaining} из ${maxSkips}.`;
           } else {
             const votedTarget = r.players.find((p) => p.id === priv.votedForId);
             statusNote.textContent = `Ваш голос отправлен (${votedTarget ? votedTarget.name : 'учтён'}). Изменить выбор нельзя.`;
@@ -2059,6 +2517,32 @@
         const candContainer = document.getElementById('voting-candidates');
         const candidatePlayers = r.players.filter((p) => p.alive && vInfo.candidates.includes(p.id));
         const votedSet = new Set(vInfo.votedPlayerIds || []);
+
+        // Runoff Defense Spotlight: side-by-side comparison of revealed traits
+        const spotlightBox = document.getElementById('runoff-spotlight');
+        const spotlightGrid = document.getElementById('runoff-spotlight-grid');
+        if (spotlightBox && spotlightGrid) {
+          if (vInfo.isRunoff && candidatePlayers.length >= 2) {
+            spotlightBox.classList.remove('hidden');
+            spotlightGrid.innerHTML = candidatePlayers.map((cp) => {
+              const revealed = TRAIT_ORDER
+                .filter((k) => cp.traits[k]?.revealed && cp.traits[k]?.data)
+                .map((k) => `<div class="text-xs"><span class="font-mono text-bunker-muted">${TRAIT_META[k].label}:</span> <span class="text-bunker-text">${escapeHtml(cp.traits[k].data.title)}</span></div>`)
+                .join('');
+              return `
+                <div class="p-2.5 bg-[#0c0e11] border border-bunker-steel space-y-1.5">
+                  <div class="flex items-center gap-2 border-b border-bunker-steel/60 pb-1.5">
+                    ${renderPixelAvatar(cp.avatarId, false, 'w-8 h-8')}
+                    <span class="font-bold text-sm text-red-300 truncate">${escapeHtml(cp.name)}</span>
+                  </div>
+                  <div class="space-y-0.5">${revealed || '<div class="text-xs text-bunker-muted italic">Открытых карт нет</div>'}</div>
+                </div>
+              `;
+            }).join('');
+          } else {
+            spotlightBox.classList.add('hidden');
+          }
+        }
 
         candContainer.innerHTML = candidatePlayers.map((p) => {
           const isSelf = me && p.id === me.id;
@@ -2104,24 +2588,31 @@
           });
         });
 
-        // Skip vote UI update
+        // Skip vote UI update (dynamic maxSkips)
         const skipBox = document.getElementById('voting-skip-box');
         const skipRemEl = document.getElementById('voting-skip-remaining-label');
         const skipBtn = document.getElementById('btn-skip-vote');
         if (skipBox && skipRemEl && skipBtn) {
           skipBox.classList.toggle('hidden', !isAlive);
-          skipRemEl.textContent = `Осталось: ${skipsRemaining} / 3`;
-          const canSkip = isAlive && !hasVoted && skipsRemaining > 0;
-          skipBtn.disabled = !canSkip;
-          if (skippedThisVote) {
-            skipBtn.textContent = `ПРОПУЩЕНО (${skipsRemaining}/3)`;
-            skipBtn.className = 'pixel-btn pixel-btn-green px-4 py-2.5 text-xs font-mono shrink-0 min-h-[44px]';
-          } else if (skipsRemaining <= 0) {
-            skipBtn.textContent = 'ЛИМИТ СКИПОВ (0/3)';
+          if (maxSkips === 0) {
+            skipRemEl.textContent = 'Отключён настройками комнаты (0 / 0)';
+            skipBtn.disabled = true;
+            skipBtn.textContent = 'СКИП ОТКЛЮЧЁН';
             skipBtn.className = 'pixel-btn pixel-btn-steel px-4 py-2.5 text-xs font-mono shrink-0 min-h-[44px]';
           } else {
-            skipBtn.textContent = `ПРОПУСТИТЬ ГОЛОС (${skipsRemaining}/3)`;
-            skipBtn.className = `pixel-btn ${canSkip ? 'pixel-btn-amber' : 'pixel-btn-steel'} px-4 py-2.5 text-xs font-mono shrink-0 min-h-[44px]`;
+            skipRemEl.textContent = `Осталось: ${skipsRemaining} / ${maxSkips}`;
+            const canSkip = isAlive && !hasVoted && skipsRemaining > 0;
+            skipBtn.disabled = !canSkip;
+            if (skippedThisVote) {
+              skipBtn.textContent = `ПРОПУЩЕНО (${skipsRemaining}/${maxSkips})`;
+              skipBtn.className = 'pixel-btn pixel-btn-green px-4 py-2.5 text-xs font-mono shrink-0 min-h-[44px]';
+            } else if (skipsRemaining <= 0) {
+              skipBtn.textContent = `ЛИМИТ СКИПОВ (0/${maxSkips})`;
+              skipBtn.className = 'pixel-btn pixel-btn-steel px-4 py-2.5 text-xs font-mono shrink-0 min-h-[44px]';
+            } else {
+              skipBtn.textContent = `ПРОПУСТИТЬ ГОЛОС (${skipsRemaining}/${maxSkips})`;
+              skipBtn.className = `pixel-btn ${canSkip ? 'pixel-btn-amber' : 'pixel-btn-steel'} px-4 py-2.5 text-xs font-mono shrink-0 min-h-[44px]`;
+            }
           }
         }
         updatePhaseActionGuide();
@@ -2172,6 +2663,9 @@
         const me = r?.players.find((p) => p.id === state.session?.playerId);
         if (!r || !priv || !priv.traits || !me) return;
 
+        const maxSkips = priv.maxSkips ?? r.settings?.maxSkips ?? 3;
+        const mustOpenProf = r.round === 1 && Boolean(r.settings?.forceProfessionRound1) && !priv.traits.profession.revealed;
+
         const revealStatusEl = document.getElementById('my-reveal-status');
         if (!me.alive) {
           revealStatusEl.textContent = 'Вы изгнаны — все ваши характеристики открыты.';
@@ -2179,6 +2673,8 @@
           revealStatusEl.textContent = 'Открытие характеристик доступно только в фазе обсуждения.';
         } else if (me.revealedThisRound) {
           revealStatusEl.textContent = '✔ В этом раунде вы уже раскрыли одну характеристику.';
+        } else if (mustOpenProf) {
+          revealStatusEl.textContent = 'По правилам 1-го раунда сначала необходимо открыть «Профессию».';
         } else {
           revealStatusEl.textContent = 'Выберите одну скрытую карту, чтобы открыть её для всех в этом раунде.';
         }
@@ -2188,8 +2684,30 @@
         if (priv.immuneThisRound) buffs.push('Неприкосновенность активна');
         if (priv.quarantinedThisRound) buffs.push('Карантин (спецкарта заблокирована)');
         if (priv.redirectTargetId) buffs.push('Адвокат дьявола активен');
-        if (typeof priv.skipsRemaining === 'number') buffs.push(`Пропусков голоса: ${priv.skipsRemaining}/3`);
+        if (typeof priv.skipsRemaining === 'number' && maxSkips > 0) buffs.push(`Пропусков голоса: ${priv.skipsRemaining}/${maxSkips}`);
         document.getElementById('my-buffs-line').textContent = buffs.join(' · ');
+
+        // Secret Personal Goal Box
+        const goalBox = document.getElementById('my-secret-goal-box');
+        if (goalBox) {
+          if (r.settings?.enableSecretRoles && priv.secretGoal) {
+            goalBox.classList.remove('hidden');
+            const titleEl = document.getElementById('my-secret-goal-title');
+            const descEl = document.getElementById('my-secret-goal-desc');
+            const toggleBtn = document.getElementById('btn-toggle-secret-goal');
+            if (state.secretGoalHidden) {
+              titleEl.textContent = 'СКРЫТО';
+              descEl.textContent = 'Нажмите «Показать цель», когда рядом нет посторонних.';
+              toggleBtn.textContent = 'Показать цель';
+            } else {
+              titleEl.textContent = priv.secretGoal.title;
+              descEl.textContent = priv.secretGoal.description;
+              toggleBtn.textContent = 'Скрыть от экрана';
+            }
+          } else {
+            goalBox.classList.add('hidden');
+          }
+        }
 
         const grid = document.getElementById('my-traits-grid');
         const keys = TRAIT_ORDER;
@@ -2201,7 +2719,8 @@
           const justFlipped = isRevealed && !state.lastRevealedKeys.has(key);
           if (isRevealed) state.lastRevealedKeys.add(key);
 
-          const canReveal = me.alive && r.phase === 'discussion' && !me.revealedThisRound && !isRevealed;
+          const blockedByProfRule = mustOpenProf && key !== 'profession';
+          const canReveal = me.alive && r.phase === 'discussion' && !me.revealedThisRound && !isRevealed && !blockedByProfRule;
           const surfaceClass = isRevealed
             ? 'pixel-panel-dark border-bunker-amber/70'
             : 'classified-surface border-2 border-bunker-steel';
@@ -2210,7 +2729,9 @@
             ? 'Вы наблюдатель'
             : r.phase !== 'discussion'
               ? 'Доступно в обсуждении'
-              : 'Открыто в этом раунде';
+              : blockedByProfRule
+                ? 'Сначала откройте Профессию'
+                : 'Открыто в этом раунде';
 
           return `
             <article class="${surfaceClass} p-3.5 flex flex-col justify-between gap-3 ${justFlipped ? 'animate-card-flip' : ''}">
@@ -2326,6 +2847,71 @@
         const me = r.players.find((p) => p.id === state.session?.playerId);
         const isHost = Boolean(me && me.isHost);
         const grid = document.getElementById('players-grid');
+        const matrix = document.getElementById('players-matrix');
+        const btnCards = document.getElementById('btn-view-cards');
+        const btnMatrix = document.getElementById('btn-view-matrix');
+        const showMatrix = state.playersViewMode === 'matrix';
+
+        if (btnCards && btnMatrix) {
+          btnCards.className = !showMatrix
+            ? 'px-3 py-1.5 text-xs font-mono font-bold bg-bunker-amber text-black min-h-[36px]'
+            : 'px-3 py-1.5 text-xs font-mono font-bold text-bunker-muted hover:text-bunker-text min-h-[36px]';
+          btnMatrix.className = showMatrix
+            ? 'px-3 py-1.5 text-xs font-mono font-bold bg-bunker-amber text-black min-h-[36px]'
+            : 'px-3 py-1.5 text-xs font-mono font-bold text-bunker-muted hover:text-bunker-text min-h-[36px]';
+        }
+        grid.classList.toggle('hidden', showMatrix);
+        if (matrix) matrix.classList.toggle('hidden', !showMatrix);
+
+        if (showMatrix && matrix) {
+          const shortHeaders = {
+            profession: 'Профессия',
+            biology: 'Биология',
+            health: 'Здоровье',
+            hobby: 'Хобби',
+            phobia: 'Фобия',
+            luggage: 'Багаж',
+            character: 'Характер',
+            fact: 'Факт'
+          };
+          matrix.innerHTML = `
+            <table class="w-full text-left border-collapse text-[11px]">
+              <thead>
+                <tr class="bg-[#14191e] border-b border-bunker-steel font-mono text-[11px] text-bunker-amber">
+                  <th class="px-2 py-2 sticky left-0 bg-[#14191e] border-r border-bunker-steel">Игрок</th>
+                  ${TRAIT_ORDER.map((k) => `<th class="px-2 py-2 border-r border-bunker-steel/50 whitespace-nowrap">${shortHeaders[k]}</th>`).join('')}
+                </tr>
+              </thead>
+              <tbody>
+                ${r.players.map((p) => `
+                  <tr data-matrix-dossier="${p.id}" class="border-b border-bunker-steel/50 hover:bg-[#161c22] cursor-pointer ${!p.alive ? 'opacity-60' : ''}">
+                    <td class="px-2 py-2 sticky left-0 bg-[#0d1013] border-r border-bunker-steel whitespace-nowrap">
+                      <div class="flex items-center gap-1.5">
+                        ${renderPixelAvatar(p.avatarId, !p.alive, 'w-5 h-5')}
+                        <span class="font-bold text-bunker-text">${escapeHtml(p.name)}</span>
+                        ${p.isBot ? '<span class="text-[10px] font-mono text-sky-300">[Б]</span>' : ''}
+                        <span class="text-[10px] font-mono ${p.alive ? 'text-bunker-green' : 'text-red-400'}">${p.alive ? 'Жив' : 'Изгнан'}</span>
+                      </div>
+                    </td>
+                    ${TRAIT_ORDER.map((k) => {
+                      const tr = p.traits[k];
+                      return tr && tr.revealed && tr.data
+                        ? `<td class="px-2 py-2 border-r border-bunker-steel/40 text-gray-200 max-w-[130px] truncate" title="${escapeHtml(tr.data.title)}">${escapeHtml(tr.data.title)}</td>`
+                        : `<td class="px-2 py-2 border-r border-bunker-steel/40 text-bunker-muted text-center">—</td>`;
+                    }).join('')}
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+          matrix.querySelectorAll('[data-matrix-dossier]').forEach((row) => {
+            row.addEventListener('click', () => {
+              SoundFX.click();
+              openDossierModal(row.getAttribute('data-matrix-dossier'));
+            });
+          });
+          return;
+        }
 
         grid.innerHTML = r.players.map((p) => {
           const isMe = me && p.id === me.id;
@@ -2335,7 +2921,7 @@
               ? 'pixel-panel-dark border-yellow-600/80'
               : 'pixel-panel-dark border-bunker-border hover:border-bunker-amber';
 
-          const statusLabel = !p.alive ? 'Изгнан' : (p.connected ? 'Жив' : 'Не в сети');
+          const statusLabel = !p.alive ? 'Изгнан' : (p.isBot ? 'Бот · Жив' : (p.connected ? 'Жив' : 'Не в сети'));
           const statusColor = !p.alive ? 'text-gray-400' : (p.connected ? 'text-bunker-green' : 'text-bunker-yellow');
 
           const revealedEntries = TRAIT_ORDER
@@ -2354,9 +2940,10 @@
                   <div class="flex items-center gap-3 min-w-0">
                     ${renderPixelAvatar(p.avatarId, !p.alive, 'w-11 h-11')}
                     <div class="min-w-0">
-                      <div class="flex items-center gap-1.5">
+                      <div class="flex items-center gap-1.5 flex-wrap">
                         <span class="font-bold text-sm text-bunker-text truncate">${escapeHtml(p.name)}</span>
                         ${p.isHost ? '<span class="text-[10px] font-pixel text-bunker-amber">[ХОСТ]</span>' : ''}
+                        ${p.isBot ? '<span class="text-[10px] font-mono text-sky-300 border border-sky-700/80 px-1">[БОТ]</span>' : ''}
                         ${isMe ? '<span class="text-[11px] font-mono text-gray-400">(Вы)</span>' : ''}
                       </div>
                       <div class="mt-0.5 text-xs font-mono flex flex-wrap items-center gap-1.5">
@@ -2533,7 +3120,45 @@
         system: { label: 'СИСТЕМА', cls: 'border-l-4 border-l-slate-500 border-bunker-steel bg-[#101418] text-gray-300', tagCls: 'text-bunker-muted' }
       };
 
+      const REACTION_EMOJIS = ['👍', '🤔', '🚨'];
+
+      function formatChatTextWithMentions(rawText) {
+        const escaped = escapeHtml(rawText || '');
+        const meName = state.room?.players?.find((p) => p.id === state.session?.playerId)?.name || '';
+        return escaped.replace(/(^|\s)(@[\p{L}\p{N}_-]{2,20})/gu, (_m, prefix, token) => {
+          const targetName = token.slice(1).toLowerCase();
+          const isMeMention = meName && targetName === meName.toLowerCase();
+          const cls = isMeMention
+            ? 'bg-bunker-amber text-black font-bold px-1'
+            : 'text-bunker-amber font-semibold';
+          return `${prefix}<span class="${cls}">${token}</span>`;
+        });
+      }
+
+      function buildReactionsHtml(msgId, reactions = {}) {
+        const myId = state.session?.playerId;
+        return REACTION_EMOJIS.map((emoji) => {
+          const list = Array.isArray(reactions[emoji]) ? reactions[emoji] : [];
+          const active = myId && list.includes(myId);
+          return `<button type="button" data-react-msg="${msgId}" data-react-emoji="${emoji}" class="px-1.5 py-0.5 border text-[11px] font-mono leading-none transition-colors ${active ? 'border-bunker-amber bg-amber-950/50 text-bunker-amber' : 'border-bunker-steel bg-[#0c0f12] text-bunker-muted hover:text-bunker-text hover:border-bunker-border'}">${emoji}${list.length > 0 ? ` <span class="tabular-nums">${list.length}</span>` : ''}</button>`;
+        }).join('');
+      }
+
+      function buildWhisperHtml(w) {
+        const isMine = Boolean(state.session && w.senderId === state.session.playerId);
+        return `
+          <div class="border-l-4 border-l-purple-400 border border-purple-700/70 bg-purple-950/35 px-2.5 py-2 text-xs animate-msg">
+            <div class="flex items-center justify-between gap-2 mb-0.5 font-mono text-[10px] text-purple-300">
+              <span class="font-bold">[ТАЙНЫЙ ШЁПОТ · ${isMine ? `Вы → ${escapeHtml(w.targetName)}` : `${escapeHtml(w.senderName)} → Вам`}]</span>
+              <span class="text-bunker-muted tabular-nums">${escapeHtml(w.time)}</span>
+            </div>
+            <div class="text-sm text-purple-50 whitespace-pre-wrap break-words">${formatChatTextWithMentions(w.text)}</div>
+          </div>
+        `;
+      }
+
       function buildChatMessageHtml(msg) {
+        if (msg.type === 'whisper') return buildWhisperHtml(msg);
         if (msg.type !== 'user') {
           const st = SYSTEM_MSG_STYLES[msg.type] || SYSTEM_MSG_STYLES.system;
           return `
@@ -2565,17 +3190,99 @@
             <div class="min-w-0 flex-1">
               <div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-xs">
                 <div class="flex flex-wrap items-center gap-1.5 min-w-0">
-                  <span class="font-bold truncate ${nameColor}">${escapeHtml(msg.senderName)}</span>
+                  <button type="button" data-mention-name="${escapeHtml(msg.senderName)}" title="Упомянуть в чате" class="font-bold truncate hover:underline text-left ${nameColor}">${escapeHtml(msg.senderName)}</button>
                   ${isHost ? '<span class="text-[10px] font-mono text-bunker-amber border border-bunker-amber/40 px-1 leading-tight">ХОСТ</span>' : ''}
                   ${isExiled ? '<span class="text-[10px] font-mono text-red-300 border border-red-800/70 bg-red-950/40 px-1 leading-tight">НАБЛЮДАТЕЛЬ</span>' : ''}
                   ${isMine ? '<span class="text-[10px] font-mono text-bunker-muted">(Вы)</span>' : ''}
                 </div>
                 <span class="font-mono text-[11px] text-bunker-muted tabular-nums shrink-0">${escapeHtml(msg.time)}</span>
               </div>
-              <p class="mt-1 text-sm text-bunker-text whitespace-pre-wrap break-words leading-snug">${escapeHtml(msg.text)}</p>
+              <p class="mt-1 text-sm text-bunker-text whitespace-pre-wrap break-words leading-snug">${formatChatTextWithMentions(msg.text)}</p>
+              <div class="mt-1.5 flex items-center gap-1" data-msg-reactions="${msg.id}">
+                ${buildReactionsHtml(msg.id, msg.reactions || {})}
+              </div>
             </div>
           </div>
         `;
+      }
+
+      function updateMessageReactionsInDom(messageId, reactions) {
+        const html = buildReactionsHtml(messageId, reactions);
+        document.querySelectorAll(`[data-msg-reactions="${messageId}"]`).forEach((el) => {
+          el.innerHTML = html;
+        });
+      }
+
+      function bindChatBoxDelegates(containerId, inputId) {
+        const box = document.getElementById(containerId);
+        if (!box || box.dataset.delegated === '1') return;
+        box.dataset.delegated = '1';
+        box.addEventListener('click', (e) => {
+          const reactBtn = e.target.closest('[data-react-msg]');
+          if (reactBtn) {
+            const messageId = reactBtn.getAttribute('data-react-msg');
+            const emoji = reactBtn.getAttribute('data-react-emoji');
+            socket.emit('chat:react', { messageId, emoji }, (res) => {
+              if (!res?.ok) showToast(res?.error || 'Не удалось поставить реакцию.', 'error');
+            });
+            return;
+          }
+          const mentionBtn = e.target.closest('[data-mention-name]');
+          if (mentionBtn) {
+            const name = mentionBtn.getAttribute('data-mention-name');
+            const input = document.getElementById(inputId);
+            if (input && name) {
+              const prefix = input.value && !input.value.endsWith(' ') ? `${input.value} ` : input.value;
+              input.value = `${prefix}@${name} `;
+              input.focus();
+              input.dispatchEvent(new Event('input'));
+              SoundFX.click();
+            }
+          }
+        });
+      }
+
+      function updateWhisperComposerUI() {
+        const bar = document.getElementById('chat-whisper-bar');
+        const sel = document.getElementById('chat-whisper-target');
+        const rem = document.getElementById('chat-whisper-remaining');
+        const input = document.getElementById('game-chat-input');
+        if (!bar || !sel || !rem) return;
+        const r = state.room;
+        const priv = state.privateData;
+        const me = r?.players?.find((p) => p.id === state.session?.playerId);
+
+        if (!r || !me || !me.alive || r.phase === 'lobby' || r.phase === 'ended') {
+          bar.classList.add('hidden');
+          if (sel) sel.value = '';
+          return;
+        }
+        bar.classList.remove('hidden');
+        const whispersRem = priv && typeof priv.whispersRemaining === 'number' ? priv.whispersRemaining : 2;
+        rem.textContent = `Шёпот: ${whispersRem}/2`;
+
+        const prevVal = sel.value;
+        const targets = r.players.filter((p) => p.alive && p.id !== me.id && !p.isBot);
+        const defaultOpt = targets.length > 0
+          ? '<option value="">Всем (общий канал)</option>'
+          : '<option value="">Всем (нет живых игроков для шёпота)</option>';
+        sel.innerHTML = defaultOpt + targets.map((p) => (
+          `<option value="${p.id}">Шёпот → ${escapeHtml(p.name)}</option>`
+        )).join('');
+        if (prevVal && targets.some((t) => t.id === prevVal)) {
+          sel.value = prevVal;
+        } else {
+          sel.value = '';
+        }
+        sel.disabled = whispersRem <= 0 || targets.length === 0;
+        rem.className = targets.length === 0
+          ? 'text-bunker-muted shrink-0 tabular-nums'
+          : 'text-purple-300 shrink-0 tabular-nums';
+        if (input) {
+          input.placeholder = sel.value
+            ? 'Тайное сообщение (увидят только вы и получатель)...'
+            : 'Сообщение в рацию... (аргументы, блеф, защита)';
+        }
       }
 
       function isChatVisibleOnScreen() {
@@ -2609,9 +3316,13 @@
       function renderChatList(containerId, messages) {
         const box = document.getElementById(containerId);
         if (!box) return;
-        const list = messages || [];
-        updateGameChatCounter(list.length);
-        const sig = `${list.length}:${list[list.length - 1]?.id || ''}`;
+        let list = messages || [];
+        if (containerId === 'game-chat-messages' && state.whispers.length > 0) {
+          list = [...list, ...state.whispers].sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+        }
+        updateGameChatCounter((messages || []).length);
+        const wSig = containerId === 'game-chat-messages' ? `:w${state.whispers.length}:${state.whispers[state.whispers.length - 1]?.id || ''}` : '';
+        const sig = `${list.length}:${list[list.length - 1]?.id || ''}${wSig}`;
         if (state.renderedChatSig[containerId] === sig) return;
 
         const wasNearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 90;
@@ -2628,6 +3339,29 @@
         }
       }
 
+      function appendWhisperMessage(whisperMsg) {
+        const box = document.getElementById('game-chat-messages');
+        if (!box) return;
+        if (box.children.length === 1 && box.firstElementChild?.textContent?.includes('Сообщений пока нет')) {
+          box.innerHTML = '';
+        }
+        const wasNearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 90;
+        const isMine = Boolean(state.session && whisperMsg.senderId === state.session.playerId);
+        const wrap = document.createElement('div');
+        wrap.innerHTML = buildWhisperHtml(whisperMsg).trim();
+        if (wrap.firstElementChild) box.appendChild(wrap.firstElementChild);
+        if (wasNearBottom || isMine) box.scrollTop = box.scrollHeight;
+        state.renderedChatSig['game-chat-messages'] = `w:${state.room?.chat?.length || 0}:${state.whispers.length}:${whisperMsg.id}`;
+        if (!isMine) {
+          SoundFX.reveal();
+          if (!isChatVisibleOnScreen()) {
+            state.unreadChatCount += 1;
+            updateChatUnreadBadges();
+          }
+          showToast(`Тайный шёпот от ${whisperMsg.senderName}!`, 'info');
+        }
+      }
+
       function appendChatMessage(msg) {
         const boxes = ['lobby-chat-messages', 'game-chat-messages', 'gameover-chat-messages'];
         const html = buildChatMessageHtml(msg);
@@ -2637,7 +3371,7 @@
           const box = document.getElementById(id);
           if (!box) return;
           if (state.room?.chat) {
-            state.renderedChatSig[id] = `${state.room.chat.length}:${msg.id}`;
+            state.renderedChatSig[id] = `${state.room.chat.length}:${msg.id}${id === 'game-chat-messages' ? `:w${state.whispers.length}` : ''}`;
           }
           // Remove empty-state hint if present
           if (box.children.length === 1 && box.firstElementChild?.textContent?.includes('Сообщений пока нет')) {
@@ -2720,6 +3454,62 @@
         document.getElementById('end-stat-exiled').textContent = sum.exiled.length;
         document.getElementById('end-stat-rounds').textContent = sum.rounds;
         document.getElementById('end-stat-votes').textContent = sum.totalVotes;
+
+        // Survival Simulation Report
+        const rep = sum.survivalReport;
+        const heroTitleEl = document.getElementById('end-hero-title');
+        if (rep) {
+          const verdictEl = document.getElementById('end-survival-verdict');
+          const scoreEl = document.getElementById('end-survival-score');
+          const barEl = document.getElementById('end-survival-bar');
+          const toneColor = rep.verdictTone === 'success' ? 'text-bunker-green' : rep.verdictTone === 'warning' ? 'text-bunker-amber' : 'text-red-400';
+          const barColor = rep.verdictTone === 'success' ? 'bg-bunker-green' : rep.verdictTone === 'warning' ? 'bg-bunker-amber' : 'bg-red-500';
+          if (heroTitleEl) {
+            heroTitleEl.textContent = rep.verdictTone === 'success'
+              ? 'ВЫЖИВАНИЕ УСПЕШНО'
+              : rep.verdictTone === 'warning'
+                ? 'БУНКЕР ЗАПЕЧАТАН'
+                : 'ВЫЖИВАНИЕ ПОД УГРОЗОЙ';
+            heroTitleEl.className = `mt-1 font-pixel text-xl sm:text-3xl lg:text-4xl leading-snug ${rep.verdictTone === 'danger' ? 'text-red-400' : 'text-bunker-amber'}`;
+          }
+          verdictEl.textContent = rep.verdictTitle;
+          verdictEl.className = `font-pixel text-sm sm:text-base mt-1 ${toneColor}`;
+          scoreEl.textContent = `${rep.score}%`;
+          scoreEl.className = `font-pixel text-lg sm:text-2xl tabular-nums ${toneColor}`;
+          barEl.style.width = `${rep.score}%`;
+          barEl.className = `h-full transition-all duration-300 ${barColor}`;
+          document.getElementById('end-survival-summary').textContent = rep.summaryText;
+          document.getElementById('end-survival-checks').innerHTML = (rep.checks || []).map((c) => `
+            <div class="p-2.5 bg-[#0b0d0f] border ${c.passed ? 'border-emerald-700/70' : 'border-red-800/70'} space-y-1">
+              <div class="font-mono font-bold ${c.passed ? 'text-bunker-green' : 'text-red-400'}">${c.passed ? '✔' : '✖'} ${escapeHtml(c.label)}</div>
+              <div class="text-[11px] text-gray-300 leading-snug">${escapeHtml(c.detail)}</div>
+            </div>
+          `).join('');
+        }
+
+        // Secret Goals Results
+        const goalsSec = document.getElementById('end-secret-goals-section');
+        const goalsList = document.getElementById('end-secret-goals-list');
+        if (goalsSec && goalsList) {
+          if (sum.goalResults && sum.goalResults.length > 0) {
+            goalsSec.classList.remove('hidden');
+            goalsList.innerHTML = sum.goalResults.map((g) => `
+              <div class="p-2.5 bg-[#0b0d0f] border ${g.achieved ? 'border-emerald-700/70' : 'border-bunker-steel'} flex items-start gap-2.5">
+                ${renderPixelAvatar(g.avatarId, false, 'w-9 h-9')}
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="font-bold text-bunker-text truncate">${escapeHtml(g.name)}</span>
+                    <span class="font-mono font-bold text-[11px] shrink-0 ${g.achieved ? 'text-bunker-green' : 'text-red-400'}">${g.achieved ? 'ВЫПОЛНЕНА' : 'ПРОВАЛЕНА'}</span>
+                  </div>
+                  <div class="text-purple-300 font-semibold mt-0.5">${escapeHtml(g.title)}</div>
+                  <div class="text-gray-300 text-[11px] leading-snug">${escapeHtml(g.note || g.description)}</div>
+                </div>
+              </div>
+            `).join('');
+          } else {
+            goalsSec.classList.add('hidden');
+          }
+        }
 
         const renderFullPlayerSummary = (p, isWinner) => `
           <div class="p-3 bg-[#101316] border ${isWinner ? 'border-emerald-700/60' : 'border-red-900/50'} space-y-2">
@@ -2847,9 +3637,11 @@
         }
       });
 
-      // Sound toggles
+      // Sound & ambient toggles
       document.getElementById('btn-sound-toggle').addEventListener('click', toggleMute);
       document.getElementById('btn-title-sound').addEventListener('click', toggleMute);
+      document.getElementById('btn-toggle-ambient')?.addEventListener('click', toggleAmbient);
+      document.getElementById('btn-title-ambient')?.addEventListener('click', toggleAmbient);
 
       // Rules modal (manual open from Start/HUD + auto-popup before first game)
       const STORAGE_HIDE_RULES_KEY = 'bunker_hide_auto_rules_v1';
@@ -2893,13 +3685,42 @@
         const btn = document.getElementById('btn-skip-vote');
         if (!btn || btn.disabled) return;
         SoundFX.click();
+        const maxSkips = state.privateData?.maxSkips ?? state.room?.settings?.maxSkips ?? 3;
         socket.emit('game:skipVote', {}, (res) => {
           if (!res?.ok) {
             showToast(res?.error || 'Не удалось пропустить голос.', 'error');
           } else {
-            showToast(`Вы воздержались от голосования. Осталось пропусков: ${res.skipsRemaining}/3`, 'info');
+            showToast(`Вы воздержались от голосования. Осталось пропусков: ${res.skipsRemaining}/${maxSkips}`, 'info');
           }
         });
+      });
+
+      // Dilemma voting handlers
+      ['yes', 'no'].forEach((choice) => {
+        document.getElementById(`btn-dilemma-${choice}`)?.addEventListener('click', () => {
+          SoundFX.click();
+          socket.emit('game:voteDilemma', { choice }, (res) => {
+            if (!res?.ok) showToast(res?.error || 'Ошибка голосования по дилемме.', 'error');
+            else showToast('Решение принято.', 'success');
+          });
+        });
+      });
+
+      // View mode & Secret Goal privacy toggles
+      document.getElementById('btn-view-cards')?.addEventListener('click', () => {
+        SoundFX.click();
+        state.playersViewMode = 'cards';
+        if (state.room) renderPlayersGrid();
+      });
+      document.getElementById('btn-view-matrix')?.addEventListener('click', () => {
+        SoundFX.click();
+        state.playersViewMode = 'matrix';
+        if (state.room) renderPlayersGrid();
+      });
+      document.getElementById('btn-toggle-secret-goal')?.addEventListener('click', () => {
+        SoundFX.click();
+        state.secretGoalHidden = !state.secretGoalHidden;
+        renderPlayingPersonal();
       });
 
       // Dossier & Special Target modal close
@@ -2969,7 +3790,7 @@
         }
       });
 
-      // Lobby actions
+      // Lobby actions: ready, bots, settings, start
       document.getElementById('btn-toggle-ready').addEventListener('click', () => {
         SoundFX.click();
         socket.emit('lobby:toggleReady', {}, (res) => {
@@ -2977,8 +3798,39 @@
         });
       });
 
+      document.getElementById('btn-add-bot')?.addEventListener('click', () => {
+        SoundFX.click();
+        socket.emit('lobby:addBot', {}, (res) => {
+          if (!res?.ok) setInlineError('lobby-error', res?.error || 'Не удалось добавить бота.');
+          else setInlineError('lobby-error', '');
+        });
+      });
+
+      function pushLobbySettingsUpdate() {
+        const payload = {
+          discussionSeconds: Number(document.getElementById('set-disc-sec')?.value || 120),
+          votingSeconds: Number(document.getElementById('set-vote-sec')?.value || 45),
+          maxSkips: Number(document.getElementById('set-max-skips')?.value ?? 3),
+          forceProfessionRound1: Boolean(document.getElementById('set-force-prof')?.checked),
+          enableRandomEvents: Boolean(document.getElementById('set-events')?.checked),
+          enableDilemmas: Boolean(document.getElementById('set-dilemmas')?.checked),
+          enableSecretRoles: Boolean(document.getElementById('set-secret-roles')?.checked)
+        };
+        socket.emit('lobby:updateSettings', payload, (res) => {
+          if (!res?.ok) setInlineError('lobby-error', res?.error || 'Не удалось обновить настройки.');
+        });
+      }
+
+      ['set-disc-sec', 'set-vote-sec', 'set-max-skips', 'set-force-prof', 'set-events', 'set-dilemmas', 'set-secret-roles'].forEach((id) => {
+        document.getElementById(id)?.addEventListener('change', () => {
+          SoundFX.click();
+          pushLobbySettingsUpdate();
+        });
+      });
+
       document.getElementById('btn-start-game').addEventListener('click', () => {
         SoundFX.click();
+        state.whispers = [];
         socket.emit('game:start', {}, (res) => {
           if (!res?.ok) setInlineError('lobby-error', res?.error || 'Не удалось начать игру.');
           else setInlineError('lobby-error', '');
@@ -2995,9 +3847,23 @@
       });
 
       // Host phase controls
+      document.getElementById('btn-host-pause')?.addEventListener('click', () => {
+        SoundFX.click();
+        socket.emit('game:togglePause', {}, (res) => {
+          if (!res?.ok) showToast(res?.error || 'Ошибка паузы.', 'error');
+        });
+      });
+
       document.getElementById('btn-host-end-discussion').addEventListener('click', () => {
         SoundFX.click();
         socket.emit('game:endDiscussion', {}, (res) => {
+          if (!res?.ok) showToast(res?.error || 'Ошибка.', 'error');
+        });
+      });
+
+      document.getElementById('btn-host-end-dilemma')?.addEventListener('click', () => {
+        SoundFX.click();
+        socket.emit('game:endDilemma', {}, (res) => {
           if (!res?.ok) showToast(res?.error || 'Ошибка.', 'error');
         });
       });
@@ -3013,6 +3879,7 @@
       document.getElementById('btn-play-again').addEventListener('click', () => {
         SoundFX.click();
         state.lastRevealedKeys.clear();
+        state.whispers = [];
         socket.emit('game:playAgain', {}, (res) => {
           if (!res?.ok) showToast(res?.error || 'Ошибка запуска новой партии.', 'error');
         });
@@ -3021,17 +3888,21 @@
       document.getElementById('btn-return-lobby').addEventListener('click', () => {
         SoundFX.click();
         state.lastRevealedKeys.clear();
+        state.whispers = [];
         socket.emit('game:returnToLobby', {}, (res) => {
           if (!res?.ok) showToast(res?.error || 'Ошибка.', 'error');
         });
       });
 
+      document.getElementById('chat-whisper-target')?.addEventListener('change', updateWhisperComposerUI);
+
       // Chat forms (Multiline textarea: Enter submits, Shift+Enter inserts newline, live counter up to 500 chars)
-      function bindChatForm(formId, inputId, counterId, errorId) {
+      function bindChatForm(formId, inputId, counterId, errorId, boxId, allowWhisper = false) {
         const form = document.getElementById(formId);
         const input = document.getElementById(inputId);
         const counter = document.getElementById(counterId);
         if (!form || !input) return;
+        if (boxId) bindChatBoxDelegates(boxId, inputId);
 
         function updateCounterAndResize() {
           const len = Array.from(input.value).length;
@@ -3047,6 +3918,24 @@
           const text = input.value.trim();
           if (!text) return;
           setInlineError(errorId, '');
+          const whisperSel = allowWhisper ? document.getElementById('chat-whisper-target') : null;
+          const whisperTargetId = whisperSel ? whisperSel.value : '';
+          if (whisperTargetId) {
+            socket.emit('chat:whisper', { targetId: whisperTargetId, text }, (res) => {
+              if (!res?.ok) {
+                setInlineError(errorId, res?.error || 'Не удалось отправить шёпот.');
+                showToast(res?.error || 'Не удалось отправить шёпот.', 'error');
+              } else {
+                setInlineError(errorId, '');
+                input.value = '';
+                if (whisperSel) whisperSel.value = '';
+                updateWhisperComposerUI();
+                updateCounterAndResize();
+                SoundFX.click();
+              }
+            });
+            return;
+          }
           socket.emit('chat:send', { text }, (res) => {
             if (!res?.ok) {
               setInlineError(errorId, res?.error || 'Не удалось отправить сообщение.');
@@ -3078,19 +3967,23 @@
         });
       }
 
-      bindChatForm('lobby-chat-form', 'lobby-chat-input', 'lobby-chat-counter', 'lobby-chat-error');
-      bindChatForm('game-chat-form', 'game-chat-input', 'game-chat-counter', 'game-chat-error');
-      bindChatForm('gameover-chat-form', 'gameover-chat-input', 'gameover-chat-counter', 'gameover-chat-error');
+      bindChatForm('lobby-chat-form', 'lobby-chat-input', 'lobby-chat-counter', 'lobby-chat-error', 'lobby-chat-messages', false);
+      bindChatForm('game-chat-form', 'game-chat-input', 'game-chat-counter', 'game-chat-error', 'game-chat-messages', true);
+      bindChatForm('gameover-chat-form', 'gameover-chat-input', 'gameover-chat-counter', 'gameover-chat-error', 'gameover-chat-messages', false);
 
       // Console Tabs (Desktop: Chat / Diary / History) + Mobile Bottom Nav (Bunker / Chat / Diary / History)
       function syncMobileNavUI() {
         const scenarioPanel = document.getElementById('scenario-panel');
+        const spectatorBanner = document.getElementById('spectator-banner');
+        const phasePanel = document.getElementById('phase-panel');
         const mainCol = document.getElementById('game-main-col');
         const consolePanel = document.getElementById('game-console-panel');
         if (!mainCol || !consolePanel) return;
 
         const showBunkerMobile = state.mobileView === 'bunker';
         if (scenarioPanel) scenarioPanel.classList.toggle('hidden', !showBunkerMobile);
+        if (spectatorBanner) spectatorBanner.classList.toggle('max-xl:hidden', !showBunkerMobile);
+        if (phasePanel) phasePanel.classList.toggle('max-xl:hidden', !showBunkerMobile);
         mainCol.classList.toggle('hidden', !showBunkerMobile);
         consolePanel.classList.toggle('hidden', showBunkerMobile);
         consolePanel.classList.toggle('flex', !showBunkerMobile);

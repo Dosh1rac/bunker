@@ -15,9 +15,14 @@ const {
   TRAIT_KEYS,
   SPECIAL_CARDS,
   RANDOM_EVENTS,
+  DILEMMAS,
+  SECRET_GOALS,
   CODE_ALPHABET,
   computeBunkerCapacity,
   validatePlayerName,
+  validateRoomSettings,
+  evaluateBunkerSurvival,
+  evaluateSecretGoal,
   sanitizeChatMessage,
   checkChatFlood
 } = require('./server.js');
@@ -186,7 +191,8 @@ test('Full multiplayer lifecycle: 3-10 players, limits, unique cards, secrecy, s
     hostMigrationMs: 250,
     offlineKickMs: 100,
     roomCleanupMs: 5000,
-    disableRandomEvents: false
+    disableRandomEvents: false,
+    disableDilemmas: true
   });
 
   await new Promise((resolve) => srv.server.listen(0, '127.0.0.1', resolve));
@@ -434,7 +440,8 @@ test('Skip Vote: 3 skips per game, 4th rejected, quorum advances with 0 exiles, 
   const srv = createBunkerServer({
     discussionSeconds: 30,
     votingSeconds: 30,
-    disableRandomEvents: true
+    disableRandomEvents: true,
+    disableDilemmas: true
   });
 
   await new Promise((resolve) => srv.server.listen(0, '127.0.0.1', resolve));
@@ -544,4 +551,270 @@ test('Skip Vote: 3 skips per game, 4th rejected, quorum advances with 0 exiles, 
     await srv.close();
   }
 });
+
+test('Unit tests: validateRoomSettings, evaluateBunkerSurvival, and evaluateSecretGoal', () => {
+  assert.ok(DILEMMAS.length >= 6);
+  assert.ok(SECRET_GOALS.length >= 6);
+
+  const defSettings = validateRoomSettings({});
+  assert.equal(defSettings.discussionSeconds, 120);
+  assert.equal(defSettings.votingSeconds, 45);
+  assert.equal(defSettings.maxSkips, 3);
+  assert.equal(defSettings.forceProfessionRound1, false);
+  assert.equal(defSettings.enableDilemmas, true);
+  assert.equal(defSettings.enableSecretRoles, true);
+
+  const customSettings = validateRoomSettings({
+    discussionSeconds: 60,
+    votingSeconds: 30,
+    maxSkips: 1,
+    forceProfessionRound1: true,
+    enableRandomEvents: false,
+    enableDilemmas: false,
+    enableSecretRoles: false
+  });
+  assert.equal(customSettings.discussionSeconds, 60);
+  assert.equal(customSettings.votingSeconds, 30);
+  assert.equal(customSettings.maxSkips, 1);
+  assert.equal(customSettings.forceProfessionRound1, true);
+  assert.equal(customSettings.enableRandomEvents, false);
+  assert.equal(customSettings.enableDilemmas, false);
+  assert.equal(customSettings.enableSecretRoles, false);
+
+  // Invalid numeric options fall back to defaults
+  const invalidFallback = validateRoomSettings({ discussionSeconds: 999, votingSeconds: 12, maxSkips: 99 });
+  assert.equal(invalidFallback.discussionSeconds, 120);
+  assert.equal(invalidFallback.votingSeconds, 45);
+  assert.equal(invalidFallback.maxSkips, 3);
+
+  const idealRoom = {
+    settings: { maxSkips: 3 },
+    game: {
+      bunker: { foodMonths: 14, waterPercent: 90, powerPercent: 90, malfunctions: [] }
+    },
+    players: [
+      {
+        id: 'p1',
+        alive: true,
+        everRunoff: false,
+        skipsUsed: 0,
+        specialCard: { used: true },
+        secretGoal: { id: 'tactician', title: 'Тактик', description: '...' },
+        traits: {
+          profession: { data: { title: 'Хирург' } },
+          health: { data: { severity: 'none' } },
+          biology: { data: { fertility: 'Фертилен' } },
+          hobby: { data: { title: 'Кулинария' } },
+          luggage: { data: { title: 'Полевая аптечка' } }
+        }
+      },
+      {
+        id: 'p2',
+        alive: true,
+        everRunoff: true,
+        skipsUsed: 3,
+        specialCard: { used: false },
+        secretGoal: { id: 'save_medic', title: 'Беречь врача', description: '...' },
+        traits: {
+          profession: { data: { title: 'Инженер-ядерщик' } },
+          health: { data: { severity: 'none' } },
+          biology: { data: { fertility: 'Фертилен' } },
+          hobby: { data: { title: 'Растениеводство' } },
+          luggage: { data: { title: 'Набор инструментов' } }
+        }
+      }
+    ]
+  };
+  const goodReport = evaluateBunkerSurvival(idealRoom);
+  assert.equal(goodReport.score, 100);
+  assert.equal(goodReport.checks.length, 5);
+  assert.equal(goodReport.verdictTone, 'success');
+  assert.equal(evaluateSecretGoal(idealRoom.players[0], idealRoom, goodReport).achieved, true);
+  assert.equal(evaluateSecretGoal(idealRoom.players[1], idealRoom, goodReport).achieved, true);
+});
+
+test('New features integration: avatars, settings, bots, pause, dilemmas, whispers, reactions, and survival report', async () => {
+  const srv = createBunkerServer({
+    discussionSeconds: 60,
+    votingSeconds: 30,
+    dilemmaSeconds: 20,
+    disableRandomEvents: true,
+    disableDilemmas: false
+  });
+
+  await new Promise((resolve) => srv.server.listen(0, '127.0.0.1', resolve));
+  const port = srv.server.address().port;
+  const baseUrl = `http://127.0.0.1:${port}`;
+  const clients = [];
+
+  try {
+    const c1 = new TestSocketClient(baseUrl);
+    const c2 = new TestSocketClient(baseUrl);
+    const c3 = new TestSocketClient(baseUrl);
+    clients.push(c1, c2, c3);
+    for (const c of clients) await c.connect();
+
+    const r1 = await c1.emit('room:create', { name: 'Альфа' });
+    const code = r1.roomCode;
+    await c2.emit('room:join', { name: 'Бета', code });
+    await c3.emit('room:join', { name: 'Гамма', code });
+
+    // Avatar picker
+    const avRes = await c2.emit('lobby:setAvatar', { avatarId: 7 });
+    assert.equal(avRes.ok, true);
+    await wait(40);
+    const betaPub = c1.latestState.players.find((p) => p.name === 'Бета');
+    assert.equal(betaPub.avatarId, 7);
+
+    // Host settings + non-host rejection
+    const nonHostSettings = await c2.emit('lobby:updateSettings', { maxSkips: 0 });
+    assert.equal(nonHostSettings.ok, false);
+
+    const hostSettings = await c1.emit('lobby:updateSettings', {
+      discussionSeconds: 60,
+      votingSeconds: 30,
+      maxSkips: 1,
+      forceProfessionRound1: true,
+      enableRandomEvents: false,
+      enableDilemmas: true,
+      enableSecretRoles: true
+    });
+    assert.equal(hostSettings.ok, true);
+    assert.equal(hostSettings.settings.maxSkips, 1);
+    assert.equal(hostSettings.settings.forceProfessionRound1, true);
+
+    // Add & Remove Bot
+    const botAdd = await c1.emit('lobby:addBot');
+    assert.equal(botAdd.ok, true);
+    await wait(220);
+    assert.equal(c1.latestState.players.length, 4);
+    assert.equal(c1.latestState.players.some((p) => p.isBot), true);
+
+    const botRem = await c1.emit('lobby:removeBot', { targetId: botAdd.botId });
+    assert.equal(botRem.ok, true);
+    await wait(220);
+    // Add bot back so 4 players -> capacity 2, round 1 -> 1 exile -> round 2
+    const botAdd2 = await c1.emit('lobby:addBot');
+    assert.equal(botAdd2.ok, true);
+
+    await wait(110);
+    assert.equal((await c1.emit('game:start')).ok, true);
+    await wait(60);
+
+    // Verify secretGoal is private only and NOT in public room:state
+    assert.ok(c1.latestPrivate.secretGoal);
+    assert.equal(c1.latestPrivate.maxSkips, 1);
+    assert.equal(c1.latestPrivate.skipsRemaining, 1);
+    assert.equal('secretGoal' in c1.latestState.players[0], false);
+
+    // forceProfessionRound1 rejects non-profession first reveal, allows profession
+    const badReveal = await c1.emit('game:revealTrait', { traitKey: 'hobby' });
+    assert.equal(badReveal.ok, false);
+    await wait(220);
+    const profReveal = await c1.emit('game:revealTrait', { traitKey: 'profession' });
+    assert.equal(profReveal.ok, true);
+
+    // Pause / resume
+    const p1 = await c1.emit('game:togglePause');
+    assert.equal(p1.ok, true);
+    assert.equal(p1.paused, true);
+    await wait(220);
+    const p2 = await c1.emit('game:togglePause');
+    assert.equal(p2.ok, true);
+    assert.equal(p2.paused, false);
+
+    // Chat reaction & strict Whisper privacy
+    const chatRes = await c1.emit('chat:send', { text: 'Проверяем реакцию!' });
+    assert.equal(chatRes.ok, true);
+    const reactRes = await c2.emit('chat:react', { messageId: chatRes.message.id, emoji: '👍' });
+    assert.equal(reactRes.ok, true);
+    assert.equal(reactRes.reactions['👍'].length, 1);
+    await wait(180);
+    const badReact = await c2.emit('chat:react', { messageId: chatRes.message.id, emoji: '💩' });
+    assert.equal(badReact.ok, false);
+
+    const c1Whispers = [];
+    const c2Whispers = [];
+    const c3Whispers = [];
+    c1.events.set('chat:whisperMessage', [(w) => c1Whispers.push(w)]);
+    c2.events.set('chat:whisperMessage', [(w) => c2Whispers.push(w)]);
+    c3.events.set('chat:whisperMessage', [(w) => c3Whispers.push(w)]);
+
+    const w1 = await c1.emit('chat:whisper', { targetId: c2.latestPrivate.playerId, text: 'Договоримся против Гаммы' });
+    assert.equal(w1.ok, true);
+    assert.equal(w1.whispersRemaining, 1);
+    await wait(450);
+    const w2 = await c1.emit('chat:whisper', { targetId: c2.latestPrivate.playerId, text: 'Второй шёпот' });
+    assert.equal(w2.ok, true);
+    assert.equal(w2.whispersRemaining, 0);
+    await wait(450);
+    const w3 = await c1.emit('chat:whisper', { targetId: c2.latestPrivate.playerId, text: 'Третий лишний' });
+    assert.equal(w3.ok, false, 'Max 2 whispers per round');
+
+    assert.equal(c1Whispers.length, 2, 'Sender sees both whispers');
+    assert.equal(c2Whispers.length, 2, 'Recipient sees both whispers');
+    assert.equal(c3Whispers.length, 0, 'Third party MUST NEVER see private whispers');
+
+    // End discussion -> Voting -> Skip + Votes -> triggers Dilemma before Round 2
+    await wait(120);
+    assert.equal((await c1.emit('game:endDiscussion')).ok, true);
+    await wait(150);
+    assert.equal(c1.latestState.phase, 'voting');
+
+    // Vote tie or skip to keep all 4 alive -> advances to dilemma phase
+    assert.equal((await c1.emit('game:skipVote')).ok, true);
+    assert.equal((await c2.emit('game:skipVote')).ok, true);
+    assert.equal((await c3.emit('game:skipVote')).ok, true);
+    await wait(150);
+    assert.equal((await c1.emit('game:endVoting')).ok, true);
+    await wait(120);
+
+    // Dilemma phase triggered! Vote ЗА from humans & endDilemma
+    assert.equal(c1.latestState.phase, 'dilemma', 'Between rounds enters dilemma phase');
+    assert.ok(c1.latestState.dilemmaInfo.title);
+    assert.equal((await c1.emit('game:voteDilemma', { choice: 'yes' })).ok, true);
+    assert.equal((await c2.emit('game:voteDilemma', { choice: 'yes' })).ok, true);
+    await wait(120);
+    assert.equal((await c1.emit('game:endDilemma')).ok, true);
+    await wait(100);
+
+    assert.equal(c1.latestState.phase, 'discussion', 'After dilemma moves to Round 2 discussion');
+    assert.equal(c1.latestState.round, 2);
+
+    // Wait for bot auto-reveal to verify bot works in discussion
+    await wait(1500);
+    const botPlayer = c1.latestState.players.find((p) => p.isBot);
+    assert.equal(botPlayer.revealedThisRound, true, 'Bot automatically reveals a trait in discussion');
+
+    // Exile two players across voting to reach capacity 2 -> ended with survivalReport & goalResults
+    for (let step = 0; step < 2; step++) {
+      if (c1.latestState.phase === 'ended') break;
+      if (c1.latestState.phase === 'dilemma') {
+        await wait(120);
+        await c1.emit('game:endDilemma');
+        await wait(60);
+      }
+      await wait(120);
+      await c1.emit('game:endDiscussion');
+      await wait(60);
+      const target = c1.latestState.players.find((p) => p.alive && p.id !== c1.latestPrivate.playerId && p.id !== c2.latestPrivate.playerId);
+      await wait(220);
+      await c1.emit('game:vote', { targetId: target.id });
+      await wait(220);
+      await c2.emit('game:vote', { targetId: target.id });
+      await wait(120);
+      await c1.emit('game:endVoting');
+      await wait(80);
+    }
+
+    assert.equal(c1.latestState.phase, 'ended');
+    assert.ok(c1.latestState.endSummary.survivalReport);
+    assert.equal(c1.latestState.endSummary.survivalReport.checks.length, 5);
+    assert.equal(c1.latestState.endSummary.goalResults.length, 4);
+  } finally {
+    for (const c of clients) c.close();
+    await srv.close();
+  }
+});
+
 
