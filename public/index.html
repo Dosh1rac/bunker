@@ -304,6 +304,10 @@
           <span id="hud-conn-text" class="hidden sm:inline text-bunker-muted">ОНЛАЙН</span>
         </div>
 
+        <button id="btn-hud-rules" type="button" class="pixel-btn pixel-btn-steel px-2.5 py-1.5 text-xs font-mono min-h-[36px]" aria-label="Открыть правила игры">
+          ПРАВИЛА
+        </button>
+
         <button id="btn-sound-toggle" type="button" class="pixel-btn pixel-btn-steel px-2.5 py-1.5 text-xs font-mono flex items-center gap-1.5 min-h-[36px]" aria-label="Переключить звук">
           <span id="sound-icon">ЗВУК: ВКЛ</span>
         </button>
@@ -469,6 +473,12 @@
                 Мест в бункере: <strong id="lobby-capacity-preview" class="text-bunker-green">0</strong>
               </div>
               <div class="text-xs text-bunker-muted">Для старта нужно от 3 до 10 игроков</div>
+            </div>
+
+            <div class="mt-3 p-2.5 bg-[#101418] border border-bunker-steel grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+              <div><strong class="text-bunker-amber font-mono">1. Пригласите друзей</strong><div class="text-bunker-muted">Передайте код или ссылку (3–10 чел.)</div></div>
+              <div><strong class="text-bunker-amber font-mono">2. Нажмите «Готов»</strong><div class="text-bunker-muted">Подтвердите участие перед входом</div></div>
+              <div><strong class="text-bunker-amber font-mono">3. Старт бункера</strong><div class="text-bunker-muted">Хост запускает раздачу карт и ролей</div></div>
             </div>
 
             <div id="lobby-error" role="alert" class="hidden mt-4 p-3 bg-red-950/80 border-2 border-red-500 text-red-200 text-sm"></div>
@@ -692,6 +702,9 @@
           </div>
         </div>
 
+        <!-- Clear Step-by-Step Action Guide -->
+        <div id="phase-action-guide" class="mt-3 p-2.5 border border-bunker-amber/50 bg-amber-950/20 text-xs sm:text-sm text-amber-100 flex items-center gap-2"></div>
+
         <!-- Active Voting Grid -->
         <div id="voting-zone" class="hidden mt-4 pt-4 border-t border-bunker-steel">
           <div class="hazard-bar-red mb-4"></div>
@@ -701,6 +714,23 @@
           </div>
           <div id="voting-status-note" class="hidden mb-3 p-3 bg-emerald-950/40 border border-emerald-700 text-emerald-200 text-sm"></div>
           <div id="voting-candidates" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+
+          <!-- Skip Vote Option (max 3 per game) -->
+          <div id="voting-skip-box" class="mt-3 p-3 bg-[#101418] border-2 border-bunker-steel flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="text-xs sm:text-sm">
+              <div class="font-semibold text-bunker-text">Не хотите никого изгонять в этом голосовании?</div>
+              <div class="text-xs text-bunker-muted mt-0.5">
+                Можно воздержаться (скипнуть) до 3 раз за игру. <span id="voting-skip-remaining-label" class="font-mono text-bunker-amber font-bold">Осталось: 3 / 3</span>
+              </div>
+            </div>
+            <button
+              id="btn-skip-vote"
+              type="button"
+              class="pixel-btn pixel-btn-steel px-4 py-2.5 text-xs font-mono shrink-0 min-h-[44px]"
+            >
+              ПРОПУСТИТЬ ГОЛОС (3/3)
+            </button>
+          </div>
         </div>
       </div>
 
@@ -720,8 +750,8 @@
               <div id="my-buffs-line" class="text-xs font-mono text-bunker-green"></div>
             </div>
 
-            <!-- 6 Trait Cards -->
-            <div id="my-traits-grid" class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+            <!-- 8 Trait Cards -->
+            <div id="my-traits-grid" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3"></div>
 
             <!-- Dedicated Special Card Section -->
             <div id="my-special-section" class="mt-5 pt-4 border-t-2 border-bunker-steel">
@@ -984,20 +1014,43 @@
     </div>
   </div>
 
-  <!-- Rules Modal -->
-  <div id="modal-rules" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="rules-modal-title">
-    <div class="pixel-panel w-full max-w-xl overflow-hidden">
+  <!-- Rules Modal (pops up automatically before first game + accessible anytime) -->
+  <div id="modal-rules" class="hidden fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="rules-modal-title">
+    <div class="pixel-panel w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
       <div class="hazard-bar"></div>
-      <div class="px-5 py-4 border-b border-bunker-steel flex items-center justify-between bg-bunker-metal">
-        <h2 id="rules-modal-title" class="font-pixel text-xs text-bunker-amber">ИНСТРУКТАЖ ВЫЖИВШИХ</h2>
-        <button id="btn-close-rules" type="button" class="pixel-btn pixel-btn-steel px-3 py-1.5 text-xs font-mono min-h-[38px]">ЗАКРЫТЬ</button>
+      <div class="px-5 py-4 border-b border-bunker-steel flex items-center justify-between gap-3 bg-bunker-metal">
+        <div>
+          <div class="text-[10px] font-mono uppercase text-bunker-muted">Инструктаж перед входом в убежище</div>
+          <h2 id="rules-modal-title" class="font-pixel text-xs sm:text-sm text-bunker-amber mt-0.5">ПРАВИЛА ИГРЫ «БУНКЕР»</h2>
+        </div>
+        <button id="btn-close-rules" type="button" class="pixel-btn pixel-btn-steel px-3 py-1.5 text-xs font-mono min-h-[38px]">ЗАКРЫТЬ [X]</button>
       </div>
-      <div class="p-5 space-y-3 text-sm text-gray-300 max-h-[75vh] overflow-y-auto leading-relaxed">
-        <p><strong class="text-bunker-amber">1. Цель игры:</strong> После глобальной катастрофы в бункере помещается только половина участников (<code class="font-mono text-bunker-yellow">Math.floor(игроков / 2)</code>). Убедите остальных, что именно ваши навыки и характеристики спасут группу.</p>
-        <p><strong class="text-bunker-amber">2. Раунд обсуждения (120 сек.):</strong> В каждом раунде живые игроки открывают по <strong>1 скрытой характеристике</strong> (Профессия, Биология, Здоровье, Хобби, Фобия или Багаж). Закрыть карту обратно нельзя.</p>
-        <p><strong class="text-bunker-amber">3. Спецкарты:</strong> У каждого есть 1 одноразовая спецкарта с реальным игровым эффектом — обмен картами, лечение, рентген, иммунитет, ремонт бункера и т.д.</p>
-        <p><strong class="text-bunker-amber">4. Голосование (45 сек.):</strong> Все живые игроки тайно голосуют за изгнание одного участника (против себя нельзя). При ничьей проводится повторное голосование между лидерами. Повторная ничья никого не выгоняет.</p>
-        <p><strong class="text-bunker-amber">5. Случайные события и финал:</strong> Между раундами происходят нештатные ситуации. Когда число живых игроков сравнивается со вместимостью бункера, оставшиеся объявляются победителями!</p>
+      <div class="p-4 sm:p-5 space-y-3 text-sm text-gray-200 overflow-y-auto leading-relaxed">
+        <div class="pixel-panel-dark p-3 border-l-4 border-l-bunker-amber">
+          <div class="font-mono text-xs font-bold text-bunker-amber">1. ГЛАВНАЯ ЦЕЛЬ (МЕСТА ОГРАНИЧЕНЫ)</div>
+          <p class="mt-1 text-xs sm:text-sm text-gray-300">Мир пережил катастрофу. В убежище поместится только <strong>половина участников</strong> (с округлением вниз, например 2 из 5 или 3 из 6). Докажите другим игрокам, что именно вы полезны для выживания.</p>
+        </div>
+        <div class="pixel-panel-dark p-3 border-l-4 border-l-sky-400">
+          <div class="font-mono text-xs font-bold text-sky-300">2. ОБСУЖДЕНИЕ (120 СЕК.) И РАСКРЫТИЕ КАРТ</div>
+          <p class="mt-1 text-xs sm:text-sm text-gray-300">В каждом раунде живой игрок должен открыть <strong>1 из 8 своих карт</strong> (Профессия, Биология, Здоровье, Хобби, Фобия, Багаж, Характер или Доп. факт). Убеждайте, блефуйте и спорьте в чате, а также используйте 1 личную <strong>Спецкарту</strong>.</p>
+        </div>
+        <div class="pixel-panel-dark p-3 border-l-4 border-l-red-400">
+          <div class="font-mono text-xs font-bold text-red-300">3. ГОЛОСОВАНИЕ И ПРОПУСК ГОЛОСА (СКИП)</div>
+          <p class="mt-1 text-xs sm:text-sm text-gray-300">Все голосуют, кто покинет бункер (против себя нельзя). Если не хотите никого выгонять — нажмите <strong>«ПРОПУСТИТЬ ГОЛОС»</strong> (доступно <strong>3 раза за игру</strong>). При ничьей проводится повторный тур; повторная ничья никого не изгоняет.</p>
+        </div>
+        <div class="pixel-panel-dark p-3 border-l-4 border-l-bunker-green">
+          <div class="font-mono text-xs font-bold text-bunker-green">4. СОБЫТИЯ И ПОБЕДА</div>
+          <p class="mt-1 text-xs sm:text-sm text-gray-300">Между раундами происходят случайные события. Изгнанные становятся наблюдателями и могут продолжать общаться в чате. Когда живых остаётся столько, сколько мест в бункере — партия завершается победой!</p>
+        </div>
+      </div>
+      <div class="px-5 py-3.5 border-t border-bunker-steel bg-[#101316] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <label class="flex items-center gap-2 text-xs text-bunker-muted cursor-pointer select-none">
+          <input id="chk-hide-auto-rules" type="checkbox" class="w-4 h-4 accent-amber-500" />
+          <span>Не показывать автоматически при запуске</span>
+        </label>
+        <button id="btn-close-rules-cta" type="button" class="pixel-btn pixel-btn-amber px-5 py-2.5 font-pixel text-xs min-h-[44px]">
+          ПОНЯТНО, В ИГРУ!
+        </button>
       </div>
     </div>
   </div>
@@ -1151,13 +1204,16 @@
       // ======================================================================
       // PIXEL ART ICON & AVATAR GENERATORS (16-BIT CRISP SVG)
       // ======================================================================
+      const TRAIT_ORDER = ['profession', 'biology', 'health', 'hobby', 'phobia', 'luggage', 'character', 'fact'];
       const TRAIT_META = {
         profession: { label: 'Профессия', color: '#f59e0b' },
         biology: { label: 'Биология', color: '#38bdf8' },
         health: { label: 'Здоровье', color: '#ef4444' },
         hobby: { label: 'Хобби', color: '#4ade80' },
         phobia: { label: 'Фобия', color: '#c084fc' },
-        luggage: { label: 'Багаж', color: '#fb923c' }
+        luggage: { label: 'Багаж', color: '#fb923c' },
+        character: { label: 'Характер', color: '#f472b6' },
+        fact: { label: 'Доп. факт', color: '#2dd4bf' }
       };
 
       function getTraitPixelSvg(key) {
@@ -1215,6 +1271,23 @@
             <rect x="5" y="6" width="6" height="6" fill="#ea580c"/>
             <rect x="5" y="8" width="6" height="1" fill="#431407"/>
             <rect x="7" y="7" width="2" height="3" fill="#fbbf24"/>
+          </svg>`,
+          character: `<svg viewBox="0 0 16 16" class="w-7 h-7 pixel-art" shape-rendering="crispEdges" aria-hidden="true">
+            <rect x="2" y="2" width="12" height="12" fill="#241420"/>
+            <rect x="4" y="4" width="8" height="7" fill="#f472b6"/>
+            <rect x="5" y="5" width="6" height="5" fill="#fdf2f8"/>
+            <rect x="6" y="6" width="1" height="2" fill="#831843"/>
+            <rect x="9" y="6" width="1" height="2" fill="#831843"/>
+            <rect x="6" y="9" width="4" height="1" fill="#db2777"/>
+            <rect x="5" y="11" width="6" height="2" fill="#be185d"/>
+          </svg>`,
+          fact: `<svg viewBox="0 0 16 16" class="w-7 h-7 pixel-art" shape-rendering="crispEdges" aria-hidden="true">
+            <rect x="2" y="2" width="12" height="12" fill="#102221"/>
+            <rect x="4" y="3" width="8" height="10" fill="#0f766e"/>
+            <rect x="5" y="4" width="6" height="8" fill="#2dd4bf"/>
+            <rect x="6" y="5" width="4" height="1" fill="#134e4a"/>
+            <rect x="6" y="7" width="4" height="1" fill="#134e4a"/>
+            <rect x="6" y="9" width="3" height="1" fill="#134e4a"/>
           </svg>`,
           special: `<svg viewBox="0 0 16 16" class="w-8 h-8 pixel-art" shape-rendering="crispEdges" aria-hidden="true">
             <rect x="1" y="1" width="14" height="14" fill="#231a0c"/>
@@ -1894,12 +1967,52 @@
         btnEndDisc.classList.toggle('hidden', !(isHost && r.phase === 'discussion'));
         btnEndVote.classList.toggle('hidden', !(isHost && (r.phase === 'voting' || r.phase === 'runoff')));
 
+        updatePhaseActionGuide();
         renderVotingZone();
         renderPlayingPersonal();
         renderPlayersGrid();
         renderChatList('game-chat-messages', r.chat);
         renderDiary();
         renderVotingHistory('panel-tab-history', r.votingHistory);
+      }
+
+      function updatePhaseActionGuide() {
+        const guideEl = document.getElementById('phase-action-guide');
+        if (!guideEl || !state.room) return;
+        const r = state.room;
+        const priv = state.privateData;
+        const me = r.players.find((p) => p.id === state.session?.playerId);
+        if (!me) return;
+
+        if (!me.alive) {
+          guideEl.className = 'mt-3 p-2.5 border border-gray-700 bg-[#121518] text-xs sm:text-sm text-gray-300';
+          guideEl.textContent = 'Наблюдатель: вы изгнаны, но можете следить за голосованием и писать в чат.';
+          return;
+        }
+
+        if (r.phase === 'discussion') {
+          if (me.revealedThisRound) {
+            guideEl.className = 'mt-3 p-2.5 border border-emerald-700/70 bg-emerald-950/25 text-xs sm:text-sm text-emerald-200';
+            guideEl.textContent = '✔ Вы уже открыли карту в этом раунде. Обсуждайте игроков в чате или примените спецкарту.';
+          } else {
+            guideEl.className = 'mt-3 p-2.5 border border-bunker-amber/60 bg-amber-950/25 text-xs sm:text-sm text-amber-100';
+            guideEl.textContent = 'ШАГ 1: Нажмите «Открыть для всех» на одной из ваших 8 характеристик ниже.';
+          }
+          return;
+        }
+
+        if (r.phase === 'voting' || r.phase === 'runoff') {
+          const skipsRemaining = priv && typeof priv.skipsRemaining === 'number' ? priv.skipsRemaining : 3;
+          if (priv && priv.hasVoted) {
+            guideEl.className = 'mt-3 p-2.5 border border-emerald-700/70 bg-emerald-950/25 text-xs sm:text-sm text-emerald-200';
+            guideEl.textContent = priv.skippedThisVote
+              ? `✔ Вы воздержались в этом голосовании (осталось пропусков: ${skipsRemaining} / 3). Ожидаем остальных.`
+              : '✔ Ваш голос учтён. Ожидаем завершения голосования.';
+          } else {
+            guideEl.className = 'mt-3 p-2.5 border border-red-600/70 bg-red-950/30 text-xs sm:text-sm text-red-100';
+            guideEl.textContent = `ШАГ 2: Выберите кандидата для изгнания или нажмите «ПРОПУСТИТЬ ГОЛОС» (осталось ${skipsRemaining} из 3).`;
+          }
+        }
       }
 
       function renderVotingZone() {
@@ -1918,30 +2031,40 @@
         document.getElementById('voting-progress').textContent = `Проголосовало: ${vInfo.votesCast} / ${vInfo.totalVoters}`;
         document.getElementById('voting-instruction').textContent = vInfo.isRunoff
           ? 'Повторное голосование между кандидатами с ничьей:'
-          : 'Выберите игрока для изгнания из убежища:';
+          : 'Выберите игрока для изгнания из убежища (или пропустите голос):';
 
         const statusNote = document.getElementById('voting-status-note');
         const hasVoted = Boolean(priv && priv.hasVoted);
+        const skippedThisVote = Boolean(priv && priv.skippedThisVote);
+        const skipsRemaining = priv && typeof priv.skipsRemaining === 'number' ? priv.skipsRemaining : 3;
         const isAlive = Boolean(me && me.alive);
 
         if (!isAlive) {
           statusNote.classList.remove('hidden');
+          statusNote.className = 'mb-3 p-3 bg-[#14171a] border border-gray-700 text-gray-300 text-sm';
           statusNote.textContent = 'Вы изгнаны и наблюдаете за голосованием со стороны.';
         } else if (hasVoted) {
-          const votedTarget = r.players.find((p) => p.id === priv.votedForId);
           statusNote.classList.remove('hidden');
-          statusNote.textContent = `Ваш голос отправлен (${votedTarget ? votedTarget.name : 'учтён'}). Изменить выбор нельзя.`;
+          statusNote.className = 'mb-3 p-3 bg-emerald-950/40 border border-emerald-700 text-emerald-200 text-sm';
+          if (skippedThisVote) {
+            statusNote.textContent = `Вы воздержались в этом голосовании (пропуск). Осталось пропусков: ${skipsRemaining} из 3.`;
+          } else {
+            const votedTarget = r.players.find((p) => p.id === priv.votedForId);
+            statusNote.textContent = `Ваш голос отправлен (${votedTarget ? votedTarget.name : 'учтён'}). Изменить выбор нельзя.`;
+          }
         } else {
           statusNote.classList.add('hidden');
         }
 
         const candContainer = document.getElementById('voting-candidates');
         const candidatePlayers = r.players.filter((p) => p.alive && vInfo.candidates.includes(p.id));
+        const votedSet = new Set(vInfo.votedPlayerIds || []);
 
         candContainer.innerHTML = candidatePlayers.map((p) => {
           const isSelf = me && p.id === me.id;
           const isChosen = hasVoted && priv.votedForId === p.id;
           const canVote = isAlive && !hasVoted && !isSelf;
+          const playerHasSubmitted = votedSet.has(p.id);
 
           return `
             <div class="pixel-panel-dark p-3 flex items-center justify-between gap-3 ${isChosen ? 'border-red-500 bg-red-950/25' : ''}">
@@ -1951,6 +2074,9 @@
                   <div class="font-semibold text-sm text-bunker-text truncate">${escapeHtml(p.name)}</div>
                   <div class="text-xs font-mono text-bunker-muted truncate">
                     ${p.traits.profession?.revealed ? escapeHtml(p.traits.profession.data.title) : 'Профессия скрыта'}
+                  </div>
+                  <div class="text-[10px] font-mono ${playerHasSubmitted ? 'text-bunker-green' : 'text-bunker-muted'}">
+                    ${playerHasSubmitted ? '✔ Выбор сделан' : 'Ожидает выбора...'}
                   </div>
                 </div>
               </div>
@@ -1977,6 +2103,28 @@
             });
           });
         });
+
+        // Skip vote UI update
+        const skipBox = document.getElementById('voting-skip-box');
+        const skipRemEl = document.getElementById('voting-skip-remaining-label');
+        const skipBtn = document.getElementById('btn-skip-vote');
+        if (skipBox && skipRemEl && skipBtn) {
+          skipBox.classList.toggle('hidden', !isAlive);
+          skipRemEl.textContent = `Осталось: ${skipsRemaining} / 3`;
+          const canSkip = isAlive && !hasVoted && skipsRemaining > 0;
+          skipBtn.disabled = !canSkip;
+          if (skippedThisVote) {
+            skipBtn.textContent = `ПРОПУЩЕНО (${skipsRemaining}/3)`;
+            skipBtn.className = 'pixel-btn pixel-btn-green px-4 py-2.5 text-xs font-mono shrink-0 min-h-[44px]';
+          } else if (skipsRemaining <= 0) {
+            skipBtn.textContent = 'ЛИМИТ СКИПОВ (0/3)';
+            skipBtn.className = 'pixel-btn pixel-btn-steel px-4 py-2.5 text-xs font-mono shrink-0 min-h-[44px]';
+          } else {
+            skipBtn.textContent = `ПРОПУСТИТЬ ГОЛОС (${skipsRemaining}/3)`;
+            skipBtn.className = `pixel-btn ${canSkip ? 'pixel-btn-amber' : 'pixel-btn-steel'} px-4 py-2.5 text-xs font-mono shrink-0 min-h-[44px]`;
+          }
+        }
+        updatePhaseActionGuide();
       }
 
       function renderTraitDetailsHtml(key, data) {
@@ -2007,6 +2155,14 @@
           return `<p class="text-xs text-gray-300 leading-relaxed">${escapeHtml(data.description)}</p>
                   <div class="mt-1 text-xs text-orange-300 font-mono">${escapeHtml(data.effect)}</div>`;
         }
+        if (key === 'character') {
+          return `<p class="text-xs text-gray-300 leading-relaxed">${escapeHtml(data.description)}</p>
+                  <div class="mt-1 text-xs text-pink-300 font-mono">${escapeHtml(data.effect)}</div>`;
+        }
+        if (key === 'fact') {
+          return `<p class="text-xs text-gray-300 leading-relaxed">${escapeHtml(data.description)}</p>
+                  <div class="mt-1 text-xs text-teal-300 font-mono">${escapeHtml(data.impact)}</div>`;
+        }
         return '';
       }
 
@@ -2022,7 +2178,7 @@
         } else if (r.phase !== 'discussion') {
           revealStatusEl.textContent = 'Открытие характеристик доступно только в фазе обсуждения.';
         } else if (me.revealedThisRound) {
-          revealStatusEl.textContent = 'В этом раунде вы уже раскрыли одну характеристику.';
+          revealStatusEl.textContent = '✔ В этом раунде вы уже раскрыли одну характеристику.';
         } else {
           revealStatusEl.textContent = 'Выберите одну скрытую карту, чтобы открыть её для всех в этом раунде.';
         }
@@ -2032,10 +2188,11 @@
         if (priv.immuneThisRound) buffs.push('Неприкосновенность активна');
         if (priv.quarantinedThisRound) buffs.push('Карантин (спецкарта заблокирована)');
         if (priv.redirectTargetId) buffs.push('Адвокат дьявола активен');
+        if (typeof priv.skipsRemaining === 'number') buffs.push(`Пропусков голоса: ${priv.skipsRemaining}/3`);
         document.getElementById('my-buffs-line').textContent = buffs.join(' · ');
 
         const grid = document.getElementById('my-traits-grid');
-        const keys = ['profession', 'biology', 'health', 'hobby', 'phobia', 'luggage'];
+        const keys = TRAIT_ORDER;
 
         grid.innerHTML = keys.map((key) => {
           const card = priv.traits[key];
@@ -2049,6 +2206,12 @@
             ? 'pixel-panel-dark border-bunker-amber/70'
             : 'classified-surface border-2 border-bunker-steel';
 
+          const disabledBtnText = !me.alive
+            ? 'Вы наблюдатель'
+            : r.phase !== 'discussion'
+              ? 'Доступно в обсуждении'
+              : 'Открыто в этом раунде';
+
           return `
             <article class="${surfaceClass} p-3.5 flex flex-col justify-between gap-3 ${justFlipped ? 'animate-card-flip' : ''}">
               <div>
@@ -2058,7 +2221,7 @@
                     <div>
                       <div class="text-[11px] font-mono uppercase text-bunker-muted">${meta.label}</div>
                       <div class="text-[11px] font-mono font-bold ${isRevealed ? 'text-bunker-green' : 'text-bunker-amber'}">
-                        ${isRevealed ? 'ОТКРЫТО' : 'СКРЫТО'}
+                        ${isRevealed ? 'ОТКРЫТО ВСЕМ' : 'СКРЫТО ОТ ДРУГИХ'}
                       </div>
                     </div>
                   </div>
@@ -2068,8 +2231,8 @@
               </div>
               <div class="pt-2 border-t border-bunker-steel/60">
                 ${isRevealed
-                  ? '<div class="text-xs font-mono text-bunker-muted py-1.5 text-center">Видно всем участникам</div>'
-                  : `<button type="button" data-reveal-key="${key}" ${canReveal ? '' : 'disabled'} class="pixel-btn pixel-btn-amber w-full py-2 px-3 text-xs font-mono">Открыть для всех</button>`
+                  ? '<div class="text-xs font-mono text-bunker-green py-1.5 text-center">✔ Видно всем участникам</div>'
+                  : `<button type="button" data-reveal-key="${key}" ${canReveal ? '' : 'disabled'} class="pixel-btn ${canReveal ? 'pixel-btn-amber' : 'pixel-btn-steel'} w-full py-2 px-3 text-xs font-mono">${canReveal ? 'Открыть для всех' : disabledBtnText}</button>`
                 }
               </div>
             </article>
@@ -2175,7 +2338,7 @@
           const statusLabel = !p.alive ? 'Изгнан' : (p.connected ? 'Жив' : 'Не в сети');
           const statusColor = !p.alive ? 'text-gray-400' : (p.connected ? 'text-bunker-green' : 'text-bunker-yellow');
 
-          const revealedEntries = ['profession', 'biology', 'health', 'hobby', 'phobia', 'luggage']
+          const revealedEntries = TRAIT_ORDER
             .filter((k) => p.traits[k] && p.traits[k].revealed && p.traits[k].data)
             .map((k) => `<div class="text-xs truncate"><span class="text-bunker-muted font-mono">${TRAIT_META[k].label}:</span> <span class="text-gray-200">${escapeHtml(p.traits[k].data.title)}</span></div>`)
             .join('');
@@ -2257,7 +2420,7 @@
         document.getElementById('dossier-modal-meta').textContent =
           `${p.alive ? 'Жив' : 'Изгнан'} · ${p.connected ? 'В сети' : 'Не в сети'} · Скрыто карт: ${p.hiddenCount} · Спецкарта: ${p.specialCardUsed ? 'Использована' : 'Доступна'}`;
 
-        const keys = ['profession', 'biology', 'health', 'hobby', 'phobia', 'luggage'];
+        const keys = TRAIT_ORDER;
         document.getElementById('dossier-modal-body').innerHTML = keys.map((k) => {
           const trait = p.traits[k];
           const meta = TRAIT_META[k];
@@ -2301,6 +2464,8 @@
           if (sc.targetRule === 'alive_other_hidden_health') return !p.traits.health?.revealed;
           if (sc.targetRule === 'alive_other_hidden_biology') return !p.traits.biology?.revealed;
           if (sc.targetRule === 'alive_other_hidden_phobia') return !p.traits.phobia?.revealed;
+          if (sc.targetRule === 'alive_other_hidden_character') return !p.traits.character?.revealed;
+          if (sc.targetRule === 'alive_other_hidden_fact') return !p.traits.fact?.revealed;
           if (sc.targetRule === 'alive_other_has_hidden') return p.hiddenCount > 0;
           if (sc.targetRule === 'alive_other_unused_special') return !p.specialCardUsed;
           return true;
@@ -2572,7 +2737,9 @@
               <div><span class="text-bunker-muted">Здоровье:</span> ${escapeHtml(p.traits.health?.data?.title || '')}</div>
               <div><span class="text-bunker-muted">Хобби:</span> ${escapeHtml(p.traits.hobby?.data?.title || '')}</div>
               <div><span class="text-bunker-muted">Фобия:</span> ${escapeHtml(p.traits.phobia?.data?.title || '')}</div>
-              <div class="sm:col-span-2"><span class="text-bunker-muted">Багаж:</span> ${escapeHtml(p.traits.luggage?.data?.title || '')}</div>
+              <div><span class="text-bunker-muted">Багаж:</span> ${escapeHtml(p.traits.luggage?.data?.title || '')}</div>
+              <div><span class="text-bunker-muted">Характер:</span> ${escapeHtml(p.traits.character?.data?.title || '')}</div>
+              <div><span class="text-bunker-muted">Доп. факт:</span> ${escapeHtml(p.traits.fact?.data?.title || '')}</div>
               ${p.specialCardPublic ? `<div class="sm:col-span-2 text-bunker-yellow"><span class="text-bunker-muted">Спецкарта:</span> ${escapeHtml(p.specialCardPublic.title)} (${p.specialCardPublic.used ? 'использована' : 'не использована'})</div>` : ''}
             </div>
           </div>
@@ -2684,14 +2851,55 @@
       document.getElementById('btn-sound-toggle').addEventListener('click', toggleMute);
       document.getElementById('btn-title-sound').addEventListener('click', toggleMute);
 
-      // Rules modal
+      // Rules modal (manual open from Start/HUD + auto-popup before first game)
+      const STORAGE_HIDE_RULES_KEY = 'bunker_hide_auto_rules_v1';
+      const SESSION_RULES_SHOWN_KEY = 'bunker_rules_shown_session_v1';
+
+      function openRulesModal() {
+        const chk = document.getElementById('chk-hide-auto-rules');
+        if (chk) chk.checked = localStorage.getItem(STORAGE_HIDE_RULES_KEY) === '1';
+        document.getElementById('modal-rules').classList.remove('hidden');
+      }
+
+      function closeRulesModal() {
+        const chk = document.getElementById('chk-hide-auto-rules');
+        try {
+          if (chk && chk.checked) localStorage.setItem(STORAGE_HIDE_RULES_KEY, '1');
+          else localStorage.removeItem(STORAGE_HIDE_RULES_KEY);
+          sessionStorage.setItem(SESSION_RULES_SHOWN_KEY, '1');
+        } catch (_e) {}
+        document.getElementById('modal-rules').classList.add('hidden');
+      }
+
       document.getElementById('btn-open-rules').addEventListener('click', () => {
         SoundFX.click();
-        document.getElementById('modal-rules').classList.remove('hidden');
+        openRulesModal();
+      });
+      document.getElementById('btn-hud-rules').addEventListener('click', () => {
+        SoundFX.click();
+        openRulesModal();
       });
       document.getElementById('btn-close-rules').addEventListener('click', () => {
         SoundFX.click();
-        document.getElementById('modal-rules').classList.add('hidden');
+        closeRulesModal();
+      });
+      document.getElementById('btn-close-rules-cta').addEventListener('click', () => {
+        SoundFX.click();
+        closeRulesModal();
+      });
+
+      // Skip Vote button handler
+      document.getElementById('btn-skip-vote').addEventListener('click', () => {
+        const btn = document.getElementById('btn-skip-vote');
+        if (!btn || btn.disabled) return;
+        SoundFX.click();
+        socket.emit('game:skipVote', {}, (res) => {
+          if (!res?.ok) {
+            showToast(res?.error || 'Не удалось пропустить голос.', 'error');
+          } else {
+            showToast(`Вы воздержались от голосования. Осталось пропусков: ${res.skipsRemaining}/3`, 'info');
+          }
+        });
       });
 
       // Dossier & Special Target modal close
@@ -2708,14 +2916,20 @@
       ['modal-dossier', 'modal-special-target', 'modal-rules'].forEach((id) => {
         const el = document.getElementById(id);
         el.addEventListener('click', (e) => {
-          if (e.target === el) el.classList.add('hidden');
+          if (e.target === el) {
+            if (id === 'modal-rules') closeRulesModal();
+            else el.classList.add('hidden');
+          }
         });
       });
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-          ['modal-dossier', 'modal-special-target', 'modal-rules'].forEach((id) => {
+          ['modal-dossier', 'modal-special-target'].forEach((id) => {
             document.getElementById(id).classList.add('hidden');
           });
+          if (!document.getElementById('modal-rules').classList.contains('hidden')) {
+            closeRulesModal();
+          }
         }
       });
 
@@ -2942,9 +3156,17 @@
 
       syncMobileNavUI();
 
-      // Initialize UI
+      // Initialize UI & auto-open rules before the first game unless user opted out
       updateMuteUI();
       renderCurrentScreen();
+      try {
+        const hideAutoRules = localStorage.getItem(STORAGE_HIDE_RULES_KEY) === '1';
+        const shownThisSession = sessionStorage.getItem(SESSION_RULES_SHOWN_KEY) === '1';
+        if (!hideAutoRules && !shownThisSession) {
+          sessionStorage.setItem(SESSION_RULES_SHOWN_KEY, '1');
+          openRulesModal();
+        }
+      } catch (_e) {}
     })();
   </script>
 </body>

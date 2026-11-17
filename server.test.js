@@ -10,6 +10,9 @@ const {
   HOBBIES,
   PHOBIAS,
   LUGGAGE,
+  CHARACTERS,
+  FACTS,
+  TRAIT_KEYS,
   SPECIAL_CARDS,
   RANDOM_EVENTS,
   CODE_ALPHABET,
@@ -119,6 +122,10 @@ test('Database minimums and code alphabet requirements', () => {
   assert.ok(HOBBIES.length >= 25, 'At least 25 hobbies');
   assert.ok(PHOBIAS.length >= 25, 'At least 25 phobias');
   assert.ok(LUGGAGE.length >= 25, 'At least 25 luggage items');
+  assert.ok(CHARACTERS.length >= 25, 'At least 25 characters');
+  assert.ok(FACTS.length >= 25, 'At least 25 facts');
+  assert.equal(TRAIT_KEYS.length, 8, '8 character stat categories');
+  assert.ok(TRAIT_KEYS.includes('character') && TRAIT_KEYS.includes('fact'));
   assert.ok(SPECIAL_CARDS.length >= 25, 'At least 25 special cards');
   assert.ok(RANDOM_EVENTS.length >= 15, 'At least 15 random events');
 
@@ -241,14 +248,20 @@ test('Full multiplayer lifecycle: 3-10 players, limits, unique cards, secrecy, s
 
     // Scenario 6 & 13: Verify unique traits across all 10 players AND hidden traits are NEVER leaked in public state
     const seenProfs = new Set();
+    const seenCharacters = new Set();
+    const seenFacts = new Set();
     for (const c of clients) {
       assert.ok(c.latestPrivate, 'Client received private state');
       assert.ok(c.latestPrivate.traits.profession.data.title);
+      assert.ok(c.latestPrivate.traits.character.data.title);
+      assert.ok(c.latestPrivate.traits.fact.data.title);
       seenProfs.add(c.latestPrivate.traits.profession.data.title);
+      seenCharacters.add(c.latestPrivate.traits.character.data.title);
+      seenFacts.add(c.latestPrivate.traits.fact.data.title);
 
       // Public state must NOT contain hidden trait data of any player
       for (const pubPlayer of c.latestState.players) {
-        for (const k of ['profession', 'biology', 'health', 'hobby', 'phobia', 'luggage']) {
+        for (const k of TRAIT_KEYS) {
           assert.equal(pubPlayer.traits[k].revealed, false);
           assert.equal(pubPlayer.traits[k].data, null);
         }
@@ -256,10 +269,16 @@ test('Full multiplayer lifecycle: 3-10 players, limits, unique cards, secrecy, s
       }
     }
     assert.equal(seenProfs.size, 10, 'All 10 players have unique professions');
+    assert.equal(seenCharacters.size, 10, 'All 10 players have unique character traits');
+    assert.equal(seenFacts.size, 10, 'All 10 players have unique background facts');
 
-    // Scenario 7, 8, 9: Reveal own trait, cannot reveal twice in one round
+    // Scenario 7, 8, 9: Reveal own trait (including new character & fact stats), cannot reveal twice in one round
     const rev1 = await host.emit('game:revealTrait', { traitKey: 'profession' });
     assert.equal(rev1.ok, true);
+    const revChar = await clients[1].emit('game:revealTrait', { traitKey: 'character' });
+    assert.equal(revChar.ok, true);
+    const revFact = await clients[2].emit('game:revealTrait', { traitKey: 'fact' });
+    assert.equal(revFact.ok, true);
     const rev2 = await host.emit('game:revealTrait', { traitKey: 'health' });
     assert.equal(rev2.ok, false);
     const revSame = await host.emit('game:revealTrait', { traitKey: 'profession' });
@@ -410,3 +429,119 @@ test('Full multiplayer lifecycle: 3-10 players, limits, unique cards, secrecy, s
     await srv.close();
   }
 });
+
+test('Skip Vote: 3 skips per game, 4th rejected, quorum advances with 0 exiles, exiled blocked, resets on playAgain', async () => {
+  const srv = createBunkerServer({
+    discussionSeconds: 30,
+    votingSeconds: 30,
+    disableRandomEvents: true
+  });
+
+  await new Promise((resolve) => srv.server.listen(0, '127.0.0.1', resolve));
+  const port = srv.server.address().port;
+  const baseUrl = `http://127.0.0.1:${port}`;
+  const clients = [];
+
+  try {
+    const c1 = new TestSocketClient(baseUrl);
+    const c2 = new TestSocketClient(baseUrl);
+    const c3 = new TestSocketClient(baseUrl);
+    const c4 = new TestSocketClient(baseUrl);
+    clients.push(c1, c2, c3, c4);
+    for (const c of clients) await c.connect();
+
+    const r1 = await c1.emit('room:create', { name: 'Хост' });
+    assert.equal(r1.ok, true);
+    const code = r1.roomCode;
+    assert.equal((await c2.emit('room:join', { name: 'Алиса', code })).ok, true);
+    assert.equal((await c3.emit('room:join', { name: 'Борис', code })).ok, true);
+    assert.equal((await c4.emit('room:join', { name: 'Вера', code })).ok, true);
+
+    assert.equal((await c1.emit('game:start')).ok, true);
+    await wait(60);
+    assert.equal(c1.latestPrivate.skipsRemaining, 3);
+    assert.equal(c1.latestPrivate.skipsUsed, 0);
+
+    // Round 1, 2, 3: all 4 alive players skip -> resolves immediately with 0 exiles and advances round
+    for (let round = 1; round <= 3; round++) {
+      await wait(120);
+      assert.equal((await c1.emit('game:endDiscussion')).ok, true);
+      await wait(40);
+      assert.equal(c1.latestState.phase, 'voting');
+
+      // c1 skips
+      const s1 = await c1.emit('game:skipVote');
+      assert.equal(s1.ok, true, s1.error);
+      assert.equal(s1.skipsRemaining, 3 - round);
+      await wait(40);
+      assert.equal(c1.latestPrivate.skippedThisVote, true);
+      assert.equal(c1.latestPrivate.votedForId, null);
+      assert.equal(c1.latestPrivate.skipsRemaining, 3 - round);
+
+      // Cannot skip twice or vote after skipping in the same voting phase
+      await wait(210);
+      assert.equal((await c1.emit('game:skipVote')).ok, false, 'Cannot skip twice in one vote');
+      assert.equal((await c1.emit('game:vote', { targetId: c2.latestPrivate.playerId })).ok, false, 'Cannot vote after skipping');
+
+      // Remaining 3 players also skip -> immediate quorum resolution -> next discussion round
+      assert.equal((await c2.emit('game:skipVote')).ok, true);
+      assert.equal((await c3.emit('game:skipVote')).ok, true);
+      assert.equal((await c4.emit('game:skipVote')).ok, true);
+      await wait(60);
+
+      assert.equal(c1.latestState.phase, 'discussion', `All-skip quorum should advance from round ${round}`);
+      assert.equal(c1.latestState.round, round + 1);
+      assert.equal(c1.latestState.players.filter((p) => p.alive).length, 4, 'No player exiled when everyone skips');
+    }
+
+    // Round 4: 4th skip must be rejected!
+    await wait(120);
+    assert.equal((await c1.emit('game:endDiscussion')).ok, true);
+    await wait(40);
+    const fourthSkip = await c1.emit('game:skipVote');
+    assert.equal(fourthSkip.ok, false, '4th skip in same game must fail');
+    assert.equal(c1.latestPrivate.skipsRemaining, 0);
+
+    // Vote c4 out while c1 tests cannot skip after voting
+    await wait(210);
+    assert.equal((await c1.emit('game:vote', { targetId: c4.latestPrivate.playerId })).ok, true);
+    await wait(210);
+    assert.equal((await c1.emit('game:skipVote')).ok, false, 'Cannot skip after casting vote');
+    assert.equal((await c2.emit('game:vote', { targetId: c4.latestPrivate.playerId })).ok, true);
+    assert.equal((await c3.emit('game:vote', { targetId: c4.latestPrivate.playerId })).ok, true);
+    assert.equal((await c4.emit('game:vote', { targetId: c3.latestPrivate.playerId })).ok, true);
+    await wait(60);
+
+    // 4 players -> capacity 2, 3 alive -> Round 5 (c4 is now exiled)
+    assert.equal(c1.latestState.phase, 'discussion');
+    assert.equal(c1.latestState.players.find((p) => p.id === c4.latestPrivate.playerId).alive, false);
+
+    // Verify exiled player cannot skip in an active vote
+    await wait(120);
+    assert.equal((await c1.emit('game:endDiscussion')).ok, true);
+    await wait(40);
+    const exiledSkip = await c4.emit('game:skipVote');
+    assert.equal(exiledSkip.ok, false, 'Exiled player cannot skip vote');
+
+    // Exile c3 so 2 alive <= capacity 2 -> game ends
+    await wait(210);
+    assert.equal((await c1.emit('game:vote', { targetId: c3.latestPrivate.playerId })).ok, true);
+    assert.equal((await c2.emit('game:vote', { targetId: c3.latestPrivate.playerId })).ok, true);
+    assert.equal((await c3.emit('game:vote', { targetId: c2.latestPrivate.playerId })).ok, true);
+    await wait(60);
+    assert.equal(c1.latestState.phase, 'ended');
+
+    // Play again resets skipsRemaining back to 3 for everyone
+    assert.equal((await c1.emit('game:playAgain')).ok, true);
+    await wait(60);
+    assert.equal(c1.latestState.phase, 'discussion');
+    assert.equal(c1.latestState.round, 1);
+    assert.equal(c1.latestPrivate.skipsRemaining, 3);
+    assert.equal(c2.latestPrivate.skipsRemaining, 3);
+    assert.equal(c4.latestPrivate.skipsRemaining, 3);
+  } finally {
+    for (const c of clients) c.close();
+    await srv.close();
+  }
+});
+

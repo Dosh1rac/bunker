@@ -410,7 +410,11 @@ const PROFESSIONS = [
   { title: 'Криптограф', experience: '10 лет', skills: 'Дешифровка перехваченных радиосообщений, защита локальных систем связи' },
   { title: 'Фармацевт', experience: '12 лет', skills: 'Точная дозировка препаратов, замена дефицитных лекарств аналогами и травами' },
   { title: 'Сантехник-гидравлик', experience: '21 год', skills: 'Поддержание канализации и водопровода без малейших протечек' },
-  { title: 'Стендап-комик', experience: '5 лет', skills: 'Снятие коллективного напряжения юмором, убеждение аудитории и импровизация' }
+  { title: 'Стендап-комик', experience: '5 лет', skills: 'Снятие коллективного напряжения юмором, убеждение аудитории и импровизация' },
+  { title: 'Военный картограф', experience: '10 лет', skills: 'Составление точных карт коммуникаций, ориентирование под землёй и на местности' },
+  { title: 'Гидрогеолог', experience: '12 лет', skills: 'Бурение скважин, поиск чистых подземных водоносных горизонтов и оценка фильтрации' },
+  { title: 'Акушер-педиатр', experience: '14 лет', skills: 'Принятие родов в экстремальных условиях, уход за детьми и базовая реанимация' },
+  { title: 'Мастер по ремонту оптики', experience: '9 лет', skills: 'Юстировка микроскопов, перископов, дозиметров и приборов ночного видения' }
 ];
 
 const BIOLOGIES = [
@@ -441,7 +445,11 @@ const BIOLOGIES = [
   { title: 'Мужчина, 33 года, фертилен', gender: 'М', age: 33, fertility: 'Фертилен', trait: 'Пониженная потребность в кислороде', description: 'Легче всех переносит духоту при сбоях вентиляции.' },
   { title: 'Женщина, 39 лет, фертильна', gender: 'Ж', age: 39, fertility: 'Фертильна', trait: 'Феноменальный вестибулярный аппарат', description: 'Работает на высоте, в узких колодцах и при задымлении без головокружения.' },
   { title: 'Мужчина, 26 лет, бесплоден', gender: 'М', age: 26, fertility: 'Бесплоден', trait: 'Гетерохромия и идеальное цветовосприятие', description: 'Безошибочно различает маркировку проводов и химических индикаторов.' },
-  { title: 'Женщина, 44 года, бесплодна', gender: 'Ж', age: 44, fertility: 'Бесплодна', trait: 'Сверхбыстрая реакция на звуковые раздражители', description: 'Первой реагирует на срабатывание аварийной сигнализации.' }
+  { title: 'Женщина, 44 года, бесплодна', gender: 'Ж', age: 44, fertility: 'Бесплодна', trait: 'Сверхбыстрая реакция на звуковые раздражители', description: 'Первой реагирует на срабатывание аварийной сигнализации.' },
+  { title: 'Мужчина, 23 года, фертилен', gender: 'М', age: 23, fertility: 'Фертилен', trait: 'Высокая переносимость гипоксии', description: 'Сохраняет ясную голову в плохо проветриваемых отсеках.' },
+  { title: 'Женщина, 32 года, фертильна', gender: 'Ж', age: 32, fertility: 'Фертильна', trait: 'Природный иммунитет к большинству кишечных инфекций', description: 'Почти не страдает от некачественной воды и сомнительных консервов.' },
+  { title: 'Мужчина, 47 лет, бесплоден', gender: 'М', age: 47, fertility: 'Бесплоден', trait: 'Низкий уровень метаболизма в покое', description: 'Потребляет на 25% меньше калорий при той же работоспособности.' },
+  { title: 'Женщина, 28 лет, фертильна', gender: 'Ж', age: 28, fertility: 'Фертильна', trait: 'Закалённая терморегуляция', description: 'Легко переносит как сквозняки и холод, так и жару возле генераторов.' }
 ];
 
 const HEALTHS = [
@@ -472,7 +480,11 @@ const HEALTHS = [
   { title: 'Глубокое переутомление (выгорание)', severity: 'mild', treatable: true, description: 'Первые недели нужна психологическая разгрузка.' },
   { title: 'Аллергия на металл и синтетику', severity: 'mild', treatable: true, description: 'Раздражение кожи при длительном ношении защитных костюмов.' },
   { title: 'Здоров, но хронический храп (85 дБ)', severity: 'none', treatable: false, description: 'Физически крепок, но никто в бункере не может уснуть рядом.' },
-  { title: 'Невосприимчивость к боли (редкий синдром)', severity: 'mild', treatable: false, description: 'Не боится ран, но может не заметить опасное внутреннее повреждение.' }
+  { title: 'Невосприимчивость к боли (редкий синдром)', severity: 'mild', treatable: false, description: 'Не боится ран, но может не заметить опасное внутреннее повреждение.' },
+  { title: 'Перенесённый перелом кисти (лёгкая скованность)', severity: 'mild', treatable: true, description: 'Тяжёлые грузы носит уверенно, но тонкая пайка даётся с трудом.' },
+  { title: 'Хронический гайморит', severity: 'mild', treatable: true, description: 'Плохо переносит пыльный и холодный воздух при осмотре фильтров.' },
+  { title: 'Вегетососудистая дистония и головокружения', severity: 'mild', treatable: true, description: 'При резком вставании или нехватке кислорода темнеет в глазах.' },
+  { title: 'Сверхкрепкое здоровье и быстрая акклиматизация', severity: 'none', treatable: false, description: 'Отличные показатели сердца, лёгких и нервной системы.' }
 ];
 
 const HOBBIES = [
@@ -503,7 +515,11 @@ const HOBBIES = [
   { title: 'Мыловарение', description: 'Обеспечит бункер мылом из жира и золы, предотвращая эпидемии.', bonus: 'Снижает риск кожных инфекций' },
   { title: 'Сбор грибов и микология', description: 'Отличит съедобный гриб от смертельного и вырастит вешенки в тёмном коридоре.', bonus: 'Дополнительный источник белка' },
   { title: 'Ведение дневников и хроник', description: 'Систематизирует запасы, дежурства и историю выживания человечества.', bonus: 'Строгий порядок и сохранение знаний' },
-  { title: 'Косплей и крафт брони', description: 'Умеет склеивать и подгонять защитные щитки из любого пластика и пены.', bonus: 'Импровизированная защита для вылазок' }
+  { title: 'Косплей и крафт брони', description: 'Умеет склеивать и подгонять защитные щитки из любого пластика и пены.', bonus: 'Импровизированная защита для вылазок' },
+  { title: 'Стрельба из лука и арбалета', description: 'Изготовит простейший блочный лук из рессор и тросов без единого патрона.', bonus: 'Бесшумная охота и защита периметра после выхода' },
+  { title: 'Консервация и ферментация', description: 'Умеет квасить, солить и вялить продукты без холодильника на месяцы вперёд.', bonus: 'Снижает порчу продовольствия в бункере' },
+  { title: 'Спортивное ориентирование', description: 'Находит дорогу по карте, солнцу и рельефу в любой видимости.', bonus: 'Успешные разведвылазки на поверхность' },
+  { title: 'Каллиграфия и переплёт книг', description: 'Мало пользы в кризис, но умеет бережно восстанавливать бумажные инструкции.', bonus: 'Помогает сохранять ветхие архивы и схемы' }
 ];
 
 const PHOBIAS = [
@@ -534,7 +550,11 @@ const PHOBIAS = [
   { title: 'Трипофобия (боязнь скоплений отверстий)', description: 'Не может смотреть на перфорированные фильтры вентиляции и пчелиные соты.', impact: 'Не подходит для обслуживания решёток' },
   { title: 'Хронофобия (боязнь течения времени)', description: 'С ужасом смотрит на календари и таймеры, теряя счёт дням изоляции.', impact: 'Ускоренное эмоциональное выгорание' },
   { title: 'Гаптофобия (боязнь прикосновений)', description: 'Тяжело переносит тесноту общих кают и медицинские осмотры.', impact: 'Трения при скученном проживании' },
-  { title: 'Омброфобия (боязнь дождя и влаги)', description: 'Нервничает от звука капающей воды и конденсата на трубах.', impact: 'Срывается в сырых помещениях' }
+  { title: 'Омброфобия (боязнь дождя и влаги)', description: 'Нервничает от звука капающей воды и конденсата на трубах.', impact: 'Срывается в сырых помещениях' },
+  { title: 'Вермифобия (боязнь червей и личинок)', description: 'Отказывается приближаться к компосту, почве и теплицам.', impact: 'Не сможет работать на гидропонике с грунтом' },
+  { title: 'Скопофобия (страх пристального внимания)', description: 'Теряется и запинается, когда вся группа смотрит на него на голосовании.', impact: 'Выглядит подозрительно при защите своей позиции' },
+  { title: 'Радиофобия (панический страх радиации)', description: 'Требует проверять дозиметром каждую ложку и литр воды по пять раз.', impact: 'Замедляет выдачу пайков и усиливает тревогу' },
+  { title: 'Ксенофобия к незнакомцам (крайнее недоверие)', description: 'Уверен, что любые выжившие за дверью принесут заразу или устроят засаду.', impact: 'Саботирует попытки выйти на контакт с соседями' }
 ];
 
 const LUGGAGE = [
@@ -565,7 +585,73 @@ const LUGGAGE = [
   { title: 'Надувной костюм динозавра', description: 'Абсолютно бесполезная вещь для выживания, но вы почему-то схватили именно её.', effect: 'Гарантированный повод для шуток и подозрений' },
   { title: 'Дозиметр-радиометр профессиональный', description: 'Точно измеряет фон альфа-, бета- и гамма-излучения.', effect: 'Позволяет проверять воду, еду и воздух у шлюза' },
   { title: 'Солнечная складная панель 200 Вт', description: 'Пригодится сразу после выхода на поверхность для зарядки техники.', effect: 'Автономное питание для лагеря' },
-  { title: 'Огнетушитель ОУ-5 и асбестовое полотно', description: 'Надёжное средство против возгорания электропроводки.', effect: 'Спасёт убежище при пожаре' }
+  { title: 'Огнетушитель ОУ-5 и асбестовое полотно', description: 'Надёжное средство против возгорания электропроводки.', effect: 'Спасёт убежище при пожаре' },
+  { title: 'Портативный УФ-стерилизатор и таблетки хлора', description: 'Быстро обеззараживает воду, раны и медицинский инструмент.', effect: 'Снижает риск эпидемии внутри убежища' },
+  { title: 'Сварочный инвертор и пачка электродов', description: 'Компактный аппарат для герметизации шлюзов и ремонта металлических узлов.', effect: 'Незаменим при прорывах и трещинах корпуса' },
+  { title: 'Запасной комплект угольных фильтров (6 шт.)', description: 'Подходит для большинства систем регенерации воздуха.', effect: 'Продлевает безопасное дыхание на месяцы' },
+  { title: 'Тёплый арктический спальник (-40°C)', description: 'Защитит от переохлаждения при отключении отопления.', effect: 'Гарантия выживания при сбоях энергосети' }
+];
+
+const CHARACTERS = [
+  { title: 'Хладнокровный стратег', description: 'Принимает взвешенные решения даже под давлением и не поддаётся панике.', effect: 'Стабилизирует группу во время ЧП' },
+  { title: 'Самоотверженный альтруист', description: 'Готов отдать часть своего пайка и взять самое опасное дежурство.', effect: 'Повышает доверие коллектива' },
+  { title: 'Циничный прагматик', description: 'Оценивает людей исключительно по сухой пользе, без эмоций и жалости.', effect: 'Жёсткая, но рациональная логика' },
+  { title: 'Харизматичный лидер', description: 'Умеет увлечь за собой, распределить роли и погасить конфликт одним словом.', effect: 'Сплачивает разрозненных выживших' },
+  { title: 'Вспыльчивый перфекционист', description: 'Требует идеального порядка и срывается на крик из-за чужой небрежности.', effect: 'Провоцирует бытовые ссоры' },
+  { title: 'Тревожный пессимист', description: 'В каждом мелком сбое видит неминуемую гибель всего бункера.', effect: 'Замечает скрытые риски, но снижает мораль' },
+  { title: 'Скрытный интриган', description: 'Всегда держит козырь в рукаве и заключает тайные союзы в чате.', effect: 'Опасный переговорщик на голосовании' },
+  { title: 'Непоколебимый оптимист', description: 'Даже при 10% энергии находит повод пошутить и поддержать товарищей.', effect: 'Снижает уровень стресса в отсеках' },
+  { title: 'Дисциплинированный педант', description: 'Ведёт учёт каждой капли воды, таблетки и минуты дежурства.', effect: 'Исключает воровство и халатность' },
+  { title: 'Бунтарь-индивидуалист', description: 'Не признаёт приказов хоста и делает всё по-своему.', effect: 'Сложно координировать в кризис' },
+  { title: 'Молчаливый наблюдатель', description: 'Мало говорит, но запоминает каждое противоречие в словах других.', effect: 'Точно разоблачает блеф' },
+  { title: 'Эмпатичный миротворец', description: 'Улавливает настроение каждого и мягко мирит враждующие стороны.', effect: 'Предотвращает раскол группы' },
+  { title: 'Азартный авантюрист', description: 'Любит рискованные решения и готов первым открыть внешний шлюз.', effect: 'Двигатель смелых, но опасных планов' },
+  { title: 'Скрупулёзный аналитик', description: 'Проверяет любые факты и быстро замечает нестыковки в биографиях.', effect: 'Силён в логическом разборе кандидатов' },
+  { title: 'Подозрительный параноик', description: 'Считает, что каждый скрывает смертельную болезнь или саботаж.', effect: 'Нагнетает атмосферу перед голосованием' },
+  { title: 'Упрямый спорщик', description: 'Никогда не уступает в дискуссии, даже когда факты против него.', effect: 'Отнимает ценное время обсуждения' },
+  { title: 'Лояльный командный игрок', description: 'Чётко выполняет общие договорённости и не предаёт союзников.', effect: 'Надёжная опора в любой смене' },
+  { title: 'Хитрый дипломат', description: 'Умеет перевести чужое обвинение в шутку и перенаправить подозрения.', effect: 'Мастер выживания на голосованиях' },
+  { title: 'Независимый одиночка', description: 'Комфортнее работает в одиночку, избегает сближения с группой.', effect: 'Трудно предсказать его голос' },
+  { title: 'Справедливый арбитр', description: 'Голосует строго по фактам и защищает незаслуженно обвинённых.', effect: 'Сдерживает несправедливые расправы' },
+  { title: 'Нетерпеливый максималист', description: 'Требует немедленных действий и не любит долгих колебаний.', effect: 'Ускоряет принятие трудных решений' },
+  { title: 'Спокойный стоик', description: 'Молча переносит холод, голод и шум генераторов без единой жалобы.', effect: 'Образец психологической стойкости' },
+  { title: 'Язвительный скептик', description: 'Ставит под сомнение каждую красивую легенду о «сверхполезности».', effect: 'Вынуждает игроков показывать факты' },
+  { title: 'Заботливый наставник', description: 'Терпеливо обучает других базовым навыкам ремонта и первой помощи.', effect: 'Повышает общую квалификацию команды' },
+  { title: 'Импульсивный смельчак', description: 'Бросается чинить аварию раньше, чем наденет защитный костюм.', effect: 'Спасает в критическую секунду, но рискует собой' },
+  { title: 'Осторожный консерватор', description: 'Бережёт ресурсы и выступает против любых рискованных вылазок.', effect: 'Экономит запасы на долгий срок' },
+  { title: 'Мастер компромиссов', description: 'Находит решение, которое устраивает даже непримиримых соперников.', effect: 'Снижает риск ничьей и хаоса' },
+  { title: 'Бескомпромиссный идеалист', description: 'Отказывается нарушать моральные принципы даже ради выживания.', effect: 'Твёрд в убеждениях, но негибок' }
+];
+
+const FACTS = [
+  { title: 'Служил 4 года на атомной подлодке', description: 'Знает быт в полной изоляции, борьбу за живучесть и работу гермозатворов.', impact: 'Огромный опыт замкнутых пространств' },
+  { title: 'Знает аварийный код от спецскладов', description: 'Работал с региональной логистикой резервов ГО и ЧС.', impact: 'Шанс пополнить припасы после выхода' },
+  { title: 'Подозревался в промышленном шпионаже', description: 'Несколько раз менял документы перед самой катастрофой.', impact: 'Вызывает сомнения в искренности' },
+  { title: 'Пережил зимовку на полярной станции', description: 'Полгода в полярной ночи научили экономить тепло и электричество.', impact: 'Готов к суровым условиям и изоляции' },
+  { title: 'Прошёл курсы первой помощи Красного Креста', description: 'Умеет накладывать жгуты, делать СЛР и сортировать пострадавших.', impact: 'Страховка на случай потери врача' },
+  { title: 'Имеет условный срок за взлом серверов', description: 'Отлично разбирается в защите и обходе электронных замков.', impact: 'Полезно для техники, но бьёт по репутации' },
+  { title: 'Вынес двоих людей из пожара в 2024 году', description: 'Доказал способность не теряться в дыму и огне.', impact: 'Реальное подтверждение смелости' },
+  { title: 'Страдает лунатизмом (ходит во сне)', description: 'Ночью иногда бродит по коридорам и дёргает ручки шлюзов.', impact: 'Опасная привычка рядом с приборами' },
+  { title: 'Свободно читает военные топографические карты', description: 'Найдёт ориентиры, тоннели и укрытия по старым бумажным листам.', impact: 'Ценно для будущей разведки' },
+  { title: 'Зашил в подкладку куртки запас антибиотиков', description: 'Скрытая заначка на две полноценные схемы лечения инфекций.', impact: 'Скрытый резерв медицины' },
+  { title: 'Умеет вскрывать заклинившие замки без ключа', description: 'Знает устройство большинства цилиндровых и сувальдных механизмов.', impact: 'Откроет любой заблокированный отсек' },
+  { title: 'Абсолютно не умеет плавать', description: 'При затоплении нижних ярусов нуждается в страховке.', impact: 'Уязвимость в водных авариях' },
+  { title: 'Участвовал в строительстве этого бункера', description: 'Помнит схему дренажа, скрытых кабелей и аварийных выходов.', impact: 'Знание планировки убежища' },
+  { title: 'Обладает фотографической памятью на схемы', description: 'С первого взгляда запоминает таблицы, чертежи и дозировки.', impact: 'Живой справочник для команды' },
+  { title: 'Проиграл все сбережения за неделю до ЧП', description: 'Искал лёгкой выгоды и привык блефовать до последнего.', impact: 'Умеет убеждать, но склонен к риску' },
+  { title: 'Собрал дома автономный фильтр воздуха', description: 'Понимает принцип работы угольных и HEPA-фильтров на практике.', impact: 'Поможет с вентиляцией убежища' },
+  { title: 'Панически избегает роли руководителя', description: 'Хорошо выполняет поручения, но теряется, если от него ждут приказа.', impact: 'Исполнитель, но не командир' },
+  { title: 'Знает 12 способов очистки технической воды', description: 'Умеет делать фильтры из песка, угля, ткани и реагентов.', impact: 'Спасёт при поломке водоочистки' },
+  { title: 'В молодости был чемпионом по спортивному луку', description: 'Твёрдая рука, идеальный глазомер и спокойное дыхание.', impact: 'Точность в критических ситуациях' },
+  { title: '8 лет проработал вахтой в Заполярье', description: 'Не жалуется на мороз, тушёнку и отсутствие комфорта.', impact: 'Высокая бытовая неприхотливость' },
+  { title: 'Перенёс обморожение пальцев — снижена мелкая моторика', description: 'Не сможет чинить микросхемы или зашивать тонкие сосуды.', impact: 'Ограничение в ювелирных работах' },
+  { title: 'Принёс с собой мастер-ключ от городских коллекторов', description: 'Универсальный ключ обслуживающего персонала подземных сетей.', impact: 'Дополнительный маршрут эвакуации' },
+  { title: 'Часто забывает закрывать краны и выключатели', description: 'Рассеянность в быту уже приводила к мелким инцидентам.', impact: 'Требует контроля при дежурствах' },
+  { title: 'Ведёт подробный конспект поведения всех участников', description: 'Фиксирует, кто, когда и что сказал во время обсуждений.', impact: 'Сложно обмануть на дистанции' },
+  { title: 'Обучался выживанию в тайге с профессиональными егерями', description: 'Знает съедобные растения, ловушки и правила безопасного ночлега.', impact: 'Опора после выхода на поверхность' },
+  { title: 'Тяжёлая непереносимость консервантов в армейских пайках', description: 'Нуждается в альтернативных продуктах или кашах без добавок.', impact: 'Усложняет распределение рационов' },
+  { title: 'Свободно владеет азбукой Морзе и световой сигнализацией', description: 'Сможет передать сообщение даже при полном отказе голосового канала.', impact: 'Резервный способ связи' },
+  { title: 'Был добровольцем в 90-дневном эксперименте изоляции', description: 'Успешно прошёл тест психологической совместимости в замкнутом модуле.', impact: 'Гарантированная стрессоустойчивость' }
 ];
 
 const SPECIAL_CARDS = [
@@ -806,6 +892,26 @@ const SPECIAL_CARDS = [
     icon: 'megaphone',
     requiresTarget: false,
     allowedPhases: ['discussion', 'voting', 'runoff']
+  },
+  {
+    id: 'psych_analyze_character',
+    title: 'Психоанализ',
+    description: 'Принудительно раскройте скрытую карту характера выбранного живого игрока.',
+    condition: 'Цель должна быть жива и иметь скрытую карту характера.',
+    icon: 'eye',
+    requiresTarget: true,
+    targetRule: 'alive_other_hidden_character',
+    allowedPhases: ['discussion', 'voting', 'runoff']
+  },
+  {
+    id: 'expose_fact',
+    title: 'Компромат',
+    description: 'Раскройте скрытый дополнительный факт выбранного живого игрока для всей группы.',
+    condition: 'Цель должна быть жива и иметь скрытый дополнительный факт.',
+    icon: 'dossier',
+    requiresTarget: true,
+    targetRule: 'alive_other_hidden_fact',
+    allowedPhases: ['discussion', 'voting', 'runoff']
   }
 ];
 
@@ -973,14 +1079,16 @@ const RANDOM_EVENTS = [
   }
 ];
 
-const TRAIT_KEYS = ['profession', 'biology', 'health', 'hobby', 'phobia', 'luggage'];
+const TRAIT_KEYS = ['profession', 'biology', 'health', 'hobby', 'phobia', 'luggage', 'character', 'fact'];
 const TRAIT_LABELS = {
   profession: 'Профессия',
   biology: 'Биология',
   health: 'Здоровье',
   hobby: 'Хобби',
   phobia: 'Фобия',
-  luggage: 'Багаж'
+  luggage: 'Багаж',
+  character: 'Характер',
+  fact: 'Доп. факт'
 };
 
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excludes O, 0, I, 1
@@ -1229,16 +1337,24 @@ function createBunkerServer(options = {}) {
     };
   }
 
+  const MAX_VOTE_SKIPS = 3;
+  const VOTE_SKIP_MARKER = '__SKIP__';
+
   function getPrivatePlayerState(room, player) {
     const game = room.game;
     const hasVoted = Boolean(game && game.votes && game.votes.has(player.id));
+    const voteVal = hasVoted ? game.votes.get(player.id) : null;
+    const skipsUsed = player.skipsUsed || 0;
     return {
       playerId: player.id,
       roomCode: room.code,
       traits: player.traits || null,
       specialCard: player.specialCard || null,
       hasVoted,
-      votedForId: hasVoted ? game.votes.get(player.id) : null,
+      skippedThisVote: voteVal === VOTE_SKIP_MARKER,
+      votedForId: voteVal && voteVal !== VOTE_SKIP_MARKER ? voteVal : null,
+      skipsUsed,
+      skipsRemaining: Math.max(0, MAX_VOTE_SKIPS - skipsUsed),
       extraVotes: player.extraVotes || 0,
       immuneThisRound: Boolean(player.immuneThisRound),
       quarantinedThisRound: Boolean(game && player.quarantinedRound === game.round),
@@ -1398,12 +1514,15 @@ function createBunkerServer(options = {}) {
     const hobbyPool = shuffle(HOBBIES);
     const phobiaPool = shuffle(PHOBIAS);
     const luggagePool = shuffle(LUGGAGE);
+    const characterPool = shuffle(CHARACTERS);
+    const factPool = shuffle(FACTS);
     const specialPool = shuffle(SPECIAL_CARDS);
 
     room.players.forEach((player, idx) => {
       player.alive = true;
       player.exiled = false;
       player.revealedThisRound = false;
+      player.skipsUsed = 0;
       player.extraVotes = 0;
       player.immuneThisRound = false;
       player.quarantinedRound = 0;
@@ -1414,7 +1533,9 @@ function createBunkerServer(options = {}) {
         health: { revealed: false, data: cloneObj(healthPool[idx]) },
         hobby: { revealed: false, data: cloneObj(hobbyPool[idx]) },
         phobia: { revealed: false, data: cloneObj(phobiaPool[idx]) },
-        luggage: { revealed: false, data: cloneObj(luggagePool[idx]) }
+        luggage: { revealed: false, data: cloneObj(luggagePool[idx]) },
+        character: { revealed: false, data: cloneObj(characterPool[idx]) },
+        fact: { revealed: false, data: cloneObj(factPool[idx]) }
       };
       player.specialCard = {
         ...cloneObj(specialPool[idx % specialPool.length]),
@@ -1553,19 +1674,19 @@ function createBunkerServer(options = {}) {
       return;
     }
 
-    // No votes cast
+    // No votes cast against candidates (everyone skipped or didn't vote)
     if (maxVotes === 0) {
       game.votingHistory.push({
         id: generateId(),
         round: game.round,
         isRunoff,
         candidates: candidatesBreakdown,
-        outcome: 'Никто не проголосовал — изгнания не произошло',
+        outcome: 'Голосов против кандидатов нет (игроки воздержались) — изгнания не произошло',
         exiledPlayerId: null,
         exiledName: null
       });
-      addSystemMessage(room, 'Голосов не подано. В этом раунде никто не изгнан.');
-      addDiaryEntry(room, 'Итоги голосования', 'Голоса отсутствуют, состав группы не изменился.', 'vote');
+      addSystemMessage(room, 'Никто не набрал голосов на изгнание (игроки воздержались или не успели). В этом раунде все остаются.', 'voting');
+      addDiaryEntry(room, 'Итоги голосования', 'Голоса против кандидатов отсутствуют, состав группы не изменился.', 'vote');
       advanceToNextRound(room);
       return;
     }
@@ -1738,6 +1859,12 @@ function createBunkerServer(options = {}) {
       }
       if (card.targetRule === 'alive_other_hidden_phobia' && target.traits.phobia.revealed) {
         return { ok: false, error: 'Карта фобии выбранного игрока уже открыта.' };
+      }
+      if (card.targetRule === 'alive_other_hidden_character' && target.traits.character.revealed) {
+        return { ok: false, error: 'Карта характера выбранного игрока уже открыта.' };
+      }
+      if (card.targetRule === 'alive_other_hidden_fact' && target.traits.fact.revealed) {
+        return { ok: false, error: 'Дополнительный факт выбранного игрока уже открыт.' };
       }
       if (card.targetRule === 'alive_other_has_hidden' && getHiddenTraitKeys(target).length === 0) {
         return { ok: false, error: 'У выбранного игрока уже открыты все характеристики.' };
@@ -1958,6 +2085,16 @@ function createBunkerServer(options = {}) {
         resultMessage = `${player.name} использовал «Последний аргумент» и получил +1 голос!${revealedInfo}`;
         break;
       }
+      case 'psych_analyze_character': {
+        target.traits.character.revealed = true;
+        resultMessage = `${player.name} провёл «Психоанализ» игрока ${target.name}. Характер: «${target.traits.character.data.title}».`;
+        break;
+      }
+      case 'expose_fact': {
+        target.traits.fact.revealed = true;
+        resultMessage = `${player.name} обнародовал «Компромат» на игрока ${target.name}. Доп. факт: «${target.traits.fact.data.title}».`;
+        break;
+      }
       default:
         return { ok: false, error: 'Неизвестная спецкарта.' };
     }
@@ -2023,6 +2160,7 @@ function createBunkerServer(options = {}) {
         exiled: false,
         disconnectedAt: null,
         revealedThisRound: false,
+        skipsUsed: 0,
         extraVotes: 0,
         immuneThisRound: false,
         quarantinedRound: 0,
@@ -2107,6 +2245,7 @@ function createBunkerServer(options = {}) {
         exiled: false,
         disconnectedAt: null,
         revealedThisRound: false,
+        skipsUsed: 0,
         extraVotes: 0,
         immuneThisRound: false,
         quarantinedRound: 0,
@@ -2392,7 +2531,7 @@ function createBunkerServer(options = {}) {
       }
 
       room.game.votes.set(player.id, targetId);
-      addSystemMessage(room, `${player.name} отправил свой голос.`);
+      addSystemMessage(room, `${player.name} отправил свой голос.`, 'voting');
       broadcastRoom(room);
 
       const aliveCount = room.players.filter((p) => p.alive).length;
@@ -2401,6 +2540,39 @@ function createBunkerServer(options = {}) {
       }
 
       ack({ ok: true });
+    });
+
+    socket.on('game:skipVote', (_payload, cb) => {
+      const ack = typeof cb === 'function' ? cb : () => {};
+      if (!allowSocketAction(socket, 'vote', 200)) return ack({ ok: false, error: 'Подождите секунду.' });
+      const ctx = getSessionContext(socket);
+      if (!ctx) return ack({ ok: false, error: 'Вы не в комнате.' });
+      const { room, player } = ctx;
+
+      if (room.phase !== 'voting' && room.phase !== 'runoff') {
+        return ack({ ok: false, error: 'Сейчас не фаза голосования.' });
+      }
+      if (!player.alive) {
+        return ack({ ok: false, error: 'Изгнанные наблюдатели не участвуют в голосовании.' });
+      }
+      if (room.game.votes.has(player.id)) {
+        return ack({ ok: false, error: 'Вы уже сделали выбор в этом голосовании.' });
+      }
+      if ((player.skipsUsed || 0) >= MAX_VOTE_SKIPS) {
+        return ack({ ok: false, error: 'Вы уже использовали все 3 пропуска голосования за игру.' });
+      }
+
+      player.skipsUsed = (player.skipsUsed || 0) + 1;
+      room.game.votes.set(player.id, VOTE_SKIP_MARKER);
+      addSystemMessage(room, `${player.name} воздержался от голосования (скип).`, 'voting');
+      broadcastRoom(room);
+
+      const aliveCount = room.players.filter((p) => p.alive).length;
+      if (room.game.votes.size >= aliveCount) {
+        resolveVoting(room);
+      }
+
+      ack({ ok: true, skipsRemaining: Math.max(0, MAX_VOTE_SKIPS - player.skipsUsed) });
     });
 
     socket.on('game:endVoting', (_payload, cb) => {
@@ -2459,6 +2631,7 @@ function createBunkerServer(options = {}) {
         p.traits = null;
         p.specialCard = null;
         p.revealedThisRound = false;
+        p.skipsUsed = 0;
         p.extraVotes = 0;
         p.immuneThisRound = false;
         p.quarantinedRound = 0;
@@ -2566,6 +2739,8 @@ module.exports = {
   HOBBIES,
   PHOBIAS,
   LUGGAGE,
+  CHARACTERS,
+  FACTS,
   SPECIAL_CARDS,
   RANDOM_EVENTS,
   TRAIT_KEYS,
