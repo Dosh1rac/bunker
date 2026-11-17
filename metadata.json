@@ -1,0 +1,6 @@
+{
+  "name": "БУНКЕР — Последнее убежище человечества",
+  "description": "Мультиплеерная браузерная игра социальной дедукции «Бункер» для 3–10 игроков в стиле современного Pixel Art.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

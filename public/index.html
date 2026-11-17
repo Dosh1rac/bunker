@@ -1,0 +1,2951 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>БУНКЕР — Последнее убежище человечества</title>
+  <meta name="description" content="Мультиплеерная браузерная игра социальной дедукции «Бункер» для 3–10 игроков в стиле современного Pixel Art." />
+  <meta property="og:title" content="БУНКЕР — Последнее убежище человечества" />
+  <meta property="og:description" content="Соберите команду от 3 до 10 человек, раскройте характеристики, переживите случайные события и решите, кто достоин места в бункере." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bunker: {
+              bg: '#0d0f11',
+              panel: '#15191d',
+              metal: '#1e242a',
+              steel: '#2a323a',
+              border: '#3b4652',
+              amber: '#f59e0b',
+              orange: '#ea580c',
+              yellow: '#eab308',
+              crimson: '#dc2626',
+              green: '#22c55e',
+              text: '#f2efe9',
+              muted: '#9ca3af'
+            }
+          },
+          fontFamily: {
+            pixel: ['"Press Start 2P"', 'monospace'],
+            sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      background-color: #0d0f11;
+      color: #f2efe9;
+      font-family: 'IBM Plex Sans', system-ui, sans-serif;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    /* High-res pixel art rendering */
+    .pixel-art {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    /* Stepped 16-bit metal panel framing */
+    .pixel-panel {
+      background-color: #15191d;
+      border: 2px solid #353f49;
+      box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.06),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.6),
+        0 4px 0 #070809;
+    }
+
+    .pixel-panel-dark {
+      background-color: #101316;
+      border: 2px solid #2b343d;
+      box-shadow:
+        inset 2px 2px 0 rgba(0, 0, 0, 0.55),
+        inset -2px -2px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .pixel-btn {
+      position: relative;
+      border: 2px solid #475461;
+      box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.16),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.45),
+        0 3px 0 #070809;
+      transition: transform 0.1s ease, filter 0.12s ease, background-color 0.12s ease;
+      cursor: pointer;
+      min-height: 44px;
+    }
+
+    .pixel-btn:hover:not(:disabled) {
+      filter: brightness(1.08);
+    }
+
+    .pixel-btn:active:not(:disabled) {
+      transform: translateY(2px);
+      box-shadow:
+        inset 2px 2px 0 rgba(0, 0, 0, 0.45),
+        0 1px 0 #070809;
+    }
+
+    .pixel-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .pixel-btn-amber {
+      background-color: #d97706;
+      border-color: #fbbf24;
+      color: #0d0f11;
+      font-weight: 700;
+    }
+
+    .pixel-btn-danger {
+      background-color: #b91c1c;
+      border-color: #f87171;
+      color: #fff5f5;
+      font-weight: 600;
+    }
+
+    .pixel-btn-green {
+      background-color: #15803d;
+      border-color: #4ade80;
+      color: #f0fdf4;
+      font-weight: 600;
+    }
+
+    .pixel-btn-steel {
+      background-color: #222930;
+      border-color: #45515e;
+      color: #f2efe9;
+      font-weight: 600;
+    }
+
+    .hazard-bar {
+      height: 8px;
+      background-image: repeating-linear-gradient(
+        -45deg,
+        #f59e0b,
+        #f59e0b 10px,
+        #181b1e 10px,
+        #181b1e 20px
+      );
+    }
+
+    .hazard-bar-red {
+      height: 8px;
+      background-image: repeating-linear-gradient(
+        -45deg,
+        #dc2626,
+        #dc2626 10px,
+        #181b1e 10px,
+        #181b1e 20px
+      );
+    }
+
+    /* Subtle CRT scanline texture without obscuring readability */
+    .crt-overlay {
+      pointer-events: none;
+      background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%,
+        rgba(0, 0, 0, 0.16) 50%
+      );
+      background-size: 100% 4px;
+      opacity: 0.25;
+    }
+
+    /* Secret card diagonal hatch pattern */
+    .classified-surface {
+      background-color: #111519;
+      background-image: repeating-linear-gradient(
+        -45deg,
+        rgba(245, 158, 11, 0.05),
+        rgba(245, 158, 11, 0.05) 8px,
+        rgba(0, 0, 0, 0) 8px,
+        rgba(0, 0, 0, 0) 16px
+      );
+    }
+
+    /* Animations */
+    @keyframes lampFlicker {
+      0%, 100% { opacity: 1; }
+      92% { opacity: 1; }
+      93% { opacity: 0.72; }
+      94% { opacity: 1; }
+      96% { opacity: 0.85; }
+      97% { opacity: 1; }
+    }
+
+    @keyframes cardRevealFlip {
+      0% { transform: perspective(700px) rotateY(90deg) scale(0.95); opacity: 0.4; }
+      60% { transform: perspective(700px) rotateY(-6deg) scale(1.02); opacity: 1; }
+      100% { transform: perspective(700px) rotateY(0deg) scale(1); opacity: 1; }
+    }
+
+    @keyframes msgAppear {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes alertBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+
+    .animate-flicker {
+      animation: lampFlicker 7s infinite;
+    }
+
+    .animate-card-flip {
+      animation: cardRevealFlip 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .animate-msg {
+      animation: msgAppear 0.18s ease-out;
+    }
+
+    .animate-alert {
+      animation: alertBlink 1.1s infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .animate-flicker,
+      .animate-card-flip,
+      .animate-msg,
+      .animate-alert {
+        animation: none !important;
+      }
+    }
+
+    /* Custom scrollbar for dark bunker consoles */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0d0f11;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #353f49;
+      border: 1px solid #15191d;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #f59e0b;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid #f59e0b;
+      outline-offset: 2px;
+    }
+
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body class="bg-bunker-bg text-bunker-text antialiased selection:bg-amber-500 selection:text-black" data-state="title">
+
+  <!-- Subtle fixed CRT atmospheric scanlines -->
+  <div class="crt-overlay fixed inset-0 z-40" aria-hidden="true"></div>
+
+  <!-- Global Notification Toast -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm pointer-events-none" aria-live="polite"></div>
+
+  <!-- Persistent Top HUD Bar (shown in lobby, playing, gameover) -->
+  <header id="top-hud" class="hidden sticky top-0 z-30 bg-[#0f1316]/95 border-b-2 border-bunker-border">
+    <div class="max-w-[1440px] mx-auto px-3 sm:px-5 py-2 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="font-pixel text-sm sm:text-base text-bunker-amber tracking-wider">БУНКЕР</span>
+          <span class="text-bunker-muted text-xs font-mono">·</span>
+          <span id="hud-room-code" class="font-pixel text-xs sm:text-sm text-bunker-text bg-bunker-metal border border-bunker-border px-2 py-1 tabular-nums">----</span>
+        </div>
+        <div class="hidden md:flex items-center gap-3 text-xs font-mono text-bunker-muted tabular-nums">
+          <span id="hud-round">РАУНД 0</span>
+          <span>·</span>
+          <span id="hud-alive">ЖИВЫХ: 0</span>
+          <span>·</span>
+          <span id="hud-capacity">МЕСТ: 0</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div id="hud-phase-wrap" class="flex items-center gap-2 bg-bunker-metal border border-bunker-border px-2.5 py-1">
+          <span id="hud-phase-label" class="text-xs font-mono font-bold text-bunker-yellow uppercase whitespace-nowrap">ЛОББИ</span>
+          <span id="hud-timer" class="hidden font-pixel text-xs sm:text-sm text-bunker-amber tabular-nums">00:00</span>
+        </div>
+
+        <div id="hud-conn" class="flex items-center gap-1.5 text-xs font-mono px-2 py-1 bg-bunker-panel border border-bunker-border" title="Статус подключения к серверу">
+          <span id="hud-conn-dot" class="w-2 h-2 bg-bunker-green inline-block"></span>
+          <span id="hud-conn-text" class="hidden sm:inline text-bunker-muted">ОНЛАЙН</span>
+        </div>
+
+        <button id="btn-sound-toggle" type="button" class="pixel-btn pixel-btn-steel px-2.5 py-1.5 text-xs font-mono flex items-center gap-1.5 min-h-[36px]" aria-label="Переключить звук">
+          <span id="sound-icon">ЗВУК: ВКЛ</span>
+        </button>
+
+        <button id="btn-leave-room" type="button" class="pixel-btn pixel-btn-steel px-2.5 py-1.5 text-xs font-mono min-h-[36px] text-red-300 hover:text-red-200" aria-label="Выйти из комнаты">
+          ВЫЙТИ
+        </button>
+      </div>
+    </div>
+    <!-- Mobile compact telemetry strip -->
+    <div id="hud-mobile-meta" class="md:hidden border-t border-bunker-steel px-3 py-1 flex items-center justify-between text-[11px] font-mono text-bunker-muted tabular-nums bg-[#0c0e10]">
+      <span id="hud-m-round">РАУНД 0</span>
+      <span id="hud-m-alive">ЖИВЫХ: 0</span>
+      <span id="hud-m-capacity">МЕСТ: 0</span>
+    </div>
+  </header>
+
+  <main class="max-w-[1440px] mx-auto px-3 sm:px-6 py-4 sm:py-6">
+
+    <!-- ===================================================================== -->
+    <!-- SCREEN 1: TITLE / START SCREEN                                        -->
+    <!-- ===================================================================== -->
+    <section id="screen-title" class="min-h-[calc(100vh-3rem)] flex flex-col justify-center items-center py-4">
+      <div class="w-full max-w-5xl pixel-panel overflow-hidden">
+        <div class="hazard-bar"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 items-stretch">
+          <!-- Left: High-Resolution Pixel Art Bunker Entrance -->
+          <div class="lg:col-span-7 relative bg-[#090b0d] min-h-[260px] sm:min-h-[360px] lg:min-h-[520px] flex flex-col justify-end overflow-hidden border-b-2 lg:border-b-0 lg:border-r-2 border-bunker-border">
+            <img
+              id="img-bunker-entrance"
+              src="/assets/images/bunker_entrance.jpg"
+              alt="Пиксельная иллюстрация герметичного входа в подземный бункер"
+              referrerPolicy="no-referrer"
+              class="pixel-art absolute inset-0 w-full h-full object-cover object-[center_100%] scale-[1.28] origin-bottom"
+            />
+            <canvas id="canvas-entrance-fallback" class="pixel-art absolute inset-0 w-full h-full hidden"></canvas>
+            <canvas id="canvas-entrance-fx" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+
+            <div class="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-[#090b0d] via-[#090b0d]/95 to-transparent pointer-events-none"></div>
+            <div class="absolute inset-0 bg-gradient-to-b from-[#0b0d0f]/70 via-transparent to-[#0b0d0f] pointer-events-none"></div>
+
+            <div class="relative z-10 p-5 sm:p-7">
+              <div class="inline-block bg-[#0d0f11]/90 border-2 border-bunker-amber px-4 py-3 shadow-lg">
+                <h1 class="font-pixel text-3xl sm:text-5xl text-bunker-amber tracking-wider leading-none animate-flicker">БУНКЕР</h1>
+                <p class="mt-2 text-xs sm:text-sm text-bunker-text font-medium tracking-wide">Последнее убежище человечества</p>
+              </div>
+              <p class="mt-3 text-xs sm:text-sm text-gray-300 max-w-md bg-[#0b0d0f]/80 px-3 py-2 border border-bunker-steel">
+                Социальная дедукция для 3–10 игроков. Раскрывайте характеристики, спорьте, используйте спецкарты и докажите, что именно вы спасете цивилизацию.
+              </p>
+            </div>
+          </div>
+
+          <!-- Right: Terminal Entry Form -->
+          <div class="lg:col-span-5 p-5 sm:p-7 flex flex-col justify-between bg-bunker-panel">
+            <div>
+              <div class="flex items-center justify-between gap-2 pb-4 border-b border-bunker-steel">
+                <span class="font-mono text-xs uppercase tracking-wider text-bunker-amber font-semibold">Терминал доступа</span>
+                <div class="flex items-center gap-2 text-xs font-mono">
+                  <span id="start-conn-dot" class="w-2.5 h-2.5 bg-bunker-yellow inline-block"></span>
+                  <span id="start-conn-text" class="text-bunker-muted">Подключение...</span>
+                </div>
+              </div>
+
+              <!-- Error banner -->
+              <div id="start-error" role="alert" class="hidden mt-4 p-3 bg-red-950/80 border-2 border-red-500 text-red-200 text-sm font-medium"></div>
+
+              <div class="mt-5 space-y-5">
+                <div>
+                  <label for="input-player-name" class="block text-xs font-mono uppercase text-bunker-muted mb-1.5">
+                    Позывной / Имя игрока (2–20 символов)
+                  </label>
+                  <input
+                    id="input-player-name"
+                    type="text"
+                    maxlength="20"
+                    autocomplete="nickname"
+                    placeholder="Например: Сталкер_42"
+                    class="w-full bg-[#0c0f12] border-2 border-bunker-border px-3.5 py-3 text-base text-bunker-text placeholder-gray-600 focus:border-bunker-amber outline-none min-h-[46px]"
+                  />
+                </div>
+
+                <button
+                  id="btn-create-room"
+                  type="button"
+                  data-start="true"
+                  class="pixel-btn pixel-btn-amber w-full py-3.5 px-4 font-pixel text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2"
+                >
+                  СОЗДАТЬ КОМНАТУ
+                </button>
+
+                <div class="relative flex items-center py-1">
+                  <div class="flex-grow border-t border-bunker-steel"></div>
+                  <span class="shrink-0 mx-3 text-xs font-mono text-bunker-muted uppercase">или войти по коду</span>
+                  <div class="flex-grow border-t border-bunker-steel"></div>
+                </div>
+
+                <div class="space-y-3">
+                  <div>
+                    <label for="input-room-code" class="block text-xs font-mono uppercase text-bunker-muted mb-1.5">
+                      Код убежища (4 символа)
+                    </label>
+                    <input
+                      id="input-room-code"
+                      type="text"
+                      maxlength="4"
+                      autocomplete="off"
+                      placeholder="A7K9"
+                      class="w-full bg-[#0c0f12] border-2 border-bunker-border px-3.5 py-3 font-pixel text-base tracking-[0.25em] uppercase text-bunker-amber placeholder-gray-700 focus:border-bunker-amber outline-none min-h-[46px]"
+                    />
+                  </div>
+                  <button
+                    id="btn-join-room"
+                    type="button"
+                    class="pixel-btn pixel-btn-steel w-full py-3.5 px-4 font-pixel text-xs tracking-wide"
+                  >
+                    ВОЙТИ ПО КОДУ
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-bunker-steel flex items-center justify-between gap-3">
+              <button id="btn-open-rules" type="button" class="pixel-btn pixel-btn-steel px-3 py-2 text-xs font-mono min-h-[44px]">
+                Краткие правила
+              </button>
+              <button id="btn-title-sound" type="button" class="pixel-btn pixel-btn-steel px-3 py-2 text-xs font-mono min-h-[44px]">
+                Звук: ВКЛ
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SCREEN 2: LOBBY                                                       -->
+    <!-- ===================================================================== -->
+    <section id="screen-lobby" class="hidden space-y-5">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        <!-- Left column: Room Header, Players & Controls -->
+        <div class="lg:col-span-7 space-y-5">
+          <div class="pixel-panel p-4 sm:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-bunker-steel">
+              <div>
+                <div class="text-xs font-mono uppercase text-bunker-muted">Код доступа в убежище</div>
+                <div id="lobby-code-big" class="mt-1 font-pixel text-3xl sm:text-4xl text-bunker-amber tracking-[0.2em] tabular-nums">----</div>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button id="btn-copy-code" type="button" class="pixel-btn pixel-btn-steel px-3.5 py-2.5 text-xs font-mono">
+                  Копировать код
+                </button>
+                <button id="btn-copy-invite" type="button" class="pixel-btn pixel-btn-steel px-3.5 py-2.5 text-xs font-mono">
+                  Ссылка приглашения
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
+              <div class="font-mono tabular-nums">
+                Участники: <strong id="lobby-player-count" class="text-bunker-amber">0 / 10</strong>
+                <span class="text-bunker-muted mx-2">·</span>
+                Мест в бункере: <strong id="lobby-capacity-preview" class="text-bunker-green">0</strong>
+              </div>
+              <div class="text-xs text-bunker-muted">Для старта нужно от 3 до 10 игроков</div>
+            </div>
+
+            <div id="lobby-error" role="alert" class="hidden mt-4 p-3 bg-red-950/80 border-2 border-red-500 text-red-200 text-sm"></div>
+
+            <!-- Player list -->
+            <div id="lobby-players-list" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+
+            <!-- Action bar -->
+            <div class="mt-6 pt-4 border-t border-bunker-steel flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <button id="btn-toggle-ready" type="button" class="pixel-btn pixel-btn-steel px-4 py-3 text-sm font-mono">
+                Отметить готовность
+              </button>
+              <button id="btn-start-game" type="button" class="hidden pixel-btn pixel-btn-amber px-6 py-3 font-pixel text-xs sm:text-sm">
+                НАЧАТЬ ИГРУ
+              </button>
+              <div id="lobby-wait-host-note" class="text-xs font-mono text-bunker-muted text-center sm:text-right">
+                Ожидаем, пока хост запустит бункер...
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column: Lobby Chat -->
+        <div class="lg:col-span-5 pixel-panel flex flex-col h-[460px] lg:h-[560px]">
+          <div class="px-4 py-3 border-b border-bunker-steel flex items-center justify-between bg-bunker-metal">
+            <h2 class="font-pixel text-xs text-bunker-amber">РАДИОКАНАЛ ЛОББИ</h2>
+            <span class="text-xs font-mono text-bunker-muted">ЧАТ · 500 СИМВ.</span>
+          </div>
+          <div id="lobby-chat-messages" role="log" aria-live="polite" class="flex-1 overflow-y-auto p-3 space-y-2.5 text-sm bg-[#0d1013]"></div>
+          <form id="lobby-chat-form" class="p-3 border-t border-bunker-steel space-y-2 bg-[#101316]">
+            <div id="lobby-chat-error" role="alert" class="hidden text-xs text-red-300 bg-red-950/60 border border-red-600 px-2.5 py-1.5"></div>
+            <div class="flex items-end gap-2">
+              <label for="lobby-chat-input" class="sr-only">Сообщение в чат лобби</label>
+              <textarea
+                id="lobby-chat-input"
+                rows="1"
+                maxlength="500"
+                placeholder="Написать в лобби... (Enter — отправить, Shift+Enter — перенос)"
+                class="flex-1 bg-[#0b0d0f] border-2 border-bunker-border px-3 py-2 text-sm text-bunker-text focus:border-bunker-amber outline-none min-h-[44px] max-h-28 resize-none leading-snug"
+              ></textarea>
+              <button type="submit" class="pixel-btn pixel-btn-amber px-4 text-xs font-mono min-h-[44px] shrink-0">ОТПР.</button>
+            </div>
+            <div class="flex items-center justify-between gap-2 text-[11px] font-mono text-bunker-muted">
+              <span class="hidden sm:inline">Enter — отправить · Shift+Enter — новая строка</span>
+              <span class="sm:hidden">Shift+Enter — перенос</span>
+              <span id="lobby-chat-counter" class="tabular-nums shrink-0">0 / 500</span>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SCREEN 3: ACTIVE GAME CONSOLE                                         -->
+    <!-- ===================================================================== -->
+    <section id="screen-playing" class="hidden space-y-3.5 pb-20 xl:pb-0">
+
+      <!-- Spectator Banner for Exiled Players -->
+      <div id="spectator-banner" class="hidden pixel-panel border-red-700 bg-red-950/35 p-3 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <span class="font-pixel text-xs text-red-400">ИЗГНАН</span>
+          <p class="text-sm text-red-100">Вы переведены в режим наблюдателя. Вы можете следить за игрой и писать в чат, но не можете голосовать и открывать карты.</p>
+        </div>
+      </div>
+
+      <!-- Collapsible Block: DISASTER & BUNKER -->
+      <div id="scenario-panel" class="pixel-panel overflow-hidden xl:block">
+        <button
+          id="btn-toggle-scenario"
+          type="button"
+          aria-expanded="true"
+          class="w-full px-4 py-2.5 bg-bunker-metal hover:bg-[#242b33] flex items-center justify-between gap-3 text-left transition-colors min-h-[44px]"
+        >
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="font-pixel text-xs text-bunker-amber shrink-0">КАТАСТРОФА И БУНКЕР</span>
+            <span id="scenario-summary-line" class="hidden sm:inline text-xs sm:text-sm text-bunker-muted truncate"></span>
+          </div>
+          <span id="scenario-chevron" class="font-mono text-xs text-bunker-amber shrink-0">[СКРЫТЬ ▲]</span>
+        </button>
+
+        <div id="scenario-body" class="border-t border-bunker-steel grid grid-cols-1 lg:grid-cols-12">
+          <!-- Disaster Column -->
+          <div class="lg:col-span-6 p-3.5 sm:p-4 border-b lg:border-b-0 lg:border-r border-bunker-steel space-y-2.5">
+            <div class="relative h-28 sm:h-32 border-2 border-bunker-border overflow-hidden bg-[#090b0d]">
+              <img
+                id="img-disaster"
+                src="/assets/images/disaster_wasteland.jpg"
+                alt="Пиксельная панорама глобальной катастрофы"
+                referrerPolicy="no-referrer"
+                class="pixel-art w-full h-full object-cover"
+              />
+              <canvas id="canvas-disaster-fallback" class="pixel-art absolute inset-0 w-full h-full hidden"></canvas>
+              <canvas id="canvas-disaster-fx" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+              <div class="absolute inset-0 bg-gradient-to-t from-[#0b0d0f] via-[#0b0d0f]/30 to-transparent"></div>
+              <div class="absolute bottom-2.5 left-3 right-3">
+                <div class="text-[10px] font-mono uppercase text-red-400 font-semibold">Активная угроза</div>
+                <h2 id="disaster-title" class="font-bold text-sm sm:text-base text-bunker-text leading-snug"></h2>
+              </div>
+            </div>
+
+            <p id="disaster-desc" class="text-xs sm:text-sm text-gray-300 leading-snug"></p>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+              <div class="pixel-panel-dark p-2">
+                <div class="text-bunker-muted font-mono text-[11px]">Срок изоляции</div>
+                <div id="disaster-duration" class="mt-0.5 font-bold text-bunker-amber text-xs sm:text-sm tabular-nums"></div>
+              </div>
+              <div class="pixel-panel-dark p-2">
+                <div class="text-bunker-muted font-mono text-[11px]">Выжило людей</div>
+                <div id="disaster-survival" class="mt-0.5 font-bold text-bunker-yellow text-xs sm:text-sm tabular-nums"></div>
+              </div>
+              <div class="pixel-panel-dark p-2 col-span-2 sm:col-span-1">
+                <div class="text-bunker-muted font-mono text-[11px]">Причина</div>
+                <div id="disaster-cause" class="mt-0.5 font-medium text-bunker-text text-xs leading-snug"></div>
+              </div>
+            </div>
+
+            <div class="space-y-1.5 text-xs">
+              <div class="p-2 bg-red-950/30 border border-red-900/70 leading-snug">
+                <span class="font-mono text-red-400 font-semibold">Доп. опасность: </span>
+                <span id="disaster-danger" class="text-red-100"></span>
+              </div>
+              <div class="p-2 bg-amber-950/25 border border-amber-800/60 leading-snug">
+                <span class="font-mono text-bunker-amber font-semibold">Особое условие: </span>
+                <span id="disaster-condition" class="text-amber-100"></span>
+              </div>
+              <div id="disaster-intel-box" class="hidden p-2 bg-emerald-950/30 border border-emerald-700 leading-snug">
+                <span class="font-mono text-bunker-green font-semibold">Разведданные: </span>
+                <span id="disaster-intel" class="text-emerald-100"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bunker Column -->
+          <div class="lg:col-span-6 p-3.5 sm:p-4 space-y-2.5">
+            <div class="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <div class="text-[10px] font-mono uppercase text-bunker-amber">Объект размещения</div>
+                <h2 id="bunker-name" class="font-bold text-sm sm:text-base text-bunker-text"></h2>
+              </div>
+              <div class="text-xs font-mono text-bunker-muted tabular-nums">
+                Площадь: <strong id="bunker-area" class="text-bunker-text"></strong> · Мест: <strong id="bunker-cap" class="text-bunker-green"></strong>
+              </div>
+            </div>
+
+            <!-- Interactive Pixel-Art Bunker Schematic -->
+            <div id="bunker-schematic-wrap" class="pixel-panel-dark p-2">
+              <div class="flex items-center justify-between text-[10px] font-mono text-bunker-muted mb-1">
+                <span>СХЕМА СИСТЕМ УБЕЖИЩА</span>
+                <span id="bunker-schematic-status" class="text-bunker-amber">МОНИТОРИНГ</span>
+              </div>
+              <div id="bunker-schematic-svg" class="w-full overflow-hidden"></div>
+            </div>
+
+            <!-- Resource gauges -->
+            <div class="grid grid-cols-3 gap-2 text-xs tabular-nums">
+              <div class="pixel-panel-dark p-2">
+                <div class="text-bunker-muted font-mono text-[11px]">Продовольствие</div>
+                <div id="bunker-food" class="mt-0.5 font-bold text-xs sm:text-sm text-bunker-amber"></div>
+                <div class="mt-1 h-1.5 bg-[#090b0d] border border-bunker-steel">
+                  <div id="bunker-food-bar" class="h-full bg-bunker-amber transition-all duration-300" style="width: 70%"></div>
+                </div>
+              </div>
+              <div class="pixel-panel-dark p-2">
+                <div class="text-bunker-muted font-mono text-[11px]">Запас воды</div>
+                <div id="bunker-water" class="mt-0.5 font-bold text-xs sm:text-sm text-sky-400"></div>
+                <div class="mt-1 h-1.5 bg-[#090b0d] border border-bunker-steel">
+                  <div id="bunker-water-bar" class="h-full bg-sky-500 transition-all duration-300" style="width: 80%"></div>
+                </div>
+              </div>
+              <div class="pixel-panel-dark p-2">
+                <div class="text-bunker-muted font-mono text-[11px]">Энергия</div>
+                <div id="bunker-power" class="mt-0.5 font-bold text-xs sm:text-sm text-bunker-yellow"></div>
+                <div class="mt-1 h-1.5 bg-[#090b0d] border border-bunker-steel">
+                  <div id="bunker-power-bar" class="h-full bg-bunker-yellow transition-all duration-300" style="width: 80%"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-1.5 text-xs">
+              <div class="pixel-panel-dark p-2 leading-snug">
+                <span class="font-mono text-bunker-green font-semibold">Медицина: </span>
+                <span id="bunker-medical" class="text-gray-200"></span>
+              </div>
+              <div class="pixel-panel-dark p-2 leading-snug">
+                <span class="font-mono text-bunker-amber font-semibold">Помещения: </span>
+                <span id="bunker-features" class="text-gray-200"></span>
+              </div>
+              <div class="pixel-panel-dark p-2 leading-snug">
+                <div class="font-mono text-red-400 font-semibold mb-0.5">Неисправности:</div>
+                <ul id="bunker-malfunctions" class="list-disc list-inside text-red-200 space-y-0.5"></ul>
+              </div>
+              <div class="pixel-panel-dark p-2 border-amber-700/50 leading-snug">
+                <span class="font-mono text-bunker-yellow font-semibold">Особенность: </span>
+                <span id="bunker-secret" class="text-amber-100"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase Control & Voting Panel -->
+      <div id="phase-panel" class="pixel-panel p-3.5 sm:p-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <span id="phase-title" class="font-pixel text-xs sm:text-sm text-bunker-amber">ФАЗА ОБСУЖДЕНИЯ</span>
+              <span id="phase-timer-inline" class="font-mono text-sm font-bold text-bunker-text tabular-nums">120с</span>
+            </div>
+            <p id="phase-subtitle" class="mt-1 text-xs sm:text-sm text-bunker-muted"></p>
+          </div>
+
+          <!-- Host Phase Controls -->
+          <div id="host-phase-controls" class="hidden flex flex-wrap gap-2">
+            <button id="btn-host-end-discussion" type="button" class="hidden pixel-btn pixel-btn-amber px-4 py-2.5 text-xs font-mono">
+              Перейти к голосованию
+            </button>
+            <button id="btn-host-end-voting" type="button" class="hidden pixel-btn pixel-btn-danger px-4 py-2.5 text-xs font-mono">
+              Завершить голосование
+            </button>
+          </div>
+        </div>
+
+        <!-- Active Voting Grid -->
+        <div id="voting-zone" class="hidden mt-4 pt-4 border-t border-bunker-steel">
+          <div class="hazard-bar-red mb-4"></div>
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="text-sm font-semibold text-red-200" id="voting-instruction">Выберите игрока, который должен покинуть убежище:</div>
+            <div id="voting-progress" class="text-xs font-mono text-bunker-amber tabular-nums">Проголосовало: 0 / 0</div>
+          </div>
+          <div id="voting-status-note" class="hidden mb-3 p-3 bg-emerald-950/40 border border-emerald-700 text-emerald-200 text-sm"></div>
+          <div id="voting-candidates" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+        </div>
+      </div>
+
+      <!-- Main Workspace Grid (Desktop: 2-col Dossier+Players / Chat+Logs; Mobile: Bottom Nav Switching) -->
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+
+        <!-- Left 8 columns: Personal Traits + Special Card + Players Roster -->
+        <div id="game-main-col" class="xl:col-span-8 space-y-5 xl:block">
+
+          <!-- Block: MY TRAITS -->
+          <div class="pixel-panel p-4 sm:p-5">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-bunker-steel">
+              <div>
+                <h2 class="font-pixel text-xs sm:text-sm text-bunker-amber">МОИ ХАРАКТЕРИСТИКИ</h2>
+                <p id="my-reveal-status" class="mt-1 text-xs text-bunker-muted"></p>
+              </div>
+              <div id="my-buffs-line" class="text-xs font-mono text-bunker-green"></div>
+            </div>
+
+            <!-- 6 Trait Cards -->
+            <div id="my-traits-grid" class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+
+            <!-- Dedicated Special Card Section -->
+            <div id="my-special-section" class="mt-5 pt-4 border-t-2 border-bunker-steel">
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <h3 class="font-pixel text-xs text-bunker-yellow">СПЕЦКАРТА</h3>
+                <span id="special-status-text" class="text-xs font-mono font-bold text-bunker-green">ДОСТУПНА</span>
+              </div>
+              <div id="special-card-box" class="pixel-panel-dark p-4 border-amber-600/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4"></div>
+            </div>
+          </div>
+
+          <!-- Block: PLAYERS ROSTER -->
+          <div class="pixel-panel p-4 sm:p-5">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-bunker-steel">
+              <h2 class="font-pixel text-xs sm:text-sm text-bunker-amber">УЧАСТНИКИ В БУНКЕРЕ</h2>
+              <span class="text-xs font-mono text-bunker-muted">Нажмите на игрока для полного досье</span>
+            </div>
+            <div id="players-grid" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+          </div>
+        </div>
+
+        <!-- Right 4 columns: Chat, Survival Diary, Voting History -->
+        <aside id="game-console-panel" class="hidden xl:flex xl:col-span-4 pixel-panel flex-col h-[calc(100dvh-10.5rem)] min-h-[420px] xl:h-[780px] xl:sticky xl:top-20">
+          <!-- Segmented Tabs -->
+          <div class="grid grid-cols-3 border-b-2 border-bunker-steel bg-[#101316]" role="tablist">
+            <button id="tab-btn-chat" type="button" role="tab" aria-selected="true" class="py-3 px-2 font-mono text-xs font-bold border-b-2 border-bunker-amber text-bunker-amber bg-bunker-panel min-h-[44px] flex items-center justify-center gap-1.5">
+              <span>ЧАТ</span>
+              <span id="chat-unread-badge" class="hidden bg-bunker-amber text-black font-bold px-1.5 py-0.5 text-[10px] leading-none tabular-nums">0</span>
+            </button>
+            <button id="tab-btn-diary" type="button" role="tab" aria-selected="false" class="py-3 px-2 font-mono text-xs font-bold border-b-2 border-transparent text-bunker-muted hover:text-bunker-text min-h-[44px]">
+              ДНЕВНИК
+            </button>
+            <button id="tab-btn-history" type="button" role="tab" aria-selected="false" class="py-3 px-2 font-mono text-xs font-bold border-b-2 border-transparent text-bunker-muted hover:text-bunker-text min-h-[44px]">
+              ИСТОРИЯ
+            </button>
+          </div>
+
+          <!-- Tab 1: Chat -->
+          <div id="panel-tab-chat" class="flex-1 flex flex-col min-h-0">
+            <div class="px-3 py-2 border-b border-bunker-steel/70 bg-[#12161a] flex items-center justify-between text-[11px] font-mono text-bunker-muted">
+              <span>ОБЩИЙ КАНАЛ СВЯЗИ</span>
+              <span id="game-chat-count" class="tabular-nums text-bunker-amber">0 сообщ.</span>
+            </div>
+            <div id="game-chat-messages" role="log" aria-live="polite" class="flex-1 overflow-y-auto p-3 space-y-2.5 text-sm bg-[#0d1013]"></div>
+            <form id="game-chat-form" class="p-3 border-t border-bunker-steel space-y-2 bg-[#101316]">
+              <div id="game-chat-error" role="alert" class="hidden text-xs text-red-300 bg-red-950/60 border border-red-600 px-2.5 py-1.5"></div>
+              <div class="flex items-end gap-2">
+                <label for="game-chat-input" class="sr-only">Сообщение в игровой чат</label>
+                <textarea
+                  id="game-chat-input"
+                  rows="1"
+                  maxlength="500"
+                  placeholder="Сообщение в рацию... (аргументы, блеф, защита)"
+                  class="flex-1 bg-[#0b0d0f] border-2 border-bunker-border px-3 py-2 text-sm text-bunker-text focus:border-bunker-amber outline-none min-h-[44px] max-h-28 resize-none leading-snug"
+                ></textarea>
+                <button type="submit" class="pixel-btn pixel-btn-amber px-4 text-xs font-mono min-h-[44px] shrink-0">ОТПР.</button>
+              </div>
+              <div class="flex items-center justify-between gap-2 text-[11px] font-mono text-bunker-muted">
+                <span class="hidden sm:inline">Enter — отправить · Shift+Enter — перенос</span>
+                <span class="sm:hidden">Shift+Enter — перенос</span>
+                <span id="game-chat-counter" class="tabular-nums shrink-0">0 / 500</span>
+              </div>
+            </form>
+          </div>
+
+          <!-- Tab 2: Survival Diary -->
+          <div id="panel-tab-diary" class="hidden flex-1 overflow-y-auto p-3 space-y-2.5 text-sm"></div>
+
+          <!-- Tab 3: Voting History -->
+          <div id="panel-tab-history" class="hidden flex-1 overflow-y-auto p-3 space-y-3 text-sm"></div>
+        </aside>
+      </div>
+
+      <!-- Mobile Bottom Navigation Bar (< xl) -->
+      <nav id="mobile-bottom-nav" aria-label="Нижняя навигация игры" class="xl:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0d1013]/95 border-t-2 border-bunker-amber grid grid-cols-4 shadow-2xl">
+        <button type="button" data-mobile-view="bunker" aria-pressed="true" class="py-2.5 px-1 flex flex-col items-center justify-center gap-0.5 font-mono text-[11px] font-bold text-bunker-amber bg-[#181d22] min-h-[52px]">
+          <span>БУНКЕР</span>
+          <span class="text-[9px] text-bunker-muted font-normal">Карты и зал</span>
+        </button>
+        <button type="button" data-mobile-view="chat" aria-pressed="false" class="relative py-2.5 px-1 flex flex-col items-center justify-center gap-0.5 font-mono text-[11px] font-bold text-bunker-muted hover:text-bunker-text min-h-[52px]">
+          <span class="flex items-center gap-1">
+            <span>ЧАТ</span>
+            <span id="mobile-chat-badge" class="hidden bg-bunker-amber text-black font-bold px-1.5 py-0.5 text-[10px] leading-none tabular-nums">0</span>
+          </span>
+          <span class="text-[9px] text-bunker-muted font-normal">Рация</span>
+        </button>
+        <button type="button" data-mobile-view="diary" aria-pressed="false" class="py-2.5 px-1 flex flex-col items-center justify-center gap-0.5 font-mono text-[11px] font-bold text-bunker-muted hover:text-bunker-text min-h-[52px]">
+          <span>ДНЕВНИК</span>
+          <span class="text-[9px] text-bunker-muted font-normal">События</span>
+        </button>
+        <button type="button" data-mobile-view="history" aria-pressed="false" class="py-2.5 px-1 flex flex-col items-center justify-center gap-0.5 font-mono text-[11px] font-bold text-bunker-muted hover:text-bunker-text min-h-[52px]">
+          <span>ИСТОРИЯ</span>
+          <span class="text-[9px] text-bunker-muted font-normal">Голоса</span>
+        </button>
+      </nav>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SCREEN 4: GAME OVER / VICTORY SCREEN                                  -->
+    <!-- ===================================================================== -->
+    <section id="screen-gameover" class="hidden space-y-6">
+      <div class="pixel-panel overflow-hidden">
+        <div class="hazard-bar"></div>
+
+        <!-- Victory Hero Banner -->
+        <div class="relative h-56 sm:h-72 bg-[#090b0d] border-b-2 border-bunker-border overflow-hidden">
+          <img
+            id="img-bunker-interior"
+            src="/assets/images/bunker_interior.jpg"
+            alt="Интерьер спасённого подземного бункера"
+            referrerPolicy="no-referrer"
+            class="pixel-art w-full h-full object-cover"
+          />
+          <canvas id="canvas-interior-fallback" class="pixel-art absolute inset-0 w-full h-full hidden"></canvas>
+          <div class="absolute inset-0 bg-gradient-to-t from-[#0d0f11] via-[#0d0f11]/45 to-transparent"></div>
+
+          <div class="absolute inset-0 flex flex-col justify-end p-5 sm:p-8">
+            <div class="text-xs font-mono uppercase text-bunker-green tracking-widest">Протокол комплектации завершён</div>
+            <h1 class="mt-1 font-pixel text-xl sm:text-3xl lg:text-4xl text-bunker-amber leading-snug">ВЫЖИВАНИЕ УСПЕШНО</h1>
+            <p id="end-subtitle" class="mt-2 text-sm text-gray-200 max-w-2xl"></p>
+          </div>
+        </div>
+
+        <div class="p-5 sm:p-7 space-y-6">
+          <!-- Stats Row -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 tabular-nums">
+            <div class="pixel-panel-dark p-3.5">
+              <div class="text-xs font-mono text-bunker-muted">Выживших</div>
+              <div id="end-stat-survivors" class="mt-1 font-pixel text-lg text-bunker-green">0</div>
+            </div>
+            <div class="pixel-panel-dark p-3.5">
+              <div class="text-xs font-mono text-bunker-muted">Изгнано</div>
+              <div id="end-stat-exiled" class="mt-1 font-pixel text-lg text-red-400">0</div>
+            </div>
+            <div class="pixel-panel-dark p-3.5">
+              <div class="text-xs font-mono text-bunker-muted">Раундов</div>
+              <div id="end-stat-rounds" class="mt-1 font-pixel text-lg text-bunker-amber">0</div>
+            </div>
+            <div class="pixel-panel-dark p-3.5">
+              <div class="text-xs font-mono text-bunker-muted">Голосований</div>
+              <div id="end-stat-votes" class="mt-1 font-pixel text-lg text-bunker-yellow">0</div>
+            </div>
+          </div>
+
+          <!-- Survivors & Exiled Lists -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div class="pixel-panel-dark p-4 border-emerald-800/70">
+              <h2 class="font-pixel text-xs text-bunker-green mb-3">ПОБЕДИТЕЛИ (ОСТАЛИСЬ В БУНКЕРЕ)</h2>
+              <div id="end-survivors-list" class="space-y-3"></div>
+            </div>
+
+            <div class="pixel-panel-dark p-4 border-red-900/60">
+              <h2 class="font-pixel text-xs text-red-400 mb-3">ИЗГНАННЫЕ НА ПОВЕРХНОСТЬ</h2>
+              <div id="end-exiled-list" class="space-y-3"></div>
+            </div>
+          </div>
+
+          <!-- Final Disaster & Bunker + Voting History -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div class="pixel-panel-dark p-4 space-y-2 text-sm">
+              <h3 class="font-pixel text-xs text-bunker-amber mb-2">ИТОГИ СЦЕНАРИЯ</h3>
+              <div><strong class="text-bunker-muted">Катастрофа:</strong> <span id="end-disaster-title"></span></div>
+              <div><strong class="text-bunker-muted">Бункер:</strong> <span id="end-bunker-name"></span></div>
+              <div><strong class="text-bunker-muted">Ресурсы финала:</strong> <span id="end-bunker-resources" class="font-mono text-bunker-amber"></span></div>
+            </div>
+            <div class="pixel-panel-dark p-4">
+              <h3 class="font-pixel text-xs text-bunker-amber mb-2">ИСТОРИЯ ГОЛОСОВАНИЙ</h3>
+              <div id="end-voting-history" class="space-y-2 max-h-60 overflow-y-auto text-xs"></div>
+            </div>
+          </div>
+
+          <!-- Post-Game Room Chat -->
+          <div class="pixel-panel-dark p-4 space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="font-pixel text-xs text-bunker-amber">ЧАТ ПОСЛЕ ПАРТИИ</h3>
+              <span class="text-[11px] font-mono text-bunker-muted">История комнаты сохранена</span>
+            </div>
+            <div id="gameover-chat-messages" role="log" aria-live="polite" class="h-56 overflow-y-auto p-2.5 space-y-2 text-sm bg-[#0b0d0f] border border-bunker-steel"></div>
+            <form id="gameover-chat-form" class="space-y-1.5">
+              <div id="gameover-chat-error" role="alert" class="hidden text-xs text-red-300 bg-red-950/60 border border-red-600 px-2.5 py-1.5"></div>
+              <div class="flex items-end gap-2">
+                <label for="gameover-chat-input" class="sr-only">Сообщение в чат после игры</label>
+                <textarea
+                  id="gameover-chat-input"
+                  rows="1"
+                  maxlength="500"
+                  placeholder="Обсудить итоги партии... (Enter — отправить, Shift+Enter — перенос)"
+                  class="flex-1 bg-[#0b0d0f] border-2 border-bunker-border px-3 py-2 text-sm text-bunker-text focus:border-bunker-amber outline-none min-h-[44px] max-h-24 resize-none leading-snug"
+                ></textarea>
+                <button type="submit" class="pixel-btn pixel-btn-amber px-4 text-xs font-mono min-h-[44px] shrink-0">ОТПР.</button>
+              </div>
+              <div class="flex items-center justify-between gap-2 text-[11px] font-mono text-bunker-muted">
+                <span class="hidden sm:inline">Enter — отправить · Shift+Enter — новая строка</span>
+                <span class="sm:hidden">Shift+Enter — перенос</span>
+                <span id="gameover-chat-counter" class="tabular-nums shrink-0">0 / 500</span>
+              </div>
+            </form>
+          </div>
+
+          <!-- Host & Player End Actions -->
+          <div class="pt-4 border-t border-bunker-steel flex flex-wrap items-center justify-between gap-3">
+            <div id="end-host-actions" class="hidden flex flex-wrap gap-3">
+              <button id="btn-play-again" type="button" class="pixel-btn pixel-btn-amber px-5 py-3 font-pixel text-xs">
+                СЫГРАТЬ ЕЩЁ РАЗ
+              </button>
+              <button id="btn-return-lobby" type="button" class="pixel-btn pixel-btn-steel px-5 py-3 font-pixel text-xs">
+                ВЕРНУТЬСЯ В ЛОББИ
+              </button>
+            </div>
+            <div id="end-nonhost-note" class="text-xs font-mono text-bunker-muted">
+              Ожидаем решения хоста о новой партии...
+            </div>
+            <button id="btn-end-leave" type="button" class="pixel-btn pixel-btn-steel px-4 py-3 text-xs font-mono text-red-300">
+              Выйти в главное меню
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================================================================= -->
+  <!-- MODALS (DOSSIER, SPECIAL CARD TARGET, RULES)                            -->
+  <!-- ======================================================================= -->
+
+  <!-- Player Dossier Modal -->
+  <div id="modal-dossier" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="dossier-modal-title">
+    <div class="pixel-panel w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="hazard-bar"></div>
+      <div class="px-5 py-4 border-b border-bunker-steel flex items-center justify-between gap-3 bg-bunker-metal">
+        <div class="flex items-center gap-3 min-w-0">
+          <div id="dossier-avatar" class="shrink-0"></div>
+          <div class="min-w-0">
+            <h2 id="dossier-modal-title" class="font-bold text-lg text-bunker-text truncate"></h2>
+            <div id="dossier-modal-meta" class="text-xs font-mono text-bunker-muted"></div>
+          </div>
+        </div>
+        <button id="btn-close-dossier" type="button" class="pixel-btn pixel-btn-steel px-3 py-2 text-xs font-mono min-h-[40px]" aria-label="Закрыть досье">
+          ЗАКРЫТЬ [X]
+        </button>
+      </div>
+      <div id="dossier-modal-body" class="p-5 overflow-y-auto space-y-3"></div>
+    </div>
+  </div>
+
+  <!-- Special Card Target Selection Modal -->
+  <div id="modal-special-target" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="special-target-title">
+    <div class="pixel-panel w-full max-w-lg overflow-hidden">
+      <div class="hazard-bar"></div>
+      <div class="px-5 py-4 border-b border-bunker-steel flex items-center justify-between bg-bunker-metal">
+        <h2 id="special-target-title" class="font-pixel text-xs text-bunker-amber">ВЫБОР ЦЕЛИ СПЕЦКАРТЫ</h2>
+        <button id="btn-close-special-modal" type="button" class="pixel-btn pixel-btn-steel px-3 py-1.5 text-xs font-mono min-h-[38px]">ОТМЕНА</button>
+      </div>
+      <div class="p-5 space-y-4">
+        <p id="special-target-desc" class="text-sm text-gray-200"></p>
+        <div id="special-target-error" class="hidden p-2.5 bg-red-950/80 border border-red-500 text-red-200 text-xs"></div>
+        <div id="special-target-list" class="space-y-2 max-h-72 overflow-y-auto"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rules Modal -->
+  <div id="modal-rules" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="rules-modal-title">
+    <div class="pixel-panel w-full max-w-xl overflow-hidden">
+      <div class="hazard-bar"></div>
+      <div class="px-5 py-4 border-b border-bunker-steel flex items-center justify-between bg-bunker-metal">
+        <h2 id="rules-modal-title" class="font-pixel text-xs text-bunker-amber">ИНСТРУКТАЖ ВЫЖИВШИХ</h2>
+        <button id="btn-close-rules" type="button" class="pixel-btn pixel-btn-steel px-3 py-1.5 text-xs font-mono min-h-[38px]">ЗАКРЫТЬ</button>
+      </div>
+      <div class="p-5 space-y-3 text-sm text-gray-300 max-h-[75vh] overflow-y-auto leading-relaxed">
+        <p><strong class="text-bunker-amber">1. Цель игры:</strong> После глобальной катастрофы в бункере помещается только половина участников (<code class="font-mono text-bunker-yellow">Math.floor(игроков / 2)</code>). Убедите остальных, что именно ваши навыки и характеристики спасут группу.</p>
+        <p><strong class="text-bunker-amber">2. Раунд обсуждения (120 сек.):</strong> В каждом раунде живые игроки открывают по <strong>1 скрытой характеристике</strong> (Профессия, Биология, Здоровье, Хобби, Фобия или Багаж). Закрыть карту обратно нельзя.</p>
+        <p><strong class="text-bunker-amber">3. Спецкарты:</strong> У каждого есть 1 одноразовая спецкарта с реальным игровым эффектом — обмен картами, лечение, рентген, иммунитет, ремонт бункера и т.д.</p>
+        <p><strong class="text-bunker-amber">4. Голосование (45 сек.):</strong> Все живые игроки тайно голосуют за изгнание одного участника (против себя нельзя). При ничьей проводится повторное голосование между лидерами. Повторная ничья никого не выгоняет.</p>
+        <p><strong class="text-bunker-amber">5. Случайные события и финал:</strong> Между раундами происходят нештатные ситуации. Когда число живых игроков сравнивается со вместимостью бункера, оставшиеся объявляются победителями!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Socket.io Client -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <script>
+    (() => {
+      'use strict';
+
+      // ======================================================================
+      // STATE & STORAGE
+      // ======================================================================
+      const STORAGE_SESSION_KEY = 'bunker_active_session_v1';
+      const STORAGE_MUTE_KEY = 'bunker_sound_muted_v1';
+
+      const state = {
+        connected: false,
+        room: null,
+        privateData: null,
+        session: loadSavedSession(),
+        activeTab: 'chat',
+        mobileView: 'bunker',
+        unreadChatCount: 0,
+        renderedChatSig: {},
+        scenarioOpen: true,
+        muted: localStorage.getItem(STORAGE_MUTE_KEY) === '1',
+        audioUnlocked: false,
+        lastRevealedKeys: new Set(),
+        knownRound: 0,
+        knownPhase: null
+      };
+
+      function loadSavedSession() {
+        try {
+          const raw = localStorage.getItem(STORAGE_SESSION_KEY);
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.roomCode && parsed.token && parsed.playerId) return parsed;
+        } catch (_e) {}
+        return null;
+      }
+
+      function saveSession(session) {
+        state.session = session;
+        try {
+          localStorage.setItem(STORAGE_SESSION_KEY, JSON.stringify(session));
+        } catch (_e) {}
+      }
+
+      function clearSession() {
+        state.session = null;
+        state.room = null;
+        state.privateData = null;
+        state.unreadChatCount = 0;
+        state.renderedChatSig = {};
+        state.mobileView = 'bunker';
+        state.lastRevealedKeys.clear();
+        if (typeof updateChatUnreadBadges === 'function') updateChatUnreadBadges();
+        if (typeof syncMobileNavUI === 'function') syncMobileNavUI();
+        try {
+          localStorage.removeItem(STORAGE_SESSION_KEY);
+        } catch (_e) {}
+      }
+
+      // ======================================================================
+      // WEB AUDIO API RETRO SYNTHESIZER
+      // ======================================================================
+      let audioCtx = null;
+
+      function unlockAudio() {
+        if (state.audioUnlocked) return;
+        state.audioUnlocked = true;
+        try {
+          const Ctx = window.AudioContext || window.webkitAudioContext;
+          if (Ctx && !audioCtx) audioCtx = new Ctx();
+          if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        } catch (_e) {}
+      }
+
+      document.addEventListener('pointerdown', unlockAudio, { once: true });
+      document.addEventListener('keydown', unlockAudio, { once: true });
+
+      function playTone(freq, duration, type = 'square', volume = 0.04, delay = 0) {
+        if (state.muted || !state.audioUnlocked) return;
+        try {
+          const Ctx = window.AudioContext || window.webkitAudioContext;
+          if (!audioCtx && Ctx) audioCtx = new Ctx();
+          if (!audioCtx) return;
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+
+          const now = audioCtx.currentTime + delay;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, now);
+          gain.gain.setValueAtTime(volume, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + duration);
+        } catch (_e) {}
+      }
+
+      const SoundFX = {
+        click() { playTone(520, 0.045, 'square', 0.025); },
+        reveal() {
+          playTone(440, 0.07, 'triangle', 0.04, 0);
+          playTone(660, 0.11, 'triangle', 0.04, 0.06);
+        },
+        warning() {
+          playTone(220, 0.12, 'sawtooth', 0.035, 0);
+          playTone(185, 0.16, 'sawtooth', 0.035, 0.13);
+        },
+        voteStart() {
+          playTone(392, 0.1, 'square', 0.035, 0);
+          playTone(523, 0.14, 'square', 0.035, 0.11);
+        },
+        voteEnd() {
+          playTone(330, 0.1, 'triangle', 0.04, 0);
+          playTone(262, 0.16, 'triangle', 0.04, 0.1);
+        },
+        exile() {
+          playTone(160, 0.18, 'sawtooth', 0.045, 0);
+          playTone(110, 0.28, 'sawtooth', 0.045, 0.16);
+        },
+        victory() {
+          playTone(392, 0.11, 'triangle', 0.045, 0);
+          playTone(494, 0.11, 'triangle', 0.045, 0.11);
+          playTone(587, 0.11, 'triangle', 0.045, 0.22);
+          playTone(784, 0.28, 'triangle', 0.05, 0.33);
+        }
+      };
+
+      function updateMuteUI() {
+        const text = state.muted ? 'ЗВУК: ВЫКЛ' : 'ЗВУК: ВКЛ';
+        document.getElementById('sound-icon').textContent = text;
+        document.getElementById('btn-title-sound').textContent = state.muted ? 'Звук: ВЫКЛ' : 'Звук: ВКЛ';
+      }
+
+      function toggleMute() {
+        unlockAudio();
+        state.muted = !state.muted;
+        localStorage.setItem(STORAGE_MUTE_KEY, state.muted ? '1' : '0');
+        updateMuteUI();
+        if (!state.muted) SoundFX.click();
+      }
+
+      // ======================================================================
+      // PIXEL ART ICON & AVATAR GENERATORS (16-BIT CRISP SVG)
+      // ======================================================================
+      const TRAIT_META = {
+        profession: { label: 'Профессия', color: '#f59e0b' },
+        biology: { label: 'Биология', color: '#38bdf8' },
+        health: { label: 'Здоровье', color: '#ef4444' },
+        hobby: { label: 'Хобби', color: '#4ade80' },
+        phobia: { label: 'Фобия', color: '#c084fc' },
+        luggage: { label: 'Багаж', color: '#fb923c' }
+      };
+
+      function getTraitPixelSvg(key) {
+        const icons = {
+          profession: `<svg viewBox="0 0 16 16" class="w-7 h-7 pixel-art" shape-rendering="crispEdges" aria-hidden="true">
+            <rect x="2" y="2" width="12" height="12" fill="#1b2026"/>
+            <rect x="4" y="3" width="8" height="2" fill="#9ca3af"/>
+            <rect x="3" y="5" width="10" height="8" fill="#d97706"/>
+            <rect x="4" y="6" width="8" height="6" fill="#f59e0b"/>
+            <rect x="6" y="4" width="4" height="1" fill="#1b2026"/>
+            <rect x="7" y="8" width="2" height="2" fill="#fef3c7"/>
+            <rect x="3" y="8" width="10" height="1" fill="#92400e"/>
+          </svg>`,
+          biology: `<svg viewBox="0 0 16 16" class="w-7 h-7 pixel-art" shape-rendering="crispEdges" aria-hidden="true">
+            <rect x="2" y="2" width="12" height="12" fill="#131c24"/>
+            <rect x="4" y="3" width="2" height="2" fill="#38bdf8"/>
+            <rect x="10" y="3" width="2" height="2" fill="#f59e0b"/>
+            <rect x="5" y="5" width="6" height="1" fill="#94a3b8"/>
+            <rect x="6" y="6" width="4" height="2" fill="#38bdf8"/>
+            <rect x="5" y="8" width="6" height="1" fill="#94a3b8"/>
+            <rect x="4" y="9" width="2" height="2" fill="#f59e0b"/>
+            <rect x="10" y="9" width="2" height="2" fill="#38bdf8"/>
+            <rect x="5" y="11" width="6" height="1" fill="#94a3b8"/>
+            <rect x="4" y="12" width="2" height="2" fill="#38bdf8"/>
+            <rect x="10" y="12" width="2" height="2" fill="#f59e0b"/>
+          </svg>`,
+          health: `<svg viewBox="0 0 16 16" class="w-7 h-7 pixel-art" shape-rendering="crispEdges" aria-hidden="true">
+            <rect x="2" y="2" width="12" height="12" fill="#211416"/>
+            <rect x="6" y="3" width="4" height="10" fill="#dc2626"/>
+            <rect x="3" y="6" width="10" height="4" fill="#dc2626"/>
+            <rect x="7" y="4" width="2" height="8" fill="#f87171"/>
+            <rect x="4" y="7" width="8" height="2" fill="#f87171"/>
+            <rect x="7" y="7" width="2" height="2" fill="#fee2e2"/>
+          </svg>`,
+          hobby: `<svg viewBox="0 0 16 16" class="w-7 h-7 pixel-art" shape-rendering="crispEdges" aria-hidden="true">
+            <rect x="2" y="2" width="12" height="12" fill="#131f17"/>
+            <rect x="7" y="7" width="2" height="6" fill="#854d0e"/>
+            <rect x="4" y="5" width="3" height="3" fill="#22c55e"/>
+            <rect x="9" y="4" width="3" height="3" fill="#4ade80"/>
+            <rect x="6" y="3" width="4" height="3" fill="#86efac"/>
+            <rect x="5" y="12" width="6" height="2" fill="#a16207"/>
+          </svg>`,
+          phobia: `<svg viewBox="0 0 16 16" class="w-7 h-7 pixel-art" shape-rendering="crispEdges" aria-hidden="true">
+            <rect x="2" y="2" width="12" height="12" fill="#1d1524"/>
+            <rect x="3" y="6" width="10" height="4" fill="#f3e8ff"/>
+            <rect x="5" y="5" width="6" height="6" fill="#ffffff"/>
+            <rect x="6" y="6" width="4" height="4" fill="#9333ea"/>
+            <rect x="7" y="7" width="2" height="2" fill="#090b0d"/>
+            <rect x="7" y="6" width="1" height="1" fill="#ffffff"/>
+          </svg>`,
+          luggage: `<svg viewBox="0 0 16 16" class="w-7 h-7 pixel-art" shape-rendering="crispEdges" aria-hidden="true">
+            <rect x="2" y="2" width="12" height="12" fill="#1d1812"/>
+            <rect x="6" y="3" width="4" height="2" fill="#9ca3af"/>
+            <rect x="4" y="5" width="8" height="8" fill="#9a3412"/>
+            <rect x="5" y="6" width="6" height="6" fill="#ea580c"/>
+            <rect x="5" y="8" width="6" height="1" fill="#431407"/>
+            <rect x="7" y="7" width="2" height="3" fill="#fbbf24"/>
+          </svg>`,
+          special: `<svg viewBox="0 0 16 16" class="w-8 h-8 pixel-art" shape-rendering="crispEdges" aria-hidden="true">
+            <rect x="1" y="1" width="14" height="14" fill="#231a0c"/>
+            <rect x="7" y="2" width="2" height="12" fill="#f59e0b"/>
+            <rect x="2" y="7" width="12" height="2" fill="#f59e0b"/>
+            <rect x="4" y="4" width="8" height="8" fill="#fbbf24"/>
+            <rect x="6" y="6" width="4" height="4" fill="#fef3c7"/>
+            <rect x="3" y="3" width="1" height="1" fill="#fde68a"/>
+            <rect x="12" y="3" width="1" height="1" fill="#fde68a"/>
+            <rect x="3" y="12" width="1" height="1" fill="#fde68a"/>
+            <rect x="12" y="12" width="1" height="1" fill="#fde68a"/>
+          </svg>`
+        };
+        return icons[key] || icons.special;
+      }
+
+      const AVATAR_THEMES = [
+        { bg: '#272e35', jacket: '#b45309', skin: '#e8be9e', hair: '#3b2416', gear: 'visor', gearCol: '#38bdf8' },
+        { bg: '#1e2c26', jacket: '#15803d', skin: '#d8a684', hair: '#1c1917', gear: 'goggles', gearCol: '#f59e0b' },
+        { bg: '#2e2226', jacket: '#991b1b', skin: '#f1ccb0', hair: '#92400e', gear: 'medcap', gearCol: '#f8fafc' },
+        { bg: '#252635', jacket: '#374151', skin: '#c68b67', hair: '#0f172a', gear: 'headset', gearCol: '#eab308' },
+        { bg: '#2b271c', jacket: '#854d0e', skin: '#eac2a3', hair: '#d97706', gear: 'ushanka', gearCol: '#78350f' },
+        { bg: '#1f2833', jacket: '#0369a1', skin: '#e0b191', hair: '#4b5563', gear: 'gasmask', gearCol: '#22c55e' },
+        { bg: '#2d232e', jacket: '#6d28d9', skin: '#f3d1b8', hair: '#1e1b4b', gear: 'glasses', gearCol: '#facc15' },
+        { bg: '#212922', jacket: '#3f6212', skin: '#b87d56', hair: '#18181b', gear: 'hood', gearCol: '#65a30d' },
+        { bg: '#30241d', jacket: '#c2410c', skin: '#e5b899', hair: '#7c2d12', gear: 'welder', gearCol: '#fb923c' },
+        { bg: '#20262b', jacket: '#475569', skin: '#edd0ba', hair: '#cbd5e1', gear: 'scarf', gearCol: '#ef4444' }
+      ];
+
+      function renderPixelAvatar(avatarId = 0, exiled = false, sizeClass = 'w-11 h-11') {
+        const idx = Math.abs(Number(avatarId) || 0) % AVATAR_THEMES.length;
+        const t = AVATAR_THEMES[idx];
+        const filterStyle = exiled ? 'filter: grayscale(100%) opacity(0.55);' : '';
+        let accessory = '';
+        if (t.gear === 'visor' || t.gear === 'glasses') {
+          accessory = `<rect x="5" y="6" width="2" height="2" fill="${t.gearCol}"/><rect x="9" y="6" width="2" height="2" fill="${t.gearCol}"/><rect x="7" y="6" width="2" height="1" fill="#9ca3af"/>`;
+        } else if (t.gear === 'goggles' || t.gear === 'welder') {
+          accessory = `<rect x="4" y="3" width="8" height="2" fill="#374151"/><rect x="5" y="3" width="2" height="2" fill="${t.gearCol}"/><rect x="9" y="3" width="2" height="2" fill="${t.gearCol}"/>`;
+        } else if (t.gear === 'medcap') {
+          accessory = `<rect x="4" y="2" width="8" height="3" fill="${t.gearCol}"/><rect x="7" y="2" width="2" height="2" fill="#dc2626"/>`;
+        } else if (t.gear === 'ushanka') {
+          accessory = `<rect x="3" y="2" width="10" height="3" fill="${t.gearCol}"/><rect x="3" y="5" width="2" height="4" fill="${t.gearCol}"/><rect x="11" y="5" width="2" height="4" fill="${t.gearCol}"/>`;
+        } else if (t.gear === 'headset') {
+          accessory = `<rect x="3" y="5" width="2" height="4" fill="${t.gearCol}"/><rect x="11" y="5" width="2" height="4" fill="${t.gearCol}"/><rect x="4" y="2" width="8" height="1" fill="#9ca3af"/>`;
+        } else if (t.gear === 'gasmask') {
+          accessory = `<rect x="5" y="8" width="6" height="3" fill="#374151"/><rect x="6" y="9" width="4" height="2" fill="#1f2937"/><rect x="7" y="9" width="2" height="2" fill="${t.gearCol}"/>`;
+        } else if (t.gear === 'hood') {
+          accessory = `<rect x="3" y="2" width="10" height="2" fill="${t.gearCol}"/><rect x="3" y="4" width="1" height="7" fill="${t.gearCol}"/><rect x="12" y="4" width="1" height="7" fill="${t.gearCol}"/>`;
+        } else if (t.gear === 'scarf') {
+          accessory = `<rect x="4" y="10" width="8" height="2" fill="${t.gearCol}"/>`;
+        }
+
+        return `<svg viewBox="0 0 16 16" class="${sizeClass} pixel-art border-2 ${exiled ? 'border-gray-700' : 'border-bunker-border'} shrink-0" style="${filterStyle}" shape-rendering="crispEdges" aria-hidden="true">
+          <rect x="0" y="0" width="16" height="16" fill="${t.bg}"/>
+          <rect x="3" y="11" width="10" height="5" fill="${t.jacket}"/>
+          <rect x="5" y="11" width="6" height="5" fill="rgba(0,0,0,0.2)"/>
+          <rect x="5" y="3" width="6" height="2" fill="${t.hair}"/>
+          <rect x="4" y="4" width="8" height="7" fill="${t.skin}"/>
+          <rect x="4" y="4" width="8" height="1" fill="${t.hair}"/>
+          <rect x="5" y="6" width="2" height="2" fill="#111827"/>
+          <rect x="9" y="6" width="2" height="2" fill="#111827"/>
+          <rect x="7" y="9" width="2" height="1" fill="#9a6b52"/>
+          ${accessory}
+        </svg>`;
+      }
+
+      // ======================================================================
+      // BUNKER SCHEMATIC SVG (LIVE REFLECTION OF RESOURCES & MALFUNCTIONS)
+      // ======================================================================
+      function renderBunkerSchematic(bunker) {
+        if (!bunker) return;
+        const hasFault = bunker.malfunctions && bunker.malfunctions.length > 0;
+        const powerOk = bunker.powerPercent >= 50;
+        const waterOk = bunker.waterPercent >= 50;
+        const foodOk = bunker.foodMonths >= 8;
+
+        const faultColor = hasFault ? '#ef4444' : '#22c55e';
+        const powerColor = powerOk ? '#eab308' : '#ef4444';
+        const waterColor = waterOk ? '#38bdf8' : '#ef4444';
+        const foodColor = foodOk ? '#f59e0b' : '#ef4444';
+
+        document.getElementById('bunker-schematic-status').textContent = hasFault
+          ? `НЕИСПРАВНОСТЕЙ: ${bunker.malfunctions.length}`
+          : 'СИСТЕМЫ В НОРМЕ';
+        document.getElementById('bunker-schematic-status').className = hasFault
+          ? 'text-red-400 font-bold animate-alert'
+          : 'text-bunker-green font-bold';
+
+        document.getElementById('bunker-schematic-svg').innerHTML = `
+          <svg viewBox="0 0 320 96" class="w-full h-16 sm:h-20 pixel-art" shape-rendering="crispEdges" role="img" aria-label="Схема систем бункера">
+            <rect x="0" y="0" width="320" height="96" fill="#090c0e"/>
+            <!-- Outer concrete shell -->
+            <rect x="6" y="6" width="308" height="84" fill="#151b20" stroke="#3b4652" stroke-width="2"/>
+            <!-- Airlock -->
+            <rect x="12" y="14" width="44" height="68" fill="#1f272e" stroke="#475569" stroke-width="2"/>
+            <rect x="16" y="34" width="8" height="28" fill="#f59e0b"/>
+            <text x="34" y="26" fill="#9ca3af" font-family="monospace" font-size="7" text-anchor="middle">ШЛЮЗ</text>
+            <circle cx="34" cy="52" r="5" fill="${faultColor}"/>
+
+            <!-- Pipe connecting rooms -->
+            <rect x="56" y="44" width="18" height="8" fill="#334155"/>
+
+            <!-- Generator / Power -->
+            <rect x="74" y="14" width="72" height="68" fill="#192128" stroke="${powerColor}" stroke-width="2"/>
+            <text x="110" y="27" fill="#e5e7eb" font-family="monospace" font-size="8" text-anchor="middle">ЭНЕРГИЯ</text>
+            <rect x="86" y="36" width="48" height="14" fill="#0d1117"/>
+            <rect x="88" y="38" width="${Math.max(4, Math.min(44, Math.round((bunker.powerPercent / 100) * 44)))}" height="10" fill="${powerColor}"/>
+            <text x="110" y="68" fill="${powerColor}" font-family="monospace" font-size="10" font-weight="bold" text-anchor="middle">${bunker.powerPercent}%</text>
+
+            <rect x="146" y="44" width="16" height="8" fill="#334155"/>
+
+            <!-- Water Tank -->
+            <rect x="162" y="14" width="68" height="68" fill="#192128" stroke="${waterColor}" stroke-width="2"/>
+            <text x="196" y="27" fill="#e5e7eb" font-family="monospace" font-size="8" text-anchor="middle">ВОДА</text>
+            <rect x="174" y="36" width="44" height="14" fill="#0d1117"/>
+            <rect x="176" y="38" width="${Math.max(4, Math.min(40, Math.round((bunker.waterPercent / 100) * 40)))}" height="10" fill="${waterColor}"/>
+            <text x="196" y="68" fill="${waterColor}" font-family="monospace" font-size="10" font-weight="bold" text-anchor="middle">${bunker.waterPercent}%</text>
+
+            <rect x="230" y="44" width="16" height="8" fill="#334155"/>
+
+            <!-- Food & Vent -->
+            <rect x="246" y="14" width="62" height="68" fill="#192128" stroke="${foodColor}" stroke-width="2"/>
+            <text x="277" y="27" fill="#e5e7eb" font-family="monospace" font-size="8" text-anchor="middle">СКЛАД</text>
+            <rect x="256" y="36" width="42" height="14" fill="#0d1117"/>
+            <rect x="258" y="38" width="${Math.max(4, Math.min(38, Math.round((bunker.foodMonths / 20) * 38)))}" height="10" fill="${foodColor}"/>
+            <text x="277" y="68" fill="${foodColor}" font-family="monospace" font-size="9" font-weight="bold" text-anchor="middle">${bunker.foodMonths} МЕС.</text>
+          </svg>
+        `;
+      }
+
+      // ======================================================================
+      // PROCEDURAL PIXEL FALLBACKS & LIVE PARTICLE OVERLAYS
+      // ======================================================================
+      function drawProceduralPixelScene(canvas, mode) {
+        if (!canvas) return;
+        const w = 160;
+        const h = 90;
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+
+        if (mode === 'entrance') {
+          ctx.fillStyle = '#0f1215';
+          ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#1d2228';
+          for (let y = 0; y < h; y += 10) ctx.fillRect(0, y, w, 1);
+          ctx.fillStyle = '#2c343d';
+          ctx.fillRect(36, 14, 88, 76);
+          ctx.fillStyle = '#111519';
+          ctx.fillRect(46, 22, 68, 68);
+          ctx.fillStyle = '#475569';
+          ctx.fillRect(50, 26, 44, 64);
+          ctx.fillStyle = '#f59e0b';
+          ctx.fillRect(72, 16, 16, 4);
+          ctx.fillStyle = 'rgba(245, 158, 11, 0.22)';
+          ctx.beginPath();
+          ctx.moveTo(72, 20); ctx.lineTo(114, 90); ctx.lineTo(54, 90); ctx.closePath();
+          ctx.fill();
+        } else if (mode === 'interior') {
+          ctx.fillStyle = '#12161a';
+          ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#232a32';
+          ctx.fillRect(10, 12, 140, 66);
+          ctx.fillStyle = '#d97706';
+          ctx.fillRect(68, 8, 24, 4);
+          ctx.fillStyle = '#22c55e';
+          ctx.fillRect(24, 46, 26, 14);
+          ctx.fillStyle = '#f59e0b';
+          ctx.fillRect(62, 42, 36, 20);
+          ctx.fillStyle = '#0d1117';
+          ctx.fillRect(65, 45, 30, 14);
+        } else {
+          const grad = ctx.createLinearGradient(0, 0, 0, h);
+          grad.addColorStop(0, '#1f1010');
+          grad.addColorStop(0.6, '#6b2714');
+          grad.addColorStop(1, '#120d0c');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = '#0d090a';
+          const heights = [38, 24, 50, 30, 44, 20, 46, 28, 36];
+          heights.forEach((bh, i) => ctx.fillRect(i * 18, h - bh, 14, bh));
+        }
+      }
+
+      function setupImgFallback(imgId, canvasId, mode) {
+        const img = document.getElementById(imgId);
+        const canvas = document.getElementById(canvasId);
+        if (!img || !canvas) return;
+        img.addEventListener('error', () => {
+          img.classList.add('hidden');
+          canvas.classList.remove('hidden');
+          drawProceduralPixelScene(canvas, mode);
+        });
+      }
+
+      setupImgFallback('img-bunker-entrance', 'canvas-entrance-fallback', 'entrance');
+      setupImgFallback('img-disaster', 'canvas-disaster-fallback', 'disaster');
+      setupImgFallback('img-bunker-interior', 'canvas-interior-fallback', 'interior');
+
+      // Animated atmospheric particles for entrance & disaster panels
+      const particles = Array.from({ length: 28 }, () => ({
+        x: Math.random(),
+        y: Math.random(),
+        s: 1 + Math.floor(Math.random() * 2),
+        v: 0.001 + Math.random() * 0.0025
+      }));
+
+      let lastParticleTick = 0;
+      function animateAtmosphere(ts) {
+        if (ts - lastParticleTick > 60) {
+          lastParticleTick = ts;
+          const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          if (!prefersReduced) {
+            const cStart = document.getElementById('canvas-entrance-fx');
+            const cDis = document.getElementById('canvas-disaster-fx');
+            const theme = state.room?.disaster?.theme || 'radiation';
+
+            if (cStart && !document.getElementById('screen-title').classList.contains('hidden')) {
+              drawFxCanvas(cStart, 'amber');
+            }
+            if (cDis && !document.getElementById('screen-playing').classList.contains('hidden') && state.scenarioOpen) {
+              drawFxCanvas(cDis, theme);
+            }
+          }
+        }
+        requestAnimationFrame(animateAtmosphere);
+      }
+
+      function drawFxCanvas(canvas, theme) {
+        const w = canvas.clientWidth || 300;
+        const h = canvas.clientHeight || 180;
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width = w;
+          canvas.height = h;
+        }
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, w, h);
+
+        let color = 'rgba(245, 158, 11, 0.55)';
+        let dySign = -1;
+        if (theme === 'frost') { color = 'rgba(224, 242, 254, 0.65)'; dySign = 1; }
+        else if (theme === 'bio' || theme === 'toxin') { color = 'rgba(74, 222, 128, 0.55)'; dySign = -1; }
+        else if (theme === 'flood') { color = 'rgba(125, 211, 252, 0.55)'; dySign = 2.4; }
+        else if (theme === 'ai' || theme === 'signal') { color = 'rgba(248, 113, 113, 0.5)'; dySign = 1; }
+
+        ctx.fillStyle = color;
+        for (const p of particles) {
+          p.y += p.v * dySign;
+          p.x += (Math.random() - 0.5) * 0.002;
+          if (p.y < 0) p.y = 1;
+          if (p.y > 1) p.y = 0;
+          if (p.x < 0) p.x = 1;
+          if (p.x > 1) p.x = 0;
+          ctx.fillRect(Math.floor(p.x * w), Math.floor(p.y * h), p.s * 2, p.s * 2);
+        }
+      }
+
+      requestAnimationFrame(animateAtmosphere);
+
+      // ======================================================================
+      // TOASTS & ERROR HELPERS
+      // ======================================================================
+      function showToast(message, variant = 'info') {
+        const container = document.getElementById('toast-container');
+        while (container.children.length >= 2) {
+          container.firstElementChild.remove();
+        }
+        const el = document.createElement('div');
+        const border = variant === 'error'
+          ? 'border-red-500 bg-red-950/95 text-red-100'
+          : variant === 'success'
+            ? 'border-bunker-green bg-emerald-950/95 text-emerald-100'
+            : 'border-bunker-amber bg-bunker-panel/95 text-bunker-text';
+        el.className = `pointer-events-auto border-2 ${border} px-3.5 py-2.5 text-xs sm:text-sm font-medium shadow-lg animate-msg`;
+        el.textContent = message;
+        container.appendChild(el);
+        setTimeout(() => {
+          el.style.opacity = '0';
+          el.style.transition = 'opacity 0.2s';
+          setTimeout(() => el.remove(), 220);
+        }, 2600);
+      }
+
+      function setInlineError(elId, msg) {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        if (!msg) {
+          el.classList.add('hidden');
+          el.textContent = '';
+        } else {
+          el.classList.remove('hidden');
+          el.textContent = msg;
+        }
+      }
+
+      function escapeHtml(str) {
+        if (str == null) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function formatTimerMMSS(sec) {
+        const s = Math.max(0, Math.floor(Number(sec) || 0));
+        const mm = String(Math.floor(s / 60)).padStart(2, '0');
+        const ss = String(s % 60).padStart(2, '0');
+        return `${mm}:${ss}`;
+      }
+
+      // ======================================================================
+      // SOCKET.IO CLIENT & SESSION RECOVERY
+      // ======================================================================
+      const socket = io({
+        reconnection: true,
+        reconnectionDelay: 800,
+        reconnectionDelayMax: 4000
+      });
+
+      function updateConnectionUI(connected) {
+        state.connected = connected;
+        const startDot = document.getElementById('start-conn-dot');
+        const startTxt = document.getElementById('start-conn-text');
+        const hudDot = document.getElementById('hud-conn-dot');
+        const hudTxt = document.getElementById('hud-conn-text');
+
+        if (connected) {
+          startDot.className = 'w-2.5 h-2.5 bg-bunker-green inline-block';
+          startTxt.textContent = 'Сервер на связи';
+          hudDot.className = 'w-2 h-2 bg-bunker-green inline-block';
+          hudTxt.textContent = 'ОНЛАЙН';
+        } else {
+          startDot.className = 'w-2.5 h-2.5 bg-red-500 inline-block animate-alert';
+          startTxt.textContent = 'Переподключение...';
+          hudDot.className = 'w-2 h-2 bg-red-500 inline-block animate-alert';
+          hudTxt.textContent = 'ОФФЛАЙН';
+        }
+      }
+
+      socket.on('connect', () => {
+        updateConnectionUI(true);
+        const saved = loadSavedSession();
+        if (saved) {
+          socket.emit('session:reconnect', saved, (res) => {
+            if (!res || !res.ok) {
+              clearSession();
+              renderCurrentScreen();
+            } else {
+              saveSession({
+                roomCode: res.roomCode,
+                playerId: res.playerId,
+                token: res.token
+              });
+              renderCurrentScreen();
+            }
+          });
+        }
+      });
+
+      socket.on('disconnect', () => {
+        updateConnectionUI(false);
+      });
+
+      socket.on('room:state', (room) => {
+        const prevPhase = state.knownPhase;
+        const prevRound = state.knownRound;
+        state.room = room;
+        state.knownPhase = room.phase;
+        state.knownRound = room.round;
+
+        if (prevPhase !== room.phase) {
+          if (room.phase === 'voting' || room.phase === 'runoff') SoundFX.voteStart();
+          else if (room.phase === 'ended') SoundFX.victory();
+          else if ((prevPhase === 'voting' || prevPhase === 'runoff') && room.phase === 'discussion') {
+            SoundFX.voteEnd();
+          }
+        }
+        if (prevRound > 0 && room.round > prevRound && room.phase === 'discussion') {
+          SoundFX.warning();
+        }
+
+        renderCurrentScreen();
+      });
+
+      socket.on('player:private', (priv) => {
+        state.privateData = priv;
+        if (state.room && state.room.phase !== 'lobby') {
+          renderPlayingPersonal();
+          renderVotingZone();
+        }
+      });
+
+      socket.on('timer:tick', ({ timerSeconds }) => {
+        if (!state.room) return;
+        state.room.timerSeconds = timerSeconds;
+        updateTimerDisplays(timerSeconds, state.room.phase);
+      });
+
+      socket.on('chat:message', (msg) => {
+        if (!state.room) return;
+        if (!state.room.chat.some((m) => m.id === msg.id)) {
+          state.room.chat.push(msg);
+          if (state.room.chat.length > 500) state.room.chat.shift();
+        }
+        appendChatMessage(msg);
+      });
+
+      socket.on('room:kicked', (data) => {
+        SoundFX.exile();
+        clearSession();
+        renderCurrentScreen();
+        showToast(data?.reason || 'Вы были исключены из комнаты.', 'error');
+      });
+
+      // ======================================================================
+      // SCREEN ROUTING & RENDERING
+      // ======================================================================
+      function renderCurrentScreen() {
+        const prevScreen = document.body.dataset.state || '';
+        const sTitle = document.getElementById('screen-title');
+        const sLobby = document.getElementById('screen-lobby');
+        const sPlay = document.getElementById('screen-playing');
+        const sEnd = document.getElementById('screen-gameover');
+        const hud = document.getElementById('top-hud');
+
+        sTitle.classList.add('hidden');
+        sLobby.classList.add('hidden');
+        sPlay.classList.add('hidden');
+        sEnd.classList.add('hidden');
+
+        let nextScreen = 'title';
+        if (!state.room || !state.session) {
+          nextScreen = 'title';
+          document.body.dataset.state = nextScreen;
+          hud.classList.add('hidden');
+          sTitle.classList.remove('hidden');
+          if (prevScreen && prevScreen !== nextScreen) window.scrollTo({ top: 0, behavior: 'instant' });
+          return;
+        }
+
+        hud.classList.remove('hidden');
+        updateTopHud();
+
+        if (state.room.phase === 'lobby') {
+          nextScreen = 'lobby';
+          document.body.dataset.state = nextScreen;
+          sLobby.classList.remove('hidden');
+          renderLobby();
+        } else if (state.room.phase === 'ended') {
+          nextScreen = 'gameover';
+          document.body.dataset.state = nextScreen;
+          sEnd.classList.remove('hidden');
+          renderGameOver();
+        } else {
+          nextScreen = 'playing';
+          document.body.dataset.state = nextScreen;
+          sPlay.classList.remove('hidden');
+          renderPlaying();
+        }
+
+        if (prevScreen && prevScreen !== nextScreen) {
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        }
+      }
+
+      function updateTimerDisplays(sec, phase) {
+        const hudTimer = document.getElementById('hud-timer');
+        const inlineTimer = document.getElementById('phase-timer-inline');
+        const isTimed = phase === 'discussion' || phase === 'voting' || phase === 'runoff';
+        if (!isTimed) {
+          hudTimer.classList.add('hidden');
+          return;
+        }
+        hudTimer.classList.remove('hidden');
+        const formatted = formatTimerMMSS(sec);
+        hudTimer.textContent = formatted;
+        inlineTimer.textContent = `${sec} сек.`;
+        if (sec <= 15) {
+          hudTimer.className = 'font-pixel text-xs sm:text-sm text-red-400 animate-alert tabular-nums';
+          inlineTimer.className = 'font-mono text-sm font-bold text-red-400 animate-alert tabular-nums';
+        } else {
+          hudTimer.className = 'font-pixel text-xs sm:text-sm text-bunker-amber tabular-nums';
+          inlineTimer.className = 'font-mono text-sm font-bold text-bunker-text tabular-nums';
+        }
+      }
+
+      function updateTopHud() {
+        const r = state.room;
+        const aliveCount = r.players.filter((p) => p.alive).length;
+        document.getElementById('hud-room-code').textContent = r.code;
+        document.getElementById('hud-round').textContent = `РАУНД ${r.round}`;
+        document.getElementById('hud-alive').textContent = `ЖИВЫХ: ${aliveCount}`;
+        document.getElementById('hud-capacity').textContent = `МЕСТ: ${r.bunkerCapacity}`;
+        document.getElementById('hud-m-round').textContent = `РАУНД ${r.round}`;
+        document.getElementById('hud-m-alive').textContent = `ЖИВЫХ: ${aliveCount}`;
+        document.getElementById('hud-m-capacity').textContent = `МЕСТ: ${r.bunkerCapacity}`;
+
+        const phaseLabels = {
+          lobby: 'ЛОББИ',
+          discussion: 'ОБСУЖДЕНИЕ',
+          voting: 'ГОЛОСОВАНИЕ',
+          runoff: 'ПЕРЕГОЛОСОВАНИЕ',
+          ended: 'ФИНАЛ'
+        };
+        const phaseEl = document.getElementById('hud-phase-label');
+        phaseEl.textContent = phaseLabels[r.phase] || r.phase;
+        phaseEl.className = (r.phase === 'voting' || r.phase === 'runoff')
+          ? 'text-xs font-mono font-bold text-red-400 uppercase whitespace-nowrap'
+          : r.phase === 'ended'
+            ? 'text-xs font-mono font-bold text-bunker-green uppercase whitespace-nowrap'
+            : 'text-xs font-mono font-bold text-bunker-yellow uppercase whitespace-nowrap';
+
+        updateTimerDisplays(r.timerSeconds, r.phase);
+      }
+
+      // ======================================================================
+      // RENDER: LOBBY
+      // ======================================================================
+      function renderLobby() {
+        const r = state.room;
+        const me = r.players.find((p) => p.id === state.session?.playerId);
+        const isHost = Boolean(me && me.isHost);
+
+        document.getElementById('lobby-code-big').textContent = r.code;
+        document.getElementById('lobby-player-count').textContent = `${r.players.length} / 10`;
+        document.getElementById('lobby-capacity-preview').textContent = Math.floor(r.players.length / 2);
+
+        const listEl = document.getElementById('lobby-players-list');
+        listEl.innerHTML = r.players.map((p) => {
+          const isMe = me && p.id === me.id;
+          const kickBtn = (isHost && !isMe)
+            ? `<button type="button" data-kick-id="${p.id}" class="pixel-btn pixel-btn-steel px-2.5 py-1 text-xs font-mono text-red-300 min-h-[36px]" aria-label="Исключить ${escapeHtml(p.name)}">ИСКЛ.</button>`
+            : '';
+          const connText = p.connected ? 'В сети' : 'Не в сети';
+          const connColor = p.connected ? 'text-bunker-green' : 'text-red-400';
+          const readyText = p.isHost ? 'Координатор' : (p.ready ? 'Готов' : 'Ожидает');
+          const readyColor = p.isHost ? 'text-bunker-amber' : (p.ready ? 'text-bunker-green' : 'text-bunker-muted');
+
+          return `
+            <div class="pixel-panel-dark p-3 flex items-center justify-between gap-3 ${isMe ? 'border-bunker-amber' : ''}">
+              <div class="flex items-center gap-3 min-w-0">
+                ${renderPixelAvatar(p.avatarId, false, 'w-11 h-11')}
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-semibold text-sm text-bunker-text truncate">${escapeHtml(p.name)}</span>
+                    ${p.isHost ? '<span class="text-[10px] font-pixel text-bunker-amber shrink-0">[ХОСТ]</span>' : ''}
+                    ${isMe ? '<span class="text-[11px] font-mono text-gray-400 shrink-0">(Вы)</span>' : ''}
+                  </div>
+                  <div class="mt-0.5 text-xs font-mono flex items-center gap-2">
+                    <span class="${connColor}">${connText}</span>
+                    <span class="text-bunker-muted">·</span>
+                    <span class="${readyColor}">${readyText}</span>
+                  </div>
+                </div>
+              </div>
+              ${kickBtn}
+            </div>
+          `;
+        }).join('');
+
+        listEl.querySelectorAll('[data-kick-id]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            SoundFX.click();
+            const targetId = btn.getAttribute('data-kick-id');
+            socket.emit('lobby:kick', { targetId }, (res) => {
+              if (!res?.ok) setInlineError('lobby-error', res?.error || 'Не удалось исключить игрока.');
+              else setInlineError('lobby-error', '');
+            });
+          });
+        });
+
+        const readyBtn = document.getElementById('btn-toggle-ready');
+        const startBtn = document.getElementById('btn-start-game');
+        const waitNote = document.getElementById('lobby-wait-host-note');
+
+        if (me) {
+          readyBtn.textContent = me.ready ? 'Готовность: ДА (снять)' : 'Отметиться готовым';
+          readyBtn.className = me.ready
+            ? 'pixel-btn pixel-btn-green px-4 py-3 text-xs sm:text-sm font-mono'
+            : 'pixel-btn pixel-btn-steel px-4 py-3 text-xs sm:text-sm font-mono';
+        }
+
+        if (isHost) {
+          startBtn.classList.remove('hidden');
+          waitNote.classList.add('hidden');
+          startBtn.disabled = r.players.length < 3;
+          startBtn.title = r.players.length < 3 ? 'Для старта требуется минимум 3 игрока' : 'Начать партию';
+        } else {
+          startBtn.classList.add('hidden');
+          waitNote.classList.remove('hidden');
+        }
+
+        renderChatList('lobby-chat-messages', r.chat);
+      }
+
+      // ======================================================================
+      // RENDER: ACTIVE GAME
+      // ======================================================================
+      function renderPlaying() {
+        const r = state.room;
+        const me = r.players.find((p) => p.id === state.session?.playerId);
+        const isHost = Boolean(me && me.isHost);
+        const isAlive = Boolean(me && me.alive);
+
+        // Spectator banner
+        document.getElementById('spectator-banner').classList.toggle('hidden', isAlive);
+
+        // Disaster & Bunker
+        const d = r.disaster;
+        const b = r.bunker;
+        if (d && b) {
+          document.getElementById('scenario-summary-line').textContent = `${d.title} · ${b.name}`;
+          document.getElementById('disaster-title').textContent = d.title;
+          document.getElementById('disaster-desc').textContent = d.description;
+          document.getElementById('disaster-duration').textContent = d.duration;
+          document.getElementById('disaster-survival').textContent = d.survivalPercent;
+          document.getElementById('disaster-cause').textContent = d.cause;
+          document.getElementById('disaster-danger').textContent = d.extraDanger;
+          document.getElementById('disaster-condition').textContent = d.specialCondition;
+
+          const intelBox = document.getElementById('disaster-intel-box');
+          if (d.extraIntel) {
+            intelBox.classList.remove('hidden');
+            document.getElementById('disaster-intel').textContent = d.extraIntel;
+          } else {
+            intelBox.classList.add('hidden');
+          }
+
+          document.getElementById('bunker-name').textContent = b.name;
+          document.getElementById('bunker-area').textContent = b.area;
+          document.getElementById('bunker-cap').textContent = r.bunkerCapacity;
+          document.getElementById('bunker-food').textContent = `${b.foodMonths} мес.`;
+          document.getElementById('bunker-food-bar').style.width = `${Math.min(100, Math.round((b.foodMonths / 20) * 100))}%`;
+          document.getElementById('bunker-water').textContent = `${b.waterPercent}%`;
+          document.getElementById('bunker-water-bar').style.width = `${Math.min(100, b.waterPercent)}%`;
+          document.getElementById('bunker-power').textContent = `${b.powerPercent}%`;
+          document.getElementById('bunker-power-bar').style.width = `${Math.min(100, b.powerPercent)}%`;
+          document.getElementById('bunker-medical').textContent = b.medical;
+          document.getElementById('bunker-features').textContent = b.features;
+          document.getElementById('bunker-secret').textContent = b.secretFeature;
+
+          const mList = document.getElementById('bunker-malfunctions');
+          if (b.malfunctions && b.malfunctions.length > 0) {
+            mList.innerHTML = b.malfunctions.map((m) => `<li>${escapeHtml(m)}</li>`).join('');
+          } else {
+            mList.innerHTML = '<li class="text-bunker-green list-none">Все критические неисправности устранены!</li>';
+          }
+
+          renderBunkerSchematic(b);
+        }
+
+        // Phase bar & Host controls
+        const phaseTitle = document.getElementById('phase-title');
+        const phaseSub = document.getElementById('phase-subtitle');
+        const hostControls = document.getElementById('host-phase-controls');
+        const btnEndDisc = document.getElementById('btn-host-end-discussion');
+        const btnEndVote = document.getElementById('btn-host-end-voting');
+
+        if (r.phase === 'discussion') {
+          phaseTitle.textContent = `РАУНД ${r.round} · ОБСУЖДЕНИЕ`;
+          phaseTitle.className = 'font-pixel text-xs sm:text-sm text-bunker-amber';
+          phaseSub.textContent = 'Откройте по одной характеристике и обсудите, кто полезнее всего для выживания.';
+        } else if (r.phase === 'voting') {
+          phaseTitle.textContent = `РАУНД ${r.round} · ГОЛОСОВАНИЕ`;
+          phaseTitle.className = 'font-pixel text-xs sm:text-sm text-red-400';
+          phaseSub.textContent = 'Тайное голосование: выберите того, кто покинет бункер. Против себя голосовать нельзя.';
+        } else if (r.phase === 'runoff') {
+          phaseTitle.textContent = `РАУНД ${r.round} · ПОВТОРНОЕ ГОЛОСОВАНИЕ`;
+          phaseTitle.className = 'font-pixel text-xs sm:text-sm text-red-400';
+          phaseSub.textContent = 'Ничья! Повторный выбор только между лидерами прошлого голосования.';
+        }
+
+        hostControls.classList.toggle('hidden', !isHost);
+        btnEndDisc.classList.toggle('hidden', !(isHost && r.phase === 'discussion'));
+        btnEndVote.classList.toggle('hidden', !(isHost && (r.phase === 'voting' || r.phase === 'runoff')));
+
+        renderVotingZone();
+        renderPlayingPersonal();
+        renderPlayersGrid();
+        renderChatList('game-chat-messages', r.chat);
+        renderDiary();
+        renderVotingHistory('panel-tab-history', r.votingHistory);
+      }
+
+      function renderVotingZone() {
+        const r = state.room;
+        const priv = state.privateData;
+        const me = r?.players.find((p) => p.id === state.session?.playerId);
+        const zone = document.getElementById('voting-zone');
+
+        if (!r || (r.phase !== 'voting' && r.phase !== 'runoff') || !r.votingInfo) {
+          zone.classList.add('hidden');
+          return;
+        }
+
+        zone.classList.remove('hidden');
+        const vInfo = r.votingInfo;
+        document.getElementById('voting-progress').textContent = `Проголосовало: ${vInfo.votesCast} / ${vInfo.totalVoters}`;
+        document.getElementById('voting-instruction').textContent = vInfo.isRunoff
+          ? 'Повторное голосование между кандидатами с ничьей:'
+          : 'Выберите игрока для изгнания из убежища:';
+
+        const statusNote = document.getElementById('voting-status-note');
+        const hasVoted = Boolean(priv && priv.hasVoted);
+        const isAlive = Boolean(me && me.alive);
+
+        if (!isAlive) {
+          statusNote.classList.remove('hidden');
+          statusNote.textContent = 'Вы изгнаны и наблюдаете за голосованием со стороны.';
+        } else if (hasVoted) {
+          const votedTarget = r.players.find((p) => p.id === priv.votedForId);
+          statusNote.classList.remove('hidden');
+          statusNote.textContent = `Ваш голос отправлен (${votedTarget ? votedTarget.name : 'учтён'}). Изменить выбор нельзя.`;
+        } else {
+          statusNote.classList.add('hidden');
+        }
+
+        const candContainer = document.getElementById('voting-candidates');
+        const candidatePlayers = r.players.filter((p) => p.alive && vInfo.candidates.includes(p.id));
+
+        candContainer.innerHTML = candidatePlayers.map((p) => {
+          const isSelf = me && p.id === me.id;
+          const isChosen = hasVoted && priv.votedForId === p.id;
+          const canVote = isAlive && !hasVoted && !isSelf;
+
+          return `
+            <div class="pixel-panel-dark p-3 flex items-center justify-between gap-3 ${isChosen ? 'border-red-500 bg-red-950/25' : ''}">
+              <div class="flex items-center gap-2.5 min-w-0">
+                ${renderPixelAvatar(p.avatarId, false, 'w-10 h-10')}
+                <div class="min-w-0">
+                  <div class="font-semibold text-sm text-bunker-text truncate">${escapeHtml(p.name)}</div>
+                  <div class="text-xs font-mono text-bunker-muted truncate">
+                    ${p.traits.profession?.revealed ? escapeHtml(p.traits.profession.data.title) : 'Профессия скрыта'}
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                data-vote-target="${p.id}"
+                ${canVote ? '' : 'disabled'}
+                class="pixel-btn ${isChosen ? 'pixel-btn-danger' : 'pixel-btn-steel'} px-3 py-2 text-xs font-mono shrink-0"
+              >
+                ${isSelf ? 'ВЫ' : isChosen ? 'ВЫБРАН' : 'ИЗГНАТЬ'}
+              </button>
+            </div>
+          `;
+        }).join('');
+
+        candContainer.querySelectorAll('[data-vote-target]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            if (btn.disabled) return;
+            SoundFX.click();
+            const targetId = btn.getAttribute('data-vote-target');
+            socket.emit('game:vote', { targetId }, (res) => {
+              if (!res?.ok) showToast(res?.error || 'Ошибка голосования.', 'error');
+              else showToast('Голос принят сервером.', 'success');
+            });
+          });
+        });
+      }
+
+      function renderTraitDetailsHtml(key, data) {
+        if (!data) return '';
+        if (key === 'profession') {
+          return `<div class="text-xs text-bunker-amber font-mono">Стаж: ${escapeHtml(data.experience)}</div>
+                  <p class="mt-1 text-xs text-gray-300 leading-relaxed">${escapeHtml(data.skills)}</p>`;
+        }
+        if (key === 'biology') {
+          return `<div class="text-xs text-sky-300 font-mono">${escapeHtml(data.trait)}</div>
+                  <p class="mt-1 text-xs text-gray-300 leading-relaxed">${escapeHtml(data.description)}</p>`;
+        }
+        if (key === 'health') {
+          const sevLabel = data.severity === 'none' ? 'Норма' : data.severity === 'mild' ? 'Лёгкая' : data.severity === 'moderate' ? 'Средняя' : 'Тяжёлая';
+          const sevColor = data.severity === 'none' ? 'text-bunker-green' : data.severity === 'mild' ? 'text-bunker-yellow' : 'text-red-400';
+          return `<div class="text-xs font-mono ${sevColor}">Тяжесть: ${sevLabel}${data.treatable ? ' · Поддаётся лечению' : ''}</div>
+                  <p class="mt-1 text-xs text-gray-300 leading-relaxed">${escapeHtml(data.description)}</p>`;
+        }
+        if (key === 'hobby') {
+          return `<p class="text-xs text-gray-300 leading-relaxed">${escapeHtml(data.description)}</p>
+                  <div class="mt-1 text-xs text-bunker-green font-mono">${escapeHtml(data.bonus)}</div>`;
+        }
+        if (key === 'phobia') {
+          return `<p class="text-xs text-gray-300 leading-relaxed">${escapeHtml(data.description)}</p>
+                  <div class="mt-1 text-xs text-purple-300 font-mono">${escapeHtml(data.impact)}</div>`;
+        }
+        if (key === 'luggage') {
+          return `<p class="text-xs text-gray-300 leading-relaxed">${escapeHtml(data.description)}</p>
+                  <div class="mt-1 text-xs text-orange-300 font-mono">${escapeHtml(data.effect)}</div>`;
+        }
+        return '';
+      }
+
+      function renderPlayingPersonal() {
+        const r = state.room;
+        const priv = state.privateData;
+        const me = r?.players.find((p) => p.id === state.session?.playerId);
+        if (!r || !priv || !priv.traits || !me) return;
+
+        const revealStatusEl = document.getElementById('my-reveal-status');
+        if (!me.alive) {
+          revealStatusEl.textContent = 'Вы изгнаны — все ваши характеристики открыты.';
+        } else if (r.phase !== 'discussion') {
+          revealStatusEl.textContent = 'Открытие характеристик доступно только в фазе обсуждения.';
+        } else if (me.revealedThisRound) {
+          revealStatusEl.textContent = 'В этом раунде вы уже раскрыли одну характеристику.';
+        } else {
+          revealStatusEl.textContent = 'Выберите одну скрытую карту, чтобы открыть её для всех в этом раунде.';
+        }
+
+        const buffs = [];
+        if (priv.extraVotes > 0) buffs.push(`Доп. голос: +${priv.extraVotes}`);
+        if (priv.immuneThisRound) buffs.push('Неприкосновенность активна');
+        if (priv.quarantinedThisRound) buffs.push('Карантин (спецкарта заблокирована)');
+        if (priv.redirectTargetId) buffs.push('Адвокат дьявола активен');
+        document.getElementById('my-buffs-line').textContent = buffs.join(' · ');
+
+        const grid = document.getElementById('my-traits-grid');
+        const keys = ['profession', 'biology', 'health', 'hobby', 'phobia', 'luggage'];
+
+        grid.innerHTML = keys.map((key) => {
+          const card = priv.traits[key];
+          const meta = TRAIT_META[key];
+          const isRevealed = Boolean(card.revealed);
+          const justFlipped = isRevealed && !state.lastRevealedKeys.has(key);
+          if (isRevealed) state.lastRevealedKeys.add(key);
+
+          const canReveal = me.alive && r.phase === 'discussion' && !me.revealedThisRound && !isRevealed;
+          const surfaceClass = isRevealed
+            ? 'pixel-panel-dark border-bunker-amber/70'
+            : 'classified-surface border-2 border-bunker-steel';
+
+          return `
+            <article class="${surfaceClass} p-3.5 flex flex-col justify-between gap-3 ${justFlipped ? 'animate-card-flip' : ''}">
+              <div>
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-2.5">
+                    ${getTraitPixelSvg(key)}
+                    <div>
+                      <div class="text-[11px] font-mono uppercase text-bunker-muted">${meta.label}</div>
+                      <div class="text-[11px] font-mono font-bold ${isRevealed ? 'text-bunker-green' : 'text-bunker-amber'}">
+                        ${isRevealed ? 'ОТКРЫТО' : 'СКРЫТО'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <h3 class="mt-2.5 font-bold text-sm text-bunker-text leading-snug">${escapeHtml(card.data.title)}</h3>
+                <div class="mt-1.5">${renderTraitDetailsHtml(key, card.data)}</div>
+              </div>
+              <div class="pt-2 border-t border-bunker-steel/60">
+                ${isRevealed
+                  ? '<div class="text-xs font-mono text-bunker-muted py-1.5 text-center">Видно всем участникам</div>'
+                  : `<button type="button" data-reveal-key="${key}" ${canReveal ? '' : 'disabled'} class="pixel-btn pixel-btn-amber w-full py-2 px-3 text-xs font-mono">Открыть для всех</button>`
+                }
+              </div>
+            </article>
+          `;
+        }).join('');
+
+        grid.querySelectorAll('[data-reveal-key]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            if (btn.disabled) return;
+            const traitKey = btn.getAttribute('data-reveal-key');
+            socket.emit('game:revealTrait', { traitKey }, (res) => {
+              if (!res?.ok) {
+                showToast(res?.error || 'Не удалось открыть характеристику.', 'error');
+              } else {
+                SoundFX.reveal();
+              }
+            });
+          });
+        });
+
+        // Special card block
+        const sc = priv.specialCard;
+        const statusEl = document.getElementById('special-status-text');
+        const boxEl = document.getElementById('special-card-box');
+        if (!sc) return;
+
+        let statusText = 'ДОСТУПНА';
+        let statusColor = 'text-bunker-green';
+        let canUse = true;
+
+        if (sc.used) {
+          statusText = 'ИСПОЛЬЗОВАНА';
+          statusColor = 'text-bunker-muted';
+          canUse = false;
+        } else if (!me.alive) {
+          statusText = 'НЕДОСТУПНА (ВЫ ИЗГНАНЫ)';
+          statusColor = 'text-red-400';
+          canUse = false;
+        } else if (priv.quarantinedThisRound) {
+          statusText = 'КАРАНТИН В ЭТОМ РАУНДЕ';
+          statusColor = 'text-red-400';
+          canUse = false;
+        } else if (!sc.allowedPhases.includes(r.phase)) {
+          statusText = 'ТОЛЬКО В ФАЗЕ ОБСУЖДЕНИЯ';
+          statusColor = 'text-bunker-yellow';
+          canUse = false;
+        }
+
+        statusEl.textContent = statusText;
+        statusEl.className = `text-xs font-mono font-bold ${statusColor}`;
+
+        boxEl.innerHTML = `
+          <div class="flex items-start gap-3">
+            <div class="shrink-0 mt-0.5">${getTraitPixelSvg('special')}</div>
+            <div>
+              <h4 class="font-bold text-base text-bunker-yellow">${escapeHtml(sc.title)}</h4>
+              <p class="mt-1 text-sm text-gray-200 leading-relaxed">${escapeHtml(sc.description)}</p>
+              <div class="mt-1.5 text-xs font-mono text-bunker-muted">Условие: ${escapeHtml(sc.condition)}</div>
+            </div>
+          </div>
+          <button
+            id="btn-use-special"
+            type="button"
+            ${canUse ? '' : 'disabled'}
+            class="pixel-btn ${canUse ? 'pixel-btn-amber' : 'pixel-btn-steel'} px-5 py-3 text-xs font-pixel shrink-0"
+          >
+            ${sc.used ? 'ИСПОЛЬЗОВАНА' : 'ИСПОЛЬЗОВАТЬ'}
+          </button>
+        `;
+
+        document.getElementById('btn-use-special')?.addEventListener('click', () => {
+          if (!canUse) return;
+          SoundFX.click();
+          if (sc.requiresTarget) {
+            openSpecialTargetModal(sc);
+          } else {
+            socket.emit('game:useSpecial', {}, (res) => {
+              if (!res?.ok) {
+                showToast(res?.error || 'Не удалось применить спецкарту.', 'error');
+              } else {
+                SoundFX.reveal();
+                showToast(res.message || 'Спецкарта применена!', 'success');
+              }
+            });
+          }
+        });
+      }
+
+      function renderPlayersGrid() {
+        const r = state.room;
+        const me = r.players.find((p) => p.id === state.session?.playerId);
+        const isHost = Boolean(me && me.isHost);
+        const grid = document.getElementById('players-grid');
+
+        grid.innerHTML = r.players.map((p) => {
+          const isMe = me && p.id === me.id;
+          const cardBg = !p.alive
+            ? 'bg-[#121315] border-gray-700 opacity-75'
+            : !p.connected
+              ? 'pixel-panel-dark border-yellow-600/80'
+              : 'pixel-panel-dark border-bunker-border hover:border-bunker-amber';
+
+          const statusLabel = !p.alive ? 'Изгнан' : (p.connected ? 'Жив' : 'Не в сети');
+          const statusColor = !p.alive ? 'text-gray-400' : (p.connected ? 'text-bunker-green' : 'text-bunker-yellow');
+
+          const revealedEntries = ['profession', 'biology', 'health', 'hobby', 'phobia', 'luggage']
+            .filter((k) => p.traits[k] && p.traits[k].revealed && p.traits[k].data)
+            .map((k) => `<div class="text-xs truncate"><span class="text-bunker-muted font-mono">${TRAIT_META[k].label}:</span> <span class="text-gray-200">${escapeHtml(p.traits[k].data.title)}</span></div>`)
+            .join('');
+
+          const offlineKickBtn = (isHost && !isMe && p.offlineKickReady)
+            ? `<button type="button" data-kick-offline="${p.id}" class="pixel-btn pixel-btn-danger px-2.5 py-1 text-[11px] font-mono min-h-[36px]">Удалить (>60с)</button>`
+            : '';
+
+          return `
+            <div class="${cardBg} border-2 p-3.5 flex flex-col justify-between gap-3 transition-colors">
+              <div>
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-3 min-w-0">
+                    ${renderPixelAvatar(p.avatarId, !p.alive, 'w-11 h-11')}
+                    <div class="min-w-0">
+                      <div class="flex items-center gap-1.5">
+                        <span class="font-bold text-sm text-bunker-text truncate">${escapeHtml(p.name)}</span>
+                        ${p.isHost ? '<span class="text-[10px] font-pixel text-bunker-amber">[ХОСТ]</span>' : ''}
+                        ${isMe ? '<span class="text-[11px] font-mono text-gray-400">(Вы)</span>' : ''}
+                      </div>
+                      <div class="mt-0.5 text-xs font-mono flex flex-wrap items-center gap-1.5">
+                        <span class="${statusColor} font-semibold">${statusLabel}</span>
+                        <span class="text-bunker-muted">·</span>
+                        <span class="text-bunker-muted tabular-nums">Скрыто: ${p.hiddenCount}</span>
+                        <span class="text-bunker-muted">·</span>
+                        <span class="${p.specialCardUsed ? 'text-bunker-muted' : 'text-bunker-yellow'}">
+                          Спец: ${p.specialCardUsed ? 'Исп.' : 'Есть'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-2.5 space-y-1 border-t border-bunker-steel/60 pt-2">
+                  ${revealedEntries || '<div class="text-xs text-bunker-muted italic">Открытых характеристик пока нет</div>'}
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between gap-2 pt-1">
+                <button type="button" data-open-dossier="${p.id}" class="pixel-btn pixel-btn-steel flex-1 py-2 px-3 text-xs font-mono">
+                  Открыть досье
+                </button>
+                ${offlineKickBtn}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        grid.querySelectorAll('[data-open-dossier]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            SoundFX.click();
+            openDossierModal(btn.getAttribute('data-open-dossier'));
+          });
+        });
+
+        grid.querySelectorAll('[data-kick-offline]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            SoundFX.click();
+            const targetId = btn.getAttribute('data-kick-offline');
+            socket.emit('lobby:kick', { targetId }, (res) => {
+              if (!res?.ok) showToast(res?.error || 'Не удалось удалить игрока.', 'error');
+              else showToast('Отсутствующий игрок удалён.', 'info');
+            });
+          });
+        });
+      }
+
+      // ======================================================================
+      // MODALS: DOSSIER & SPECIAL TARGET
+      // ======================================================================
+      function openDossierModal(playerId) {
+        const r = state.room;
+        if (!r) return;
+        const p = r.players.find((pl) => pl.id === playerId);
+        if (!p) return;
+
+        document.getElementById('dossier-avatar').innerHTML = renderPixelAvatar(p.avatarId, !p.alive, 'w-12 h-12');
+        document.getElementById('dossier-modal-title').textContent = p.name;
+        document.getElementById('dossier-modal-meta').textContent =
+          `${p.alive ? 'Жив' : 'Изгнан'} · ${p.connected ? 'В сети' : 'Не в сети'} · Скрыто карт: ${p.hiddenCount} · Спецкарта: ${p.specialCardUsed ? 'Использована' : 'Доступна'}`;
+
+        const keys = ['profession', 'biology', 'health', 'hobby', 'phobia', 'luggage'];
+        document.getElementById('dossier-modal-body').innerHTML = keys.map((k) => {
+          const trait = p.traits[k];
+          const meta = TRAIT_META[k];
+          if (!trait || !trait.revealed || !trait.data) {
+            return `
+              <div class="classified-surface border border-bunker-steel p-3 flex items-center gap-3">
+                ${getTraitPixelSvg(k)}
+                <div>
+                  <div class="text-xs font-mono text-bunker-muted">${meta.label}</div>
+                  <div class="text-sm font-mono text-bunker-amber">ЗАСЕКРЕЧЕНО</div>
+                </div>
+              </div>
+            `;
+          }
+          return `
+            <div class="pixel-panel-dark p-3 flex items-start gap-3">
+              <div class="shrink-0 mt-0.5">${getTraitPixelSvg(k)}</div>
+              <div>
+                <div class="text-xs font-mono text-bunker-muted">${meta.label}</div>
+                <div class="font-bold text-sm text-bunker-text">${escapeHtml(trait.data.title)}</div>
+                <div class="mt-1">${renderTraitDetailsHtml(k, trait.data)}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        document.getElementById('modal-dossier').classList.remove('hidden');
+      }
+
+      function openSpecialTargetModal(sc) {
+        const r = state.room;
+        const me = r.players.find((p) => p.id === state.session?.playerId);
+        if (!r || !me) return;
+
+        document.getElementById('special-target-title').textContent = `ЦЕЛЬ: ${sc.title.toUpperCase()}`;
+        document.getElementById('special-target-desc').textContent = sc.description;
+        setInlineError('special-target-error', '');
+
+        const candidates = r.players.filter((p) => {
+          if (!p.alive || p.id === me.id) return false;
+          if (sc.targetRule === 'alive_other_hidden_health') return !p.traits.health?.revealed;
+          if (sc.targetRule === 'alive_other_hidden_biology') return !p.traits.biology?.revealed;
+          if (sc.targetRule === 'alive_other_hidden_phobia') return !p.traits.phobia?.revealed;
+          if (sc.targetRule === 'alive_other_has_hidden') return p.hiddenCount > 0;
+          if (sc.targetRule === 'alive_other_unused_special') return !p.specialCardUsed;
+          return true;
+        });
+
+        const list = document.getElementById('special-target-list');
+        if (candidates.length === 0) {
+          list.innerHTML = '<div class="p-3 bg-bunker-panel border border-bunker-steel text-sm text-bunker-muted">Нет подходящих живых целей для этой спецкарты.</div>';
+        } else {
+          list.innerHTML = candidates.map((p) => `
+            <button type="button" data-pick-special-target="${p.id}" class="pixel-btn pixel-btn-steel w-full p-3 flex items-center justify-between gap-3 text-left">
+              <span class="flex items-center gap-3 min-w-0">
+                ${renderPixelAvatar(p.avatarId, false, 'w-9 h-9')}
+                <span class="font-semibold text-sm truncate">${escapeHtml(p.name)}</span>
+              </span>
+              <span class="text-xs font-mono text-bunker-amber shrink-0">ВЫБРАТЬ</span>
+            </button>
+          `).join('');
+
+          list.querySelectorAll('[data-pick-special-target]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              const targetId = btn.getAttribute('data-pick-special-target');
+              socket.emit('game:useSpecial', { targetId }, (res) => {
+                if (!res?.ok) {
+                  setInlineError('special-target-error', res?.error || 'Не удалось применить спецкарту.');
+                } else {
+                  document.getElementById('modal-special-target').classList.add('hidden');
+                  SoundFX.reveal();
+                  showToast(res.message || 'Спецкарта применена!', 'success');
+                }
+              });
+            });
+          });
+        }
+
+        document.getElementById('modal-special-target').classList.remove('hidden');
+      }
+
+      // ======================================================================
+      // CHAT, DIARY & VOTING HISTORY
+      // ======================================================================
+      const PLAYER_CHAT_ACCENTS = [
+        'text-amber-300',
+        'text-emerald-300',
+        'text-sky-300',
+        'text-yellow-300',
+        'text-rose-300',
+        'text-violet-300',
+        'text-teal-300',
+        'text-orange-300',
+        'text-lime-300',
+        'text-cyan-300'
+      ];
+
+      const SYSTEM_MSG_STYLES = {
+        join: { label: 'ПОДКЛЮЧЕНИЕ', cls: 'border-l-4 border-l-emerald-500 border-bunker-steel bg-emerald-950/25 text-emerald-100', tagCls: 'text-emerald-400' },
+        leave: { label: 'ОТКЛЮЧЕНИЕ', cls: 'border-l-4 border-l-orange-500 border-bunker-steel bg-orange-950/25 text-orange-100', tagCls: 'text-orange-400' },
+        reveal: { label: 'РАСКРЫТИЕ', cls: 'border-l-4 border-l-sky-400 border-bunker-steel bg-sky-950/25 text-sky-100', tagCls: 'text-sky-400' },
+        special: { label: 'СПЕЦКАРТА', cls: 'border-l-4 border-l-purple-400 border-bunker-steel bg-purple-950/30 text-purple-100', tagCls: 'text-purple-300' },
+        voting: { label: 'ГОЛОСОВАНИЕ', cls: 'border-l-4 border-l-red-500 border-bunker-steel bg-red-950/25 text-red-100', tagCls: 'text-red-400' },
+        exile: { label: 'ИЗГНАНИЕ', cls: 'border-l-4 border-l-red-600 border-red-800/80 bg-red-950/45 text-red-100', tagCls: 'text-red-400' },
+        event: { label: 'СОБЫТИЕ', cls: 'border-l-4 border-l-bunker-yellow border-amber-700/70 bg-amber-950/30 text-amber-100', tagCls: 'text-bunker-yellow' },
+        round: { label: 'РАУНД', cls: 'border-l-4 border-l-bunker-amber border-bunker-steel bg-amber-950/20 text-amber-50', tagCls: 'text-bunker-amber' },
+        gameover: { label: 'ФИНАЛ', cls: 'border-l-4 border-l-bunker-green border-emerald-700 bg-emerald-950/40 text-emerald-50', tagCls: 'text-bunker-green' },
+        system: { label: 'СИСТЕМА', cls: 'border-l-4 border-l-slate-500 border-bunker-steel bg-[#101418] text-gray-300', tagCls: 'text-bunker-muted' }
+      };
+
+      function buildChatMessageHtml(msg) {
+        if (msg.type !== 'user') {
+          const st = SYSTEM_MSG_STYLES[msg.type] || SYSTEM_MSG_STYLES.system;
+          return `
+            <div class="border ${st.cls} px-2.5 py-2 text-xs leading-relaxed animate-msg">
+              <div class="flex items-center justify-between gap-2 mb-0.5 font-mono text-[10px]">
+                <span class="font-bold tracking-wider ${st.tagCls}">[${st.label}]</span>
+                <span class="text-bunker-muted tabular-nums">${escapeHtml(msg.time)}</span>
+              </div>
+              <div class="whitespace-pre-wrap break-words">${escapeHtml(msg.text)}</div>
+            </div>
+          `;
+        }
+
+        const playerRef = state.room?.players?.find((p) => p.id === msg.senderId);
+        const avatarId = Number.isInteger(msg.senderAvatarId) ? msg.senderAvatarId : (playerRef?.avatarId ?? 0);
+        const isMine = Boolean(state.session && msg.senderId === state.session.playerId);
+        const isExiled = Boolean(msg.senderExiled);
+        const isHost = Boolean(msg.senderIsHost || playerRef?.isHost);
+        const nameColor = isExiled ? 'text-gray-400' : PLAYER_CHAT_ACCENTS[Math.abs(avatarId) % PLAYER_CHAT_ACCENTS.length];
+        const cardClass = isMine
+          ? 'bg-[#171c22] border-bunker-amber/70'
+          : isExiled
+            ? 'bg-[#101214] border-gray-700/80 opacity-90'
+            : 'bg-[#12161b] border-bunker-steel/80';
+
+        return `
+          <div class="p-2.5 border ${cardClass} flex items-start gap-2.5 animate-msg">
+            <div class="shrink-0 mt-0.5">${renderPixelAvatar(avatarId, isExiled, 'w-8 h-8')}</div>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-xs">
+                <div class="flex flex-wrap items-center gap-1.5 min-w-0">
+                  <span class="font-bold truncate ${nameColor}">${escapeHtml(msg.senderName)}</span>
+                  ${isHost ? '<span class="text-[10px] font-mono text-bunker-amber border border-bunker-amber/40 px-1 leading-tight">ХОСТ</span>' : ''}
+                  ${isExiled ? '<span class="text-[10px] font-mono text-red-300 border border-red-800/70 bg-red-950/40 px-1 leading-tight">НАБЛЮДАТЕЛЬ</span>' : ''}
+                  ${isMine ? '<span class="text-[10px] font-mono text-bunker-muted">(Вы)</span>' : ''}
+                </div>
+                <span class="font-mono text-[11px] text-bunker-muted tabular-nums shrink-0">${escapeHtml(msg.time)}</span>
+              </div>
+              <p class="mt-1 text-sm text-bunker-text whitespace-pre-wrap break-words leading-snug">${escapeHtml(msg.text)}</p>
+            </div>
+          </div>
+        `;
+      }
+
+      function isChatVisibleOnScreen() {
+        const screen = document.body.dataset.state;
+        if (screen === 'lobby' || screen === 'gameover') return true;
+        if (screen !== 'playing') return false;
+        const isDesktop = window.innerWidth >= 1280;
+        if (isDesktop) return state.activeTab === 'chat';
+        return state.mobileView === 'chat' && state.activeTab === 'chat';
+      }
+
+      function updateChatUnreadBadges() {
+        const count = state.unreadChatCount;
+        ['chat-unread-badge', 'mobile-chat-badge'].forEach((id) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          if (count > 0) {
+            el.textContent = count > 99 ? '99+' : String(count);
+            el.classList.remove('hidden');
+          } else {
+            el.classList.add('hidden');
+          }
+        });
+      }
+
+      function updateGameChatCounter(count) {
+        const el = document.getElementById('game-chat-count');
+        if (el) el.textContent = `${count} сообщ.`;
+      }
+
+      function renderChatList(containerId, messages) {
+        const box = document.getElementById(containerId);
+        if (!box) return;
+        const list = messages || [];
+        updateGameChatCounter(list.length);
+        const sig = `${list.length}:${list[list.length - 1]?.id || ''}`;
+        if (state.renderedChatSig[containerId] === sig) return;
+
+        const wasNearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 90;
+        const isFirstRender = !state.renderedChatSig[containerId];
+        state.renderedChatSig[containerId] = sig;
+
+        if (list.length === 0) {
+          box.innerHTML = '<div class="text-xs text-bunker-muted p-2">Сообщений пока нет. Начните обсуждение!</div>';
+          return;
+        }
+        box.innerHTML = list.map(buildChatMessageHtml).join('');
+        if (isFirstRender || wasNearBottom) {
+          box.scrollTop = box.scrollHeight;
+        }
+      }
+
+      function appendChatMessage(msg) {
+        const boxes = ['lobby-chat-messages', 'game-chat-messages', 'gameover-chat-messages'];
+        const html = buildChatMessageHtml(msg);
+        const isMine = Boolean(state.session && msg.senderId === state.session.playerId);
+
+        boxes.forEach((id) => {
+          const box = document.getElementById(id);
+          if (!box) return;
+          if (state.room?.chat) {
+            state.renderedChatSig[id] = `${state.room.chat.length}:${msg.id}`;
+          }
+          // Remove empty-state hint if present
+          if (box.children.length === 1 && box.firstElementChild?.textContent?.includes('Сообщений пока нет')) {
+            box.innerHTML = '';
+          }
+          const wasNearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 90;
+          const wrap = document.createElement('div');
+          wrap.innerHTML = html.trim();
+          if (wrap.firstElementChild) box.appendChild(wrap.firstElementChild);
+          if (wasNearBottom || isMine) {
+            box.scrollTop = box.scrollHeight;
+          }
+        });
+
+        updateGameChatCounter(state.room?.chat?.length || 0);
+        if (!isChatVisibleOnScreen() && !isMine) {
+          state.unreadChatCount += 1;
+          updateChatUnreadBadges();
+        }
+      }
+
+      function renderDiary() {
+        const el = document.getElementById('panel-tab-diary');
+        const diary = state.room?.diary || [];
+        if (diary.length === 0) {
+          el.innerHTML = '<div class="text-xs text-bunker-muted">Записей пока нет.</div>';
+          return;
+        }
+        el.innerHTML = [...diary].reverse().map((entry) => `
+          <div class="pixel-panel-dark p-2.5 space-y-1">
+            <div class="flex items-center justify-between text-[11px] font-mono text-bunker-amber">
+              <span>РАУНД ${entry.round} · ${escapeHtml(entry.title)}</span>
+              <span class="text-bunker-muted">${escapeHtml(entry.time)}</span>
+            </div>
+            <p class="text-xs text-gray-300 leading-relaxed">${escapeHtml(entry.detail)}</p>
+          </div>
+        `).join('');
+      }
+
+      function renderVotingHistory(containerId, history) {
+        const el = document.getElementById(containerId);
+        if (!el) return;
+        if (!history || history.length === 0) {
+          el.innerHTML = '<div class="text-xs text-bunker-muted">Голосований ещё не проводилось.</div>';
+          return;
+        }
+        el.innerHTML = [...history].reverse().map((item) => {
+          const rows = item.candidates.map((c) => `
+            <div class="flex justify-between text-xs py-0.5 tabular-nums">
+              <span class="${item.exiledPlayerId === c.playerId ? 'text-red-400 font-bold' : 'text-gray-300'}">${escapeHtml(c.name)}</span>
+              <span class="font-mono text-bunker-amber">${c.votes} гол.</span>
+            </div>
+          `).join('');
+
+          return `
+            <div class="pixel-panel-dark p-3 space-y-2">
+              <div class="flex items-center justify-between text-xs font-mono">
+                <span class="text-bunker-amber font-bold">Раунд ${item.round}${item.isRunoff ? ' (Переголосование)' : ''}</span>
+              </div>
+              <div class="border-y border-bunker-steel/60 py-1.5">${rows}</div>
+              <div class="text-xs text-gray-200">${escapeHtml(item.outcome)}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // ======================================================================
+      // RENDER: GAME OVER SCREEN
+      // ======================================================================
+      function renderGameOver() {
+        const r = state.room;
+        const sum = r.endSummary;
+        const me = r.players.find((p) => p.id === state.session?.playerId);
+        const isHost = Boolean(me && me.isHost);
+        if (!sum) return;
+
+        document.getElementById('end-subtitle').textContent =
+          `Гермодвери запечатаны. В живых осталось ${sum.survivors.length} из ${r.players.length} претендентов.`;
+        document.getElementById('end-stat-survivors').textContent = sum.survivors.length;
+        document.getElementById('end-stat-exiled').textContent = sum.exiled.length;
+        document.getElementById('end-stat-rounds').textContent = sum.rounds;
+        document.getElementById('end-stat-votes').textContent = sum.totalVotes;
+
+        const renderFullPlayerSummary = (p, isWinner) => `
+          <div class="p-3 bg-[#101316] border ${isWinner ? 'border-emerald-700/60' : 'border-red-900/50'} space-y-2">
+            <div class="flex items-center gap-3">
+              ${renderPixelAvatar(p.avatarId, !isWinner, 'w-11 h-11')}
+              <div>
+                <div class="font-bold text-sm text-bunker-text">${escapeHtml(p.name)}</div>
+                <div class="text-xs font-mono ${isWinner ? 'text-bunker-green' : 'text-red-400'}">
+                  ${escapeHtml(p.traits.profession?.data?.title || '')}
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs text-gray-300">
+              <div><span class="text-bunker-muted">Биология:</span> ${escapeHtml(p.traits.biology?.data?.title || '')}</div>
+              <div><span class="text-bunker-muted">Здоровье:</span> ${escapeHtml(p.traits.health?.data?.title || '')}</div>
+              <div><span class="text-bunker-muted">Хобби:</span> ${escapeHtml(p.traits.hobby?.data?.title || '')}</div>
+              <div><span class="text-bunker-muted">Фобия:</span> ${escapeHtml(p.traits.phobia?.data?.title || '')}</div>
+              <div class="sm:col-span-2"><span class="text-bunker-muted">Багаж:</span> ${escapeHtml(p.traits.luggage?.data?.title || '')}</div>
+              ${p.specialCardPublic ? `<div class="sm:col-span-2 text-bunker-yellow"><span class="text-bunker-muted">Спецкарта:</span> ${escapeHtml(p.specialCardPublic.title)} (${p.specialCardPublic.used ? 'использована' : 'не использована'})</div>` : ''}
+            </div>
+          </div>
+        `;
+
+        const survivorPlayers = r.players.filter((p) => p.alive);
+        const exiledPlayers = r.players.filter((p) => !p.alive);
+
+        document.getElementById('end-survivors-list').innerHTML = survivorPlayers
+          .map((p) => renderFullPlayerSummary(p, true)).join('');
+        document.getElementById('end-exiled-list').innerHTML = exiledPlayers.length > 0
+          ? exiledPlayers.map((p) => renderFullPlayerSummary(p, false)).join('')
+          : '<div class="text-xs text-bunker-muted">Никто не был изгнан.</div>';
+
+        document.getElementById('end-disaster-title').textContent = r.disaster?.title || '';
+        document.getElementById('end-bunker-name').textContent = r.bunker?.name || '';
+        document.getElementById('end-bunker-resources').textContent =
+          `Еда: ${r.bunker?.foodMonths} мес. · Вода: ${r.bunker?.waterPercent}% · Энергия: ${r.bunker?.powerPercent}%`;
+
+        renderVotingHistory('end-voting-history', r.votingHistory);
+        renderChatList('gameover-chat-messages', r.chat);
+
+        document.getElementById('end-host-actions').classList.toggle('hidden', !isHost);
+        document.getElementById('end-nonhost-note').classList.toggle('hidden', isHost);
+      }
+
+      // ======================================================================
+      // UI EVENT BINDINGS
+      // ======================================================================
+      const nameInput = document.getElementById('input-player-name');
+      const codeInput = document.getElementById('input-room-code');
+
+      // Pre-fill room code from invite link (?room=XXXX)
+      const urlParams = new URLSearchParams(window.location.search);
+      const inviteCode = urlParams.get('room');
+      if (inviteCode) {
+        codeInput.value = inviteCode.toUpperCase().slice(0, 4);
+      }
+
+      function handleCreateRoom() {
+        unlockAudio();
+        SoundFX.click();
+        const name = nameInput.value.trim();
+        if (name.length < 2 || name.length > 20) {
+          setInlineError('start-error', 'Имя игрока должно содержать от 2 до 20 символов.');
+          nameInput.focus();
+          return;
+        }
+        setInlineError('start-error', '');
+        socket.emit('room:create', { name }, (res) => {
+          if (!res?.ok) {
+            setInlineError('start-error', res?.error || 'Не удалось создать комнату.');
+            return;
+          }
+          saveSession({ roomCode: res.roomCode, playerId: res.playerId, token: res.token });
+          renderCurrentScreen();
+        });
+      }
+
+      function handleJoinRoom() {
+        unlockAudio();
+        SoundFX.click();
+        const name = nameInput.value.trim();
+        const code = codeInput.value.trim().toUpperCase();
+        if (name.length < 2 || name.length > 20) {
+          setInlineError('start-error', 'Имя игрока должно содержать от 2 до 20 символов.');
+          nameInput.focus();
+          return;
+        }
+        if (!/^[A-Z0-9]{4}$/.test(code) || /[O0I1]/.test(code)) {
+          setInlineError('start-error', 'Введите 4-значный код комнаты (без символов O, 0, I, 1).');
+          codeInput.focus();
+          return;
+        }
+        setInlineError('start-error', '');
+        socket.emit('room:join', { name, code }, (res) => {
+          if (!res?.ok) {
+            setInlineError('start-error', res?.error || 'Не удалось войти в комнату.');
+            return;
+          }
+          saveSession({ roomCode: res.roomCode, playerId: res.playerId, token: res.token });
+          renderCurrentScreen();
+        });
+      }
+
+      document.getElementById('btn-create-room').addEventListener('click', handleCreateRoom);
+      document.getElementById('btn-join-room').addEventListener('click', handleJoinRoom);
+
+      nameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (codeInput.value.trim().length === 4) handleJoinRoom();
+          else handleCreateRoom();
+        }
+      });
+
+      codeInput.addEventListener('input', () => {
+        codeInput.value = codeInput.value.toUpperCase().replace(/[^A-Z2-9]/g, '').replace(/[OI]/g, '');
+      });
+
+      codeInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleJoinRoom();
+        }
+      });
+
+      // Sound toggles
+      document.getElementById('btn-sound-toggle').addEventListener('click', toggleMute);
+      document.getElementById('btn-title-sound').addEventListener('click', toggleMute);
+
+      // Rules modal
+      document.getElementById('btn-open-rules').addEventListener('click', () => {
+        SoundFX.click();
+        document.getElementById('modal-rules').classList.remove('hidden');
+      });
+      document.getElementById('btn-close-rules').addEventListener('click', () => {
+        SoundFX.click();
+        document.getElementById('modal-rules').classList.add('hidden');
+      });
+
+      // Dossier & Special Target modal close
+      document.getElementById('btn-close-dossier').addEventListener('click', () => {
+        SoundFX.click();
+        document.getElementById('modal-dossier').classList.add('hidden');
+      });
+      document.getElementById('btn-close-special-modal').addEventListener('click', () => {
+        SoundFX.click();
+        document.getElementById('modal-special-target').classList.add('hidden');
+      });
+
+      // Close modals on Escape or backdrop click
+      ['modal-dossier', 'modal-special-target', 'modal-rules'].forEach((id) => {
+        const el = document.getElementById(id);
+        el.addEventListener('click', (e) => {
+          if (e.target === el) el.classList.add('hidden');
+        });
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          ['modal-dossier', 'modal-special-target', 'modal-rules'].forEach((id) => {
+            document.getElementById(id).classList.add('hidden');
+          });
+        }
+      });
+
+      // Leave room
+      function handleLeaveRoom() {
+        SoundFX.click();
+        socket.emit('room:leave', {}, () => {
+          clearSession();
+          renderCurrentScreen();
+        });
+      }
+      document.getElementById('btn-leave-room').addEventListener('click', handleLeaveRoom);
+      document.getElementById('btn-end-leave').addEventListener('click', handleLeaveRoom);
+
+      // Copy room code & invite link
+      function copyText(text, successMsg) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(
+            () => showToast(successMsg, 'success'),
+            () => showToast(`Код: ${text}`, 'info')
+          );
+        } else {
+          showToast(`Код: ${text}`, 'info');
+        }
+      }
+
+      document.getElementById('btn-copy-code').addEventListener('click', () => {
+        SoundFX.click();
+        if (state.room) copyText(state.room.code, `Код ${state.room.code} скопирован!`);
+      });
+
+      document.getElementById('btn-copy-invite').addEventListener('click', () => {
+        SoundFX.click();
+        if (state.room) {
+          const url = `${window.location.origin}/?room=${state.room.code}`;
+          copyText(url, 'Ссылка-приглашение скопирована!');
+        }
+      });
+
+      // Lobby actions
+      document.getElementById('btn-toggle-ready').addEventListener('click', () => {
+        SoundFX.click();
+        socket.emit('lobby:toggleReady', {}, (res) => {
+          if (!res?.ok) setInlineError('lobby-error', res?.error || 'Ошибка.');
+        });
+      });
+
+      document.getElementById('btn-start-game').addEventListener('click', () => {
+        SoundFX.click();
+        socket.emit('game:start', {}, (res) => {
+          if (!res?.ok) setInlineError('lobby-error', res?.error || 'Не удалось начать игру.');
+          else setInlineError('lobby-error', '');
+        });
+      });
+
+      // Scenario collapse toggle
+      document.getElementById('btn-toggle-scenario').addEventListener('click', () => {
+        SoundFX.click();
+        state.scenarioOpen = !state.scenarioOpen;
+        document.getElementById('scenario-body').classList.toggle('hidden', !state.scenarioOpen);
+        document.getElementById('btn-toggle-scenario').setAttribute('aria-expanded', String(state.scenarioOpen));
+        document.getElementById('scenario-chevron').textContent = state.scenarioOpen ? '[СКРЫТЬ ▲]' : '[ПОКАЗАТЬ ▼]';
+      });
+
+      // Host phase controls
+      document.getElementById('btn-host-end-discussion').addEventListener('click', () => {
+        SoundFX.click();
+        socket.emit('game:endDiscussion', {}, (res) => {
+          if (!res?.ok) showToast(res?.error || 'Ошибка.', 'error');
+        });
+      });
+
+      document.getElementById('btn-host-end-voting').addEventListener('click', () => {
+        SoundFX.click();
+        socket.emit('game:endVoting', {}, (res) => {
+          if (!res?.ok) showToast(res?.error || 'Ошибка.', 'error');
+        });
+      });
+
+      // End game host actions
+      document.getElementById('btn-play-again').addEventListener('click', () => {
+        SoundFX.click();
+        state.lastRevealedKeys.clear();
+        socket.emit('game:playAgain', {}, (res) => {
+          if (!res?.ok) showToast(res?.error || 'Ошибка запуска новой партии.', 'error');
+        });
+      });
+
+      document.getElementById('btn-return-lobby').addEventListener('click', () => {
+        SoundFX.click();
+        state.lastRevealedKeys.clear();
+        socket.emit('game:returnToLobby', {}, (res) => {
+          if (!res?.ok) showToast(res?.error || 'Ошибка.', 'error');
+        });
+      });
+
+      // Chat forms (Multiline textarea: Enter submits, Shift+Enter inserts newline, live counter up to 500 chars)
+      function bindChatForm(formId, inputId, counterId, errorId) {
+        const form = document.getElementById(formId);
+        const input = document.getElementById(inputId);
+        const counter = document.getElementById(counterId);
+        if (!form || !input) return;
+
+        function updateCounterAndResize() {
+          const len = Array.from(input.value).length;
+          if (counter) {
+            counter.textContent = `${len} / 500`;
+            counter.className = len >= 470 ? 'tabular-nums text-bunker-yellow font-bold' : 'tabular-nums';
+          }
+          input.style.height = 'auto';
+          input.style.height = `${Math.min(112, Math.max(44, input.scrollHeight))}px`;
+        }
+
+        function submitMessage() {
+          const text = input.value.trim();
+          if (!text) return;
+          setInlineError(errorId, '');
+          socket.emit('chat:send', { text }, (res) => {
+            if (!res?.ok) {
+              setInlineError(errorId, res?.error || 'Не удалось отправить сообщение.');
+              showToast(res?.error || 'Не удалось отправить сообщение.', 'error');
+            } else {
+              setInlineError(errorId, '');
+              input.value = '';
+              updateCounterAndResize();
+              SoundFX.click();
+            }
+          });
+        }
+
+        input.addEventListener('input', () => {
+          setInlineError(errorId, '');
+          updateCounterAndResize();
+        });
+
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+            e.preventDefault();
+            submitMessage();
+          }
+        });
+
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          submitMessage();
+        });
+      }
+
+      bindChatForm('lobby-chat-form', 'lobby-chat-input', 'lobby-chat-counter', 'lobby-chat-error');
+      bindChatForm('game-chat-form', 'game-chat-input', 'game-chat-counter', 'game-chat-error');
+      bindChatForm('gameover-chat-form', 'gameover-chat-input', 'gameover-chat-counter', 'gameover-chat-error');
+
+      // Console Tabs (Desktop: Chat / Diary / History) + Mobile Bottom Nav (Bunker / Chat / Diary / History)
+      function syncMobileNavUI() {
+        const scenarioPanel = document.getElementById('scenario-panel');
+        const mainCol = document.getElementById('game-main-col');
+        const consolePanel = document.getElementById('game-console-panel');
+        if (!mainCol || !consolePanel) return;
+
+        const showBunkerMobile = state.mobileView === 'bunker';
+        if (scenarioPanel) scenarioPanel.classList.toggle('hidden', !showBunkerMobile);
+        mainCol.classList.toggle('hidden', !showBunkerMobile);
+        consolePanel.classList.toggle('hidden', showBunkerMobile);
+        consolePanel.classList.toggle('flex', !showBunkerMobile);
+
+        document.querySelectorAll('#mobile-bottom-nav [data-mobile-view]').forEach((btn) => {
+          const view = btn.getAttribute('data-mobile-view');
+          const active = view === state.mobileView;
+          btn.setAttribute('aria-pressed', String(active));
+          btn.className = active
+            ? 'relative py-2.5 px-1 flex flex-col items-center justify-center gap-0.5 font-mono text-[11px] font-bold text-bunker-amber bg-[#181d22] min-h-[52px]'
+            : 'relative py-2.5 px-1 flex flex-col items-center justify-center gap-0.5 font-mono text-[11px] font-bold text-bunker-muted hover:text-bunker-text min-h-[52px]';
+        });
+      }
+
+      function switchConsoleTab(tab, fromMobileNav = false) {
+        SoundFX.click();
+        state.activeTab = tab;
+        ['chat', 'diary', 'history'].forEach((t) => {
+          const btn = document.getElementById(`tab-btn-${t}`);
+          const panel = document.getElementById(`panel-tab-${t}`);
+          const active = t === tab;
+          btn.setAttribute('aria-selected', String(active));
+          btn.className = t === 'chat'
+            ? (active
+              ? 'py-3 px-2 font-mono text-xs font-bold border-b-2 border-bunker-amber text-bunker-amber bg-bunker-panel min-h-[44px] flex items-center justify-center gap-1.5'
+              : 'py-3 px-2 font-mono text-xs font-bold border-b-2 border-transparent text-bunker-muted hover:text-bunker-text min-h-[44px] flex items-center justify-center gap-1.5')
+            : (active
+              ? 'py-3 px-2 font-mono text-xs font-bold border-b-2 border-bunker-amber text-bunker-amber bg-bunker-panel min-h-[44px]'
+              : 'py-3 px-2 font-mono text-xs font-bold border-b-2 border-transparent text-bunker-muted hover:text-bunker-text min-h-[44px]');
+          panel.classList.toggle('hidden', !active);
+        });
+
+        if (tab === 'chat' && (window.innerWidth >= 1280 || state.mobileView === 'chat' || fromMobileNav)) {
+          state.unreadChatCount = 0;
+          updateChatUnreadBadges();
+          const gameChatBox = document.getElementById('game-chat-messages');
+          if (gameChatBox) gameChatBox.scrollTop = gameChatBox.scrollHeight;
+        }
+      }
+
+      function setMobileView(view) {
+        state.mobileView = view;
+        if (view === 'chat' || view === 'diary' || view === 'history') {
+          switchConsoleTab(view, true);
+        } else {
+          SoundFX.click();
+        }
+        syncMobileNavUI();
+        if (view === 'chat') {
+          window.scrollTo({ top: 0, behavior: 'instant' });
+          const gameChatBox = document.getElementById('game-chat-messages');
+          if (gameChatBox) gameChatBox.scrollTop = gameChatBox.scrollHeight;
+        }
+      }
+
+      document.getElementById('tab-btn-chat').addEventListener('click', () => switchConsoleTab('chat'));
+      document.getElementById('tab-btn-diary').addEventListener('click', () => switchConsoleTab('diary'));
+      document.getElementById('tab-btn-history').addEventListener('click', () => switchConsoleTab('history'));
+
+      document.querySelectorAll('#mobile-bottom-nav [data-mobile-view]').forEach((btn) => {
+        btn.addEventListener('click', () => setMobileView(btn.getAttribute('data-mobile-view')));
+      });
+
+      syncMobileNavUI();
+
+      // Initialize UI
+      updateMuteUI();
+      renderCurrentScreen();
+    })();
+  </script>
+</body>
+</html>

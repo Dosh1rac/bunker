@@ -1,0 +1,412 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const {
+  createBunkerServer,
+  DISASTERS,
+  BUNKERS,
+  PROFESSIONS,
+  BIOLOGIES,
+  HEALTHS,
+  HOBBIES,
+  PHOBIAS,
+  LUGGAGE,
+  SPECIAL_CARDS,
+  RANDOM_EVENTS,
+  CODE_ALPHABET,
+  computeBunkerCapacity,
+  validatePlayerName,
+  sanitizeChatMessage,
+  checkChatFlood
+} = require('./server.js');
+
+// Lightweight Socket.IO v4 WebSocket test client using Node's built-in WebSocket (zero external deps)
+class TestSocketClient {
+  constructor(url) {
+    this.url = url.replace(/^http/, 'ws') + '/socket.io/?EIO=4&transport=websocket';
+    this.ws = null;
+    this.ackId = 1;
+    this.pendingAcks = new Map();
+    this.events = new Map();
+    this.latestState = null;
+    this.latestPrivate = null;
+    this.kicked = false;
+  }
+
+  connect() {
+    return new Promise((resolve, reject) => {
+      const ws = new WebSocket(this.url);
+      this.ws = ws;
+      let connected = false;
+
+      ws.addEventListener('message', (ev) => {
+        const msg = String(ev.data);
+        if (msg === '2') {
+          ws.send('3'); // pong
+          return;
+        }
+        if (msg.startsWith('0')) {
+          ws.send('40'); // connect namespace /
+          return;
+        }
+        if (msg.startsWith('40')) {
+          connected = true;
+          resolve();
+          return;
+        }
+        if (msg.startsWith('42')) {
+          const parsed = JSON.parse(msg.slice(2));
+          const [eventName, payload] = parsed;
+          if (eventName === 'room:state') this.latestState = payload;
+          if (eventName === 'player:private') this.latestPrivate = payload;
+          if (eventName === 'room:kicked') this.kicked = true;
+          const handlers = this.events.get(eventName) || [];
+          for (const h of handlers) h(payload);
+          return;
+        }
+        if (msg.startsWith('43')) {
+          const match = /^43(\d+)(.*)$/.exec(msg);
+          if (match) {
+            const id = Number(match[1]);
+            const args = JSON.parse(match[2]);
+            const resolver = this.pendingAcks.get(id);
+            if (resolver) {
+              this.pendingAcks.delete(id);
+              resolver(args[0]);
+            }
+          }
+        }
+      });
+
+      ws.addEventListener('error', (err) => {
+        if (!connected) reject(err);
+      });
+    });
+  }
+
+  emit(event, payload = {}) {
+    return new Promise((resolve, reject) => {
+      const id = this.ackId++;
+      const timer = setTimeout(() => {
+        this.pendingAcks.delete(id);
+        reject(new Error(`Ack timeout for ${event}`));
+      }, 4000);
+      this.pendingAcks.set(id, (res) => {
+        clearTimeout(timer);
+        resolve(res);
+      });
+      this.ws.send(`42${id}${JSON.stringify([event, payload])}`);
+    });
+  }
+
+  close() {
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
+    }
+  }
+}
+
+function wait(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+test('Database minimums and code alphabet requirements', () => {
+  assert.ok(DISASTERS.length >= 15, 'At least 15 disasters');
+  assert.ok(BUNKERS.length >= 15, 'At least 15 bunkers');
+  assert.ok(PROFESSIONS.length >= 25, 'At least 25 professions');
+  assert.ok(BIOLOGIES.length >= 25, 'At least 25 biologies');
+  assert.ok(HEALTHS.length >= 25, 'At least 25 health states');
+  assert.ok(HOBBIES.length >= 25, 'At least 25 hobbies');
+  assert.ok(PHOBIAS.length >= 25, 'At least 25 phobias');
+  assert.ok(LUGGAGE.length >= 25, 'At least 25 luggage items');
+  assert.ok(SPECIAL_CARDS.length >= 25, 'At least 25 special cards');
+  assert.ok(RANDOM_EVENTS.length >= 15, 'At least 15 random events');
+
+  assert.equal(CODE_ALPHABET.includes('O'), false);
+  assert.equal(CODE_ALPHABET.includes('0'), false);
+  assert.equal(CODE_ALPHABET.includes('I'), false);
+  assert.equal(CODE_ALPHABET.includes('1'), false);
+
+  assert.equal(computeBunkerCapacity(3), 1);
+  assert.equal(computeBunkerCapacity(4), 2);
+  assert.equal(computeBunkerCapacity(5), 2);
+  assert.equal(computeBunkerCapacity(6), 3);
+  assert.equal(computeBunkerCapacity(8), 4);
+  assert.equal(computeBunkerCapacity(10), 5);
+
+  assert.equal(validatePlayerName('А').valid, false);
+  assert.equal(validatePlayerName('Алекс').valid, true);
+});
+
+test('Chat sanitization, 500-char limit, newlines, emoji, XSS prevention, and flood protection', () => {
+  // Valid Russian + emoji + newlines
+  const okMsg = sanitizeChatMessage('  Привет!\nЯ врач 🩺 и спасаю людей!\r\nГолосуем с умом.  ', 500);
+  assert.equal(okMsg.valid, true);
+  assert.equal(okMsg.text, 'Привет!\nЯ врач 🩺 и спасаю людей!\nГолосуем с умом.');
+
+  // Strips HTML angle brackets
+  const xssMsg = sanitizeChatMessage('<script>alert(1)</script>Безопасно', 500);
+  assert.equal(xssMsg.valid, true);
+  assert.equal(xssMsg.text.includes('<'), false);
+  assert.equal(xssMsg.text.includes('>'), false);
+
+  // Rejects empty / whitespace only
+  assert.equal(sanitizeChatMessage('   \n\n  ', 500).valid, false);
+
+  // Enforces 500 code-point limit (with emoji)
+  const exact500 = '🔥'.repeat(500);
+  assert.equal(sanitizeChatMessage(exact500, 500).valid, true);
+  const over500 = 'а'.repeat(501);
+  assert.equal(sanitizeChatMessage(over500, 500).valid, false);
+
+  // Flood protection: cooldown, duplicate, burst 5/10s
+  const mockPlayer = {};
+  assert.equal(checkChatFlood(mockPlayer, 'Первое', 1000).ok, true);
+  assert.equal(checkChatFlood(mockPlayer, 'Быстрое', 1200).ok, false, 'Rejects <700ms cooldown');
+  assert.equal(checkChatFlood(mockPlayer, 'Первое', 2500).ok, false, 'Rejects duplicate within 12s');
+  assert.equal(checkChatFlood(mockPlayer, 'Второе', 2000).ok, true);
+  assert.equal(checkChatFlood(mockPlayer, 'Третье', 3000).ok, true);
+  assert.equal(checkChatFlood(mockPlayer, 'Четвёртое', 4000).ok, true);
+  assert.equal(checkChatFlood(mockPlayer, 'Пятое', 5000).ok, true);
+  assert.equal(checkChatFlood(mockPlayer, 'Шестое', 6000).ok, false, 'Rejects >5 messages in 10s');
+  assert.equal(checkChatFlood(mockPlayer, 'После окна', 12000).ok, true, 'Allows once window clears');
+});
+
+test('Full multiplayer lifecycle: 3-10 players, limits, unique cards, secrecy, special cards, voting, ties, exile, reconnect, host migration, victory', async () => {
+  const srv = createBunkerServer({
+    discussionSeconds: 2,
+    votingSeconds: 2,
+    hostMigrationMs: 250,
+    offlineKickMs: 100,
+    roomCleanupMs: 5000,
+    disableRandomEvents: false
+  });
+
+  await new Promise((resolve) => srv.server.listen(0, '127.0.0.1', resolve));
+  const port = srv.server.address().port;
+  const baseUrl = `http://127.0.0.1:${port}`;
+
+  const clients = [];
+  try {
+    // 1. Create room & try starting with 2 players (should fail)
+    const host = new TestSocketClient(baseUrl);
+    await host.connect();
+    clients.push(host);
+
+    const createRes = await host.emit('room:create', { name: 'Хост_1' });
+    assert.equal(createRes.ok, true);
+    assert.match(createRes.roomCode, /^[A-HJ-NP-Z2-9]{4}$/);
+    const code = createRes.roomCode;
+
+    const p2 = new TestSocketClient(baseUrl);
+    await p2.connect();
+    clients.push(p2);
+    const j2 = await p2.emit('room:join', { name: 'Игрок_2', code });
+    assert.equal(j2.ok, true);
+
+    // Duplicate name blocked
+    const dupRes = await p2.emit('room:join', { name: 'игрок_2', code });
+    assert.equal(dupRes.ok, false);
+
+    // Scenario 5: Start with 2 players rejected
+    const failStart = await host.emit('game:start');
+    assert.equal(failStart.ok, false);
+
+    // Connect up to 10 players (Scenarios 2 & 3)
+    for (let i = 3; i <= 10; i++) {
+      const c = new TestSocketClient(baseUrl);
+      await c.connect();
+      clients.push(c);
+      const jr = await c.emit('room:join', { name: `Игрок_${i}`, code });
+      assert.equal(jr.ok, true, `Player ${i} should join`);
+    }
+
+    // Attempt 11th player -> rejected
+    const p11 = new TestSocketClient(baseUrl);
+    await p11.connect();
+    clients.push(p11);
+    const j11 = await p11.emit('room:join', { name: 'Игрок_11', code });
+    assert.equal(j11.ok, false);
+    p11.close();
+    clients.pop();
+
+    await wait(110);
+    // Start game with 10 players -> capacity 5
+    const startRes = await host.emit('game:start');
+    assert.equal(startRes.ok, true, startRes.error);
+    await wait(60);
+
+    assert.equal(host.latestState.phase, 'discussion');
+    assert.equal(host.latestState.bunkerCapacity, 5);
+
+    // Scenario 6 & 13: Verify unique traits across all 10 players AND hidden traits are NEVER leaked in public state
+    const seenProfs = new Set();
+    for (const c of clients) {
+      assert.ok(c.latestPrivate, 'Client received private state');
+      assert.ok(c.latestPrivate.traits.profession.data.title);
+      seenProfs.add(c.latestPrivate.traits.profession.data.title);
+
+      // Public state must NOT contain hidden trait data of any player
+      for (const pubPlayer of c.latestState.players) {
+        for (const k of ['profession', 'biology', 'health', 'hobby', 'phobia', 'luggage']) {
+          assert.equal(pubPlayer.traits[k].revealed, false);
+          assert.equal(pubPlayer.traits[k].data, null);
+        }
+        assert.equal(pubPlayer.specialCardPublic, null);
+      }
+    }
+    assert.equal(seenProfs.size, 10, 'All 10 players have unique professions');
+
+    // Scenario 7, 8, 9: Reveal own trait, cannot reveal twice in one round
+    const rev1 = await host.emit('game:revealTrait', { traitKey: 'profession' });
+    assert.equal(rev1.ok, true);
+    const rev2 = await host.emit('game:revealTrait', { traitKey: 'health' });
+    assert.equal(rev2.ok, false);
+    const revSame = await host.emit('game:revealTrait', { traitKey: 'profession' });
+    assert.equal(revSame.ok, false);
+
+    // Scenario 10 & 11: Use special card and prevent double-use
+    const sc = host.latestPrivate.specialCard;
+    const targetId = clients[1].latestPrivate.playerId;
+    if (sc.id !== 'reconsider_verdict' && sc.id !== 'immunity') {
+      const scRes = await host.emit('game:useSpecial', sc.requiresTarget ? { targetId } : {});
+      if (scRes.ok) {
+        const scDouble = await host.emit('game:useSpecial', sc.requiresTarget ? { targetId } : {});
+        assert.equal(scDouble.ok, false, 'Special card cannot be used twice');
+      }
+    }
+
+    // Scenario 18, 19, 20: Disconnect & Reconnect with token
+    p2.close();
+    await wait(60);
+    const p2Disconnected = host.latestState.players.find((p) => p.id === j2.playerId);
+    assert.equal(p2Disconnected.connected, false);
+
+    const p2Reconnected = new TestSocketClient(baseUrl);
+    await p2Reconnected.connect();
+    clients[1] = p2Reconnected;
+    const recRes = await p2Reconnected.emit('session:reconnect', { roomCode: code, token: j2.token });
+    assert.equal(recRes.ok, true);
+    await wait(60);
+    const p2Online = host.latestState.players.find((p) => p.id === j2.playerId);
+    assert.equal(p2Online.connected, true);
+
+    // Scenario 21: Host disconnect & migration after 250ms
+    host.close();
+    await wait(350);
+    assert.notEqual(p2Reconnected.latestState.hostId, createRes.playerId, 'Host migrated away from offline host');
+
+    // Reconnect old host -> does NOT automatically reclaim host
+    const hostReconnected = new TestSocketClient(baseUrl);
+    await hostReconnected.connect();
+    clients[0] = hostReconnected;
+    await hostReconnected.emit('session:reconnect', { roomCode: code, token: createRes.token });
+    await wait(60);
+    assert.notEqual(hostReconnected.latestState.hostId, createRes.playerId, 'Old host does not reclaim host');
+
+    // Find current host client
+    const currentHostId = hostReconnected.latestState.hostId;
+    const currentHostClient = clients.find((c) => c.latestPrivate.playerId === currentHostId);
+    assert.ok(currentHostClient);
+
+    // Scenario 14 & 15: Tie -> Runoff -> Second Tie (nobody exiled)
+    await currentHostClient.emit('game:endDiscussion');
+    await wait(60);
+    assert.equal(currentHostClient.latestState.phase, 'voting');
+
+    // Cannot vote for self
+    const selfVote = await currentHostClient.emit('game:vote', { targetId: currentHostId });
+    assert.equal(selfVote.ok, false);
+
+    // Cast 1 vote for player[8] and 1 vote for player[9]
+    const candA = clients[8].latestPrivate.playerId;
+    const candB = clients[9].latestPrivate.playerId;
+    await clients[3].emit('game:vote', { targetId: candA });
+    await clients[4].emit('game:vote', { targetId: candB });
+    const ev1 = await currentHostClient.emit('game:endVoting');
+    assert.equal(ev1.ok, true, ev1.error);
+    await wait(120);
+
+    assert.equal(currentHostClient.latestState.phase, 'runoff', 'Tie triggers runoff');
+    // Second tie in runoff -> nobody exiled -> advances to round 2
+    await clients[3].emit('game:vote', { targetId: candA });
+    await clients[4].emit('game:vote', { targetId: candB });
+    const ev2 = await currentHostClient.emit('game:endVoting');
+    assert.equal(ev2.ok, true, ev2.error);
+    await wait(120);
+
+    assert.equal(currentHostClient.latestState.phase, 'discussion');
+    assert.equal(currentHostClient.latestState.round, 2);
+
+    // Scenario 16, 17, 22: Exile players until alive <= bunkerCapacity (5) -> Game ends!
+    for (let exileStep = 0; exileStep < 5; exileStep++) {
+      const activeHostId = currentHostClient.latestState.hostId;
+      const activeHost = clients.find((c) => c.latestPrivate.playerId === activeHostId);
+      if (activeHost.latestState.phase === 'ended') break;
+
+      await wait(110);
+      const ed = await activeHost.emit('game:endDiscussion');
+      assert.equal(ed.ok, true, ed.error);
+      await wait(50);
+
+      const aliveTargets = activeHost.latestState.players.filter((p) => p.alive);
+      const voter1 = clients.find((c) => c.latestPrivate.playerId === aliveTargets[0].id);
+      const voter2 = clients.find((c) => c.latestPrivate.playerId === aliveTargets[1].id);
+      const victim = aliveTargets[aliveTargets.length - 1];
+
+      await voter1.emit('game:vote', { targetId: victim.id });
+      await voter2.emit('game:vote', { targetId: victim.id });
+      await wait(110);
+      const ev = await activeHost.emit('game:endVoting');
+      assert.equal(ev.ok, true, ev.error);
+      await wait(50);
+
+      // Check exiled player cannot vote or reveal if game still running, BUT can still chat as spectator
+      if (activeHost.latestState.phase !== 'ended') {
+        const exiledClient = clients.find((c) => c.latestPrivate.playerId === victim.id);
+        const exiledAction = await exiledClient.emit('game:revealTrait', { traitKey: 'hobby' });
+        assert.equal(exiledAction.ok, false, 'Exiled player cannot reveal traits');
+
+        const exiledChat = await exiledClient.emit('chat:send', { text: 'Я всё ещё наблюдаю 👀\nУдачи в бункере!' });
+        assert.equal(exiledChat.ok, true, 'Exiled player can chat as spectator');
+        assert.equal(exiledChat.message.senderExiled, true);
+        assert.equal(typeof exiledChat.message.senderAvatarId, 'number');
+        assert.ok(exiledChat.message.text.includes('\n'));
+      }
+    }
+
+    assert.equal(currentHostClient.latestState.phase, 'ended', 'Game ended when alive <= bunkerCapacity');
+    assert.ok(currentHostClient.latestState.endSummary.survivors.length <= 5);
+
+    // Verify 500-char chat limit, XSS sanitization, flood protection, and system event types in room chat
+    const chatHost = clients.find((c) => c.latestPrivate.playerId === currentHostClient.latestState.hostId);
+    const overLimitChat = await chatHost.emit('chat:send', { text: 'Я'.repeat(501) });
+    assert.equal(overLimitChat.ok, false, 'Server rejects messages >500 chars');
+
+    const multiEmojiChat = await chatHost.emit('chat:send', { text: '<b>Финал</b>!\nМы выжили 🛡️🔥' });
+    assert.equal(multiEmojiChat.ok, true, multiEmojiChat.error);
+    assert.equal(multiEmojiChat.message.text, 'bФинал/b!\nМы выжили 🛡️🔥');
+
+    const rapidFlood = await chatHost.emit('chat:send', { text: 'Спам сразу' });
+    assert.equal(rapidFlood.ok, false, 'Server rejects rapid flood <700ms');
+
+    const sysTypes = new Set(chatHost.latestState.chat.map((m) => m.type));
+    assert.ok(sysTypes.has('join'), 'Chat records join system messages');
+    assert.ok(sysTypes.has('round'), 'Chat records round start system messages');
+    assert.ok(sysTypes.has('voting'), 'Chat records voting system messages');
+    assert.ok(sysTypes.has('exile'), 'Chat records exile system messages');
+    assert.ok(sysTypes.has('gameover'), 'Chat records gameover system messages');
+    assert.ok(sysTypes.has('user'), 'Chat records user messages');
+
+    // Scenario 23: Play again starts fresh round 1
+    const againHost = clients.find((c) => c.latestPrivate.playerId === currentHostClient.latestState.hostId);
+    const playAgainRes = await againHost.emit('game:playAgain');
+    assert.equal(playAgainRes.ok, true);
+    await wait(60);
+    assert.equal(againHost.latestState.phase, 'discussion');
+    assert.equal(againHost.latestState.round, 1);
+  } finally {
+    for (const c of clients) c.close();
+    await srv.close();
+  }
+});
