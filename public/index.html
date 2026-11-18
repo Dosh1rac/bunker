@@ -1872,6 +1872,7 @@
       // SOCKET.IO CLIENT & SESSION RECOVERY
       // ======================================================================
       const socket = io({
+        transports: ['websocket'],
         reconnection: true,
         reconnectionDelay: 800,
         reconnectionDelayMax: 4000
@@ -1915,6 +1916,10 @@
             }
           });
         }
+      });
+
+      socket.on('connect_error', () => {
+        updateConnectionUI(false);
       });
 
       socket.on('disconnect', () => {

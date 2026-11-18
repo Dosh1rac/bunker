@@ -1,0 +1,13 @@
+[build]
+  command = "node --check server.js"
+  publish = "public"
+
+[build.environment]
+  NODE_VERSION = "24"
+
+[dev]
+  framework = "#custom"
+  command = "node server.js"
+  targetPort = 3000
+  port = 8889
+  autoLaunch = false
