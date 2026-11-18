@@ -1529,7 +1529,7 @@ function createBunkerServer(options = {}) {
   app.use('/src/assets', express.static(path.join(__dirname, 'src/assets')));
 
   app.get('/health', (_req, res) => {
-    res.json({ ok: true, rooms: rooms.size });
+    res.status(storageHealthy ? 200 : 503).json({ ok: storageHealthy, rooms: rooms.size });
   });
 
   app.get('*', (req, res, next) => {
@@ -1539,6 +1539,82 @@ function createBunkerServer(options = {}) {
 
   const rooms = new Map(); // code -> room
   const socketToSession = new Map(); // socket.id -> { roomCode, playerId }
+  const store = options.store;
+  let writes = Promise.resolve();
+  let storageHealthy = true;
+  const transientKeys = new Set([
+    'phaseInterval', 'botTimers', 'hostMigrationTimer', 'cleanupTimer', 'offlineTimer'
+  ]);
+
+  function snapshotRoom(room) {
+    return JSON.parse(JSON.stringify(room, (key, value) => {
+      if (transientKeys.has(key)) return undefined;
+      if (value instanceof Map) return { $map: [...value] };
+      if (value instanceof Set) return { $set: [...value] };
+      return value;
+    }));
+  }
+
+  function queueWrite(operation) {
+    // Keep writes ordered; a failed write must not poison future retries.
+    writes = writes.catch(() => {}).then(operation);
+    writes.then(() => { storageHealthy = true; }, () => {
+      storageHealthy = false;
+      console.error('Could not save game state.');
+    });
+    return writes;
+  }
+
+  function persistRoom(room) {
+    if (!store) return Promise.resolve();
+    const snapshot = snapshotRoom(room);
+    return queueWrite(() => store.save(room.code, snapshot));
+  }
+
+  function deleteRoom(code) {
+    rooms.delete(code);
+    if (store) queueWrite(() => store.remove(code));
+  }
+
+  function resumeRoom(room) {
+    const seconds = Math.max(1, room.timerSeconds || 1);
+    if (room.phase === 'discussion') {
+      startPhaseTimer(room, seconds, () => startVotingPhase(room));
+      scheduleBotsForDiscussion(room);
+    } else if (room.phase === 'voting' || room.phase === 'runoff') {
+      startPhaseTimer(room, seconds, () => resolveVoting(room));
+      scheduleBotsForVoting(room);
+    } else if (room.phase === 'dilemma') {
+      startPhaseTimer(room, seconds, () => resolveDilemma(room));
+      scheduleBotsForDilemma(room);
+    }
+  }
+
+  const ready = store ? store.load().then((snapshots) => {
+    for (const snapshot of snapshots) {
+      const room = JSON.parse(JSON.stringify(snapshot), (_key, value) => {
+        if (value && value.$map) return new Map(value.$map);
+        if (value && value.$set) return new Set(value.$set);
+        return value;
+      });
+      room.botTimers = new Set();
+      room.phaseInterval = null;
+      room.hostMigrationTimer = null;
+      room.cleanupTimer = null;
+      room.restored = true;
+      for (const player of room.players) {
+        player.socketId = null;
+        player.offlineTimer = null;
+        player.connected = Boolean(player.isBot);
+      }
+      rooms.set(room.code, room);
+    }
+  }) : Promise.resolve();
+  // Don't accept players until saved rooms are available.
+  ready.catch(() => console.error('Could not restore game state.'));
+  io.use((_socket, next) => {
+    ready.then(() => next(), () => next(new Error('Сервер временно недоступен. Повторяем подключение.')));
+  });
 
   // --------------------------------------------------------------------------
   // STATE SERIALIZATION (STRICT PUBLIC / PRIVATE SPLIT)
@@ -1679,6 +1755,8 @@ function createBunkerServer(options = {}) {
   }
 
   function broadcastRoom(room) {
+    // Run after the current action also initializes phase timers.
+    if (store) queueMicrotask(() => { if (rooms.has(room.code)) persistRoom(room); });
     const publicState = getPublicRoomState(room);
     io.to(room.code).emit('room:state', publicState);
     for (const player of room.players) {
@@ -1799,7 +1877,7 @@ function createBunkerServer(options = {}) {
       const stillEmpty = !current.players.some((p) => !p.isBot && p.connected);
       if (stillEmpty) {
         clearAllRoomTimers(current);
-        rooms.delete(current.code);
+        deleteRoom(current.code);
       }
     }, roomCleanupMs);
   }
@@ -2637,6 +2715,22 @@ function createBunkerServer(options = {}) {
   // --------------------------------------------------------------------------
 
   io.on('connection', (socket) => {
+    if (store) {
+      // Acknowledge actions only after the resulting room state has been saved.
+      const register = socket.on.bind(socket);
+      socket.on = (event, handler) => register(event, (...args) => {
+        const callback = typeof args[args.length - 1] === 'function' ? args.pop() : null;
+        let response;
+        const result = handler(...args, (value) => { response = value; });
+        const session = socketToSession.get(socket.id);
+        const room = session && rooms.get(session.roomCode);
+        const saved = room ? persistRoom(room) : writes;
+        saved.then(() => callback?.(response), () => callback?.({
+          ok: false, error: 'Не удалось сохранить действие. Проверьте подключение и повторите.'
+        }));
+        return result;
+      });
+    }
     socket.on('room:create', (payload, cb) => {
       const ack = typeof cb === 'function' ? cb : () => {};
       if (!allowSocketAction(socket, 'room_op', 400)) {
@@ -2814,6 +2908,14 @@ function createBunkerServer(options = {}) {
         socketToSession.delete(player.socketId);
       }
 
+      if (room.restored) {
+        room.restored = false;
+        resumeRoom(room);
+        if (!room.players.some((p) => p.isHost && p.connected)) {
+          for (const p of room.players) p.isHost = p.id === player.id;
+          room.hostId = player.id;
+        }
+      }
       player.socketId = socket.id;
       player.connected = true;
       player.disconnectedAt = null;
@@ -2917,7 +3019,7 @@ function createBunkerServer(options = {}) {
         }
         if (room.players.length === 0) {
           clearAllRoomTimers(room);
-          rooms.delete(room.code);
+          deleteRoom(room.code);
         } else {
           broadcastRoom(room);
         }
@@ -3209,6 +3311,11 @@ function createBunkerServer(options = {}) {
         return ack({ ok: false, error: 'Пауза доступна только во время активного раунда.' });
       }
       room.paused = !room.paused;
+      if (!room.paused) {
+        if (room.phase === 'discussion') scheduleBotsForDiscussion(room);
+        else if (room.phase === 'dilemma') scheduleBotsForDilemma(room);
+        else scheduleBotsForVoting(room);
+      } else clearBotTimers(room);
       addSystemMessage(room, room.paused ? `Хост ${player.name} поставил игру на паузу.` : `Хост ${player.name} снял паузу.`);
       broadcastRoom(room);
       ack({ ok: true, paused: room.paused });
@@ -3460,6 +3567,8 @@ function createBunkerServer(options = {}) {
     app,
     server,
     io,
+    ready,
+    flush: () => writes,
     rooms,
     getPublicRoomState,
     getPrivatePlayerState,

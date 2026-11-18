@@ -818,3 +818,62 @@ test('New features integration: avatars, settings, bots, pause, dilemmas, whispe
 });
 
 
+
+test('Saved rooms survive a server restart and restore private cards, votes, timers and chat', async () => {
+  // Fake adapter exercises the production persistence boundary without a live database.
+  const saved = new Map();
+  const store = {
+    load: async () => [...saved.values()].map((value) => structuredClone(value)),
+    save: async (code, snapshot) => { saved.set(code, structuredClone(snapshot)); },
+    remove: async (code) => { saved.delete(code); }
+  };
+  let srv = createBunkerServer({ store, discussionSeconds: 120, disableDilemmas: true });
+  let host;
+  try {
+    await srv.ready;
+    await new Promise((resolve) => srv.server.listen(0, '127.0.0.1', resolve));
+    host = new TestSocketClient(`http://127.0.0.1:${srv.server.address().port}`);
+    await host.connect();
+    const session = await host.emit('room:create', { name: 'Хост' });
+    assert.equal(session.ok, true);
+    assert.ok(saved.has(session.roomCode), 'Create acknowledgement waits for persistence');
+    assert.equal((await host.emit('lobby:addBot')).ok, true);
+    await wait(220);
+    assert.equal((await host.emit('lobby:addBot')).ok, true);
+    assert.equal((await host.emit('game:start')).ok, true);
+    assert.equal((await host.emit('chat:send', { text: 'Сохраняем партию' })).ok, true);
+    const original = structuredClone(saved.get(session.roomCode));
+    assert.equal(original.phase, 'discussion');
+    assert.ok(original.timerSeconds > 0);
+    assert.ok(original.game.votes.$map);
+    assert.ok(original.game.usedDilemmaIds.$set);
+    const traits = original.players.find((p) => p.id === session.playerId).traits;
+    host.close();
+    await srv.close();
+    await srv.flush();
+
+    srv = createBunkerServer({ store });
+    await srv.ready;
+    await new Promise((resolve) => srv.server.listen(0, '127.0.0.1', resolve));
+    host = new TestSocketClient(`http://127.0.0.1:${srv.server.address().port}`);
+    await host.connect();
+    assert.equal((await host.emit('session:reconnect', session)).ok, true);
+    await wait(40);
+    const room = srv.rooms.get(session.roomCode);
+    assert.equal(room.phase, 'discussion');
+    assert.ok(room.phaseInterval, 'Phase countdown resumes on reconnect');
+    assert.ok(room.game.votes instanceof Map);
+    assert.ok(room.game.usedDilemmaIds instanceof Set);
+    assert.deepEqual(room.players.find((p) => p.id === session.playerId).traits, traits);
+    assert.ok(room.chat.some((msg) => msg.text === 'Сохраняем партию'));
+    assert.equal(host.latestState.players.length, 3);
+    assert.equal(host.latestState.players[0].traits.profession.revealed, false);
+    assert.ok(host.latestPrivate.traits.profession);
+    assert.equal((await host.emit('game:endDiscussion')).ok, true);
+    assert.equal(room.phase, 'voting');
+  } finally {
+    host?.close();
+    await srv.close();
+    await srv.flush();
+  }
+});
