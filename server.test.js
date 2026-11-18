@@ -134,6 +134,13 @@ test('Database minimums and code alphabet requirements', () => {
   assert.ok(SPECIAL_CARDS.length >= 25, 'At least 25 special cards');
   assert.ok(RANDOM_EVENTS.length >= 15, 'At least 15 random events');
 
+  // Verify absurd stats across all 8 pools including 14 years old, 90-60-90 figure, and AIDS
+  for (const pool of [PROFESSIONS, BIOLOGIES, HEALTHS, HOBBIES, PHOBIAS, LUGGAGE, CHARACTERS, FACTS]) {
+    assert.ok(pool.filter((x) => x.absurd).length >= 12, 'At least 12 absurd cards per category');
+  }
+  assert.ok(BIOLOGIES.some((b) => b.age === 14 && /90-60-90/.test(b.title)), 'Has 14yo + 90-60-90 biology stat');
+  assert.ok(HEALTHS.some((h) => /СПИД/i.test(h.title)), 'Has AIDS health stat');
+
   assert.equal(CODE_ALPHABET.includes('O'), false);
   assert.equal(CODE_ALPHABET.includes('0'), false);
   assert.equal(CODE_ALPHABET.includes('I'), false);

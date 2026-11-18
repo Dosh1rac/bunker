@@ -562,6 +562,10 @@
                   <input id="set-secret-roles" type="checkbox" class="w-4 h-4 accent-amber-500" />
                   <span class="text-gray-200">Тайные личные цели игроков</span>
                 </label>
+                <label class="sm:col-span-2 flex items-center gap-2 cursor-pointer select-none p-1.5 bg-amber-950/20 border border-bunker-amber/60">
+                  <input id="set-absurd-cards" type="checkbox" checked class="w-4 h-4 accent-amber-500" />
+                  <span class="text-amber-200 font-semibold">Безумные и абсурдные статы (14 лет, СПИД, фигура 90-60-90, треш-режим)</span>
+                </label>
               </div>
             </div>
 
@@ -2216,6 +2220,7 @@
         const setEvents = document.getElementById('set-events');
         const setDilemmas = document.getElementById('set-dilemmas');
         const setSecrets = document.getElementById('set-secret-roles');
+        const setAbsurd = document.getElementById('set-absurd-cards');
         const setBadge = document.getElementById('lobby-settings-badge');
         if (setDisc && setVote && setSkips) {
           setDisc.value = String(s.discussionSeconds || 120);
@@ -2225,8 +2230,9 @@
           setEvents.checked = s.enableRandomEvents !== false;
           setDilemmas.checked = s.enableDilemmas !== false;
           setSecrets.checked = s.enableSecretRoles !== false;
-          [setDisc, setVote, setSkips, setProf, setEvents, setDilemmas, setSecrets].forEach((el) => {
-            el.disabled = !isHost;
+          if (setAbsurd) setAbsurd.checked = s.enableAbsurdCards !== false;
+          [setDisc, setVote, setSkips, setProf, setEvents, setDilemmas, setSecrets, setAbsurd].forEach((el) => {
+            if (el) el.disabled = !isHost;
           });
           if (setBadge) {
             setBadge.textContent = isHost ? 'Настройки активны (Хост)' : 'Только просмотр (меняет хост)';
@@ -2625,7 +2631,14 @@
                   <p class="mt-1 text-xs text-gray-300 leading-relaxed">${escapeHtml(data.skills)}</p>`;
         }
         if (key === 'biology') {
-          return `<div class="text-xs text-sky-300 font-mono">${escapeHtml(data.trait)}</div>
+          const bodyText = data.body
+            ? (/^фигура/i.test(data.body) ? data.body : `Фигура: ${data.body}`)
+            : '';
+          const bodyHtml = bodyText
+            ? `<div class="text-xs text-amber-300 font-mono font-semibold">${escapeHtml(bodyText)}</div>`
+            : '';
+          return `${bodyHtml}
+                  <div class="text-xs text-sky-300 font-mono">${escapeHtml(data.trait)}</div>
                   <p class="mt-1 text-xs text-gray-300 leading-relaxed">${escapeHtml(data.description)}</p>`;
         }
         if (key === 'health') {
@@ -2740,7 +2753,10 @@
                   <div class="flex items-center gap-2.5">
                     ${getTraitPixelSvg(key)}
                     <div>
-                      <div class="text-[11px] font-mono uppercase text-bunker-muted">${meta.label}</div>
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-[11px] font-mono uppercase text-bunker-muted">${meta.label}</span>
+                        ${card.data.absurd ? '<span class="text-[10px] font-mono font-bold bg-amber-950/70 border border-bunker-amber/70 text-bunker-amber px-1 leading-tight">АБСУРД</span>' : ''}
+                      </div>
                       <div class="text-[11px] font-mono font-bold ${isRevealed ? 'text-bunker-green' : 'text-bunker-amber'}">
                         ${isRevealed ? 'ОТКРЫТО ВСЕМ' : 'СКРЫТО ОТ ДРУГИХ'}
                       </div>
@@ -3814,14 +3830,15 @@
           forceProfessionRound1: Boolean(document.getElementById('set-force-prof')?.checked),
           enableRandomEvents: Boolean(document.getElementById('set-events')?.checked),
           enableDilemmas: Boolean(document.getElementById('set-dilemmas')?.checked),
-          enableSecretRoles: Boolean(document.getElementById('set-secret-roles')?.checked)
+          enableSecretRoles: Boolean(document.getElementById('set-secret-roles')?.checked),
+          enableAbsurdCards: Boolean(document.getElementById('set-absurd-cards')?.checked)
         };
         socket.emit('lobby:updateSettings', payload, (res) => {
           if (!res?.ok) setInlineError('lobby-error', res?.error || 'Не удалось обновить настройки.');
         });
       }
 
-      ['set-disc-sec', 'set-vote-sec', 'set-max-skips', 'set-force-prof', 'set-events', 'set-dilemmas', 'set-secret-roles'].forEach((id) => {
+      ['set-disc-sec', 'set-vote-sec', 'set-max-skips', 'set-force-prof', 'set-events', 'set-dilemmas', 'set-secret-roles', 'set-absurd-cards'].forEach((id) => {
         document.getElementById(id)?.addEventListener('change', () => {
           SoundFX.click();
           pushLobbySettingsUpdate();
